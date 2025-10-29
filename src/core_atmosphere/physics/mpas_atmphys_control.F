@@ -83,6 +83,8 @@
 ! * in the mesoscale_reference suite, replaced the MM5 surface layer scheme with the MM5 revised surface layer
 !   scheme as the default option for config_sfclayer_scheme.
 !   Laura D. Fowler (laura@ucar.edu) / 2024-06-18.
+! * added the physics options for the 'MPAS-GOCART2G' suite for gocartMPAS
+!   Jun Park (junpark@ucar.edu)      / 2025-10-29
 
 
  contains
@@ -106,6 +108,9 @@
                                   config_radt_lw_scheme,    &
                                   config_radt_sw_scheme,    &
                                   config_sfclayer_scheme
+#ifdef DO_GOCART2G
+ logical,pointer::                config_mynn_mixchems
+#endif
 
 !-----------------------------------------------------------------------------------------------------------------
 !call mpas_log_write('')
@@ -121,6 +126,9 @@
  call mpas_pool_get_config(configs,'config_radt_lw_scheme'   ,config_radt_lw_scheme   )
  call mpas_pool_get_config(configs,'config_radt_sw_scheme'   ,config_radt_sw_scheme   )
  call mpas_pool_get_config(configs,'config_sfclayer_scheme'  ,config_sfclayer_scheme  )
+#ifdef DO_GOCART2G
+ call mpas_pool_get_config(configs,'config_mynn_mixchems'  ,config_mynn_mixchems)
+#endif
 
  call mpas_log_write('')
  call mpas_log_write('----- Setting up physics suite '''//trim(config_physics_suite)//''' -----')
@@ -151,6 +159,25 @@
     if (trim(config_radt_cld_scheme)   == 'suite') config_radt_cld_scheme   = 'cld_fraction'
     if (trim(config_sfclayer_scheme)   == 'suite') config_sfclayer_scheme   = 'sf_mynn'
     if (trim(config_lsm_scheme)        == 'suite') config_lsm_scheme        = 'sf_noah'
+
+ else if (trim(config_physics_suite) == 'MPAS-GOCART2G') then
+
+#ifdef DO_GOCART2G
+    if (trim(config_microp_scheme)     == 'suite') config_microp_scheme     = 'mp_thompson_gocart2G'
+    if (trim(config_convection_scheme) == 'suite') config_convection_scheme = 'cu_ntiedtke'
+    if (trim(config_pbl_scheme)        == 'suite') config_pbl_scheme        = 'bl_mynn'
+    if (trim(config_gwdo_scheme)       == 'suite') config_gwdo_scheme       = 'bl_ysu_gwdo'
+    if (trim(config_radt_lw_scheme)    == 'suite') config_radt_lw_scheme    = 'rrtmg_lw'
+    if (trim(config_radt_sw_scheme)    == 'suite') config_radt_sw_scheme    = 'rrtmg_sw'
+    if (trim(config_radt_cld_scheme)   == 'suite') config_radt_cld_scheme   = 'cld_fraction'
+    if (trim(config_sfclayer_scheme)   == 'suite') config_sfclayer_scheme   = 'sf_mynn'
+    if (trim(config_lsm_scheme)        == 'suite') config_lsm_scheme        = 'sf_noah'
+    if (.not. config_mynn_mixchems               ) config_mynn_mixchems     = .true.
+#else
+    write(mpas_err_message,'(A)') 'Please recompile the model with GOCART2G=true for config_physics_suite = '''// &
+                                   trim(config_physics_suite)//''''
+    call physics_error_fatal(mpas_err_message)
+#endif
 
  else if (trim(config_physics_suite) == 'none') then
 
