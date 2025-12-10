@@ -315,6 +315,7 @@
 !==================================================================================================================
 
 !input arguments:
+! 20251010_rkumar_bugfix: Prevents zero emissions for hourly data by checking total_dt, after_dt, and before_dt > 0 before interpolation. If not, sets *_biob_em(:) = biob_modis(:) for each species.
  type(mpas_Clock_type),intent(in):: clock
  type(mpas_pool_type),intent(in),pointer:: mesh
  type(mpas_pool_type),intent(in),pointer:: CAMS_anth_emissions
@@ -1033,7 +1034,10 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     bc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*bc_biob_modis(:)
- endif
+else
+   bc_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+endif
+! 20251010_rkumar_bugfix_end
 
 !biomass burning of organic carbon:
  call mpas_stream_mgr_read(stream_manager,'biob_oc_emissions',rightNow=.true., &
@@ -1046,10 +1050,12 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
- if(total_dt > 0.0_RKIND) then
-    oc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*oc_biob_modis(:)
- endif
+if(total_dt > 0.0_RKIND) then
+   oc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*oc_biob_modis(:)
+else
+   oc_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+endif
+! 20251010_rkumar_bugfix_end
 
 
 !biomass burning of nitrate:
@@ -1063,10 +1069,12 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
- if(total_dt > 0.0_RKIND) then
-    ni_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*nh3_biob_modis(:)
- endif
+if(total_dt > 0.0_RKIND) then
+   ni_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*nh3_biob_modis(:)
+else
+   ni_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+endif
+! 20251010_rkumar_bugfix_end
 
 
 !biomass burning of sulphur dioxide:
@@ -1080,10 +1088,12 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
- if(total_dt > 0.0_RKIND) then
-    su_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*so2_biob_modis(:)
- endif
+if(total_dt > 0.0_RKIND) then
+   su_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*so2_biob_modis(:)
+else
+   su_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+endif
+! 20251010_rkumar_bugfix_end
 
 
 !biomass burning of carbon monoxide:
@@ -1097,10 +1107,12 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
- if(total_dt > 0.0_RKIND) then
-    co_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*co_biob_modis(:)
- endif
+if(total_dt > 0.0_RKIND) then
+   co_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*co_biob_modis(:)
+else
+   co_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+endif
+! 20251010_rkumar_bugfix_end
 
 
 !biomass burning of isoprene:
@@ -1114,10 +1126,12 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
- if(total_dt > 0.0_RKIND) then
-    iso_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*iso_biob_modis(:)
- endif
+if(total_dt > 0.0_RKIND) then
+   iso_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*iso_biob_modis(:)
+else
+   iso_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+endif
+! 20251010_rkumar_bugfix_end
 
 
 !biomass burning of monoterpenes:
@@ -1131,10 +1145,12 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
- if(total_dt > 0.0_RKIND) then
-    mnt_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*mnt_biob_modis(:)
- endif
+if(total_dt > 0.0_RKIND) then
+   mnt_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*mnt_biob_modis(:)
+else
+   mnt_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+endif
+! 20251010_rkumar_bugfix_end
 
  deallocate(biob_modis)
 
