@@ -27,6 +27,8 @@
 !     subroutine mp_thompson.
 !     Laura D. Fowler (laura@ucar.edu) / 2017-08-31.
 
+!     Chen-Hau Lan & Jun Park / 2026-03-20
+!   * Modified the hard-coded bounds on nifa and nwfa for mp_thompson_gocart2G (0 - inf)
 
 !+---+-----------------------------------------------------------------+
 !.. This subroutine computes the moisture tendencies of water vapor,
@@ -1682,8 +1684,10 @@
          qv(k) = MAX(1.E-10, qv1d(k))
          pres(k) = p1d(k)
          rho(k) = 0.622*pres(k)/(R*temp(k)*(qv(k)+0.622))
-         nwfa(k) = MAX(11.1E6, MIN(9999.E6, nwfa1d(k)*rho(k)))
-         nifa(k) = MAX(naIN1*0.01, MIN(9999.E6, nifa1d(k)*rho(k)))
+         !nwfa(k) = MAX(11.1E6, MIN(9999.E6, nwfa1d(k)*rho(k)))
+         !nifa(k) = MAX(naIN1*0.01, MIN(9999.E6, nifa1d(k)*rho(k)))
+         nwfa(k) = MAX(0.0, nwfa1d(k)*rho(k))
+         nifa(k) = MAX(0.0, nifa1d(k)*rho(k))
 
          if (qc1d(k) .gt. R1) then
             no_micro = .false.
@@ -2887,7 +2891,8 @@
          ocp(k) = 1./(Cp*(1.+0.887*qv(k)))
          lvt2(k)=lvap(k)*lvap(k)*ocp(k)*oRv*otemp*otemp
 
-         nwfa(k) = MAX(11.1E6, (nwfa1d(k) + nwfaten(k)*DT)*rho(k))
+         !nwfa(k) = MAX(11.1E6, (nwfa1d(k) + nwfaten(k)*DT)*rho(k))
+         nwfa(k) = MAX(0.0, (nwfa1d(k) + nwfaten(k)*DT)*rho(k))
       enddo
 
       do k = kts, kte
@@ -3637,10 +3642,12 @@
          qv1d(k) = MAX(1.E-10, qv1d(k) + qvten(k)*DT)
          qc1d(k) = qc1d(k) + qcten(k)*DT
          nc1d(k) = MAX(2./rho(k), MIN(nc1d(k) + ncten(k)*DT, Nt_c_max))
-         nwfa1d(k) = MAX(11.1E6, MIN(9999.E6,                           &
-                       (nwfa1d(k)+nwfaten(k)*DT)))
-         nifa1d(k) = MAX(naIN1*0.01, MIN(9999.E6,                       &
-                       (nifa1d(k)+nifaten(k)*DT)))
+         !nwfa1d(k) = MAX(11.1E6, MIN(9999.E6,                           &
+         !              (nwfa1d(k)+nwfaten(k)*DT)))
+         !nifa1d(k) = MAX(naIN1*0.01, MIN(9999.E6,                       &
+         !              (nifa1d(k)+nifaten(k)*DT)))
+         nwfa1d(k) = MAX(0.0, (nwfa1d(k)+nwfaten(k)*DT))
+         nifa1d(k) = MAX(0.0, (nifa1d(k)+nifaten(k)*DT))
 
          if (qc1d(k) .le. R1) then
            qc1d(k) = 0.0
