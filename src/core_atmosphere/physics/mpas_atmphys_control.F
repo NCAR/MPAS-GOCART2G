@@ -84,7 +84,7 @@
 !   scheme as the default option for config_sfclayer_scheme.
 !   Laura D. Fowler (laura@ucar.edu) / 2024-06-18.
 ! * added the physics options for the 'MPAS-GOCART2G' suite for gocartMPAS
-!   Jun Park (junpark@ucar.edu)      / 2025-10-29
+!   Jun Park (junpark@ucar.edu)      / 2025-10-29/2026-03-17
 
 
  contains
@@ -110,6 +110,8 @@
                                   config_sfclayer_scheme
 #ifdef DO_GOCART2G
  logical,pointer::                config_mynn_mixchems
+ logical,pointer::                config_ntiedtke_ctrchems
+ logical,pointer::                config_ntiedtke_scavchems
 #endif
 
 !-----------------------------------------------------------------------------------------------------------------
@@ -128,6 +130,8 @@
  call mpas_pool_get_config(configs,'config_sfclayer_scheme'  ,config_sfclayer_scheme  )
 #ifdef DO_GOCART2G
  call mpas_pool_get_config(configs,'config_mynn_mixchems'  ,config_mynn_mixchems)
+ call mpas_pool_get_config(configs,'config_ntiedtke_ctrchems'  ,config_ntiedtke_ctrchems)
+ call mpas_pool_get_config(configs,'config_ntiedtke_scavchems'  ,config_ntiedtke_scavchems)
 #endif
 
  call mpas_log_write('')
@@ -173,6 +177,8 @@
     if (trim(config_sfclayer_scheme)   == 'suite') config_sfclayer_scheme   = 'sf_mynn'
     if (trim(config_lsm_scheme)        == 'suite') config_lsm_scheme        = 'sf_noah'
     if (.not. config_mynn_mixchems               ) config_mynn_mixchems     = .true.
+    if (.not. config_ntiedtke_ctrchems           ) config_ntiedtke_ctrchems  = .true.
+    if (.not. config_ntiedtke_scavchems          ) config_ntiedtke_scavchems = .true.
 #else
     write(mpas_err_message,'(A)') 'Please recompile the model with GOCART2G=true for config_physics_suite = '''// &
                                    trim(config_physics_suite)//''''
