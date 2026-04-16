@@ -12,14 +12,20 @@ all: dummy core_gocart2G
 dummy:
 	echo "****** compiling initialization of gocart2G ******"
 
-
+ifeq "$(GOCART2G)" "true"
 OBJS = \
 	mpas_chemistry_init_gocart2G_climatology.o \
 	mpas_chemistry_init_gocart2G_emissions.o \
 	mpas_chemistry_init_gocart2G_interp.o \
 	mpas_chemistry_init_gocart2G_lbcs.o \
-	mpas_chemistry_init_gocart2G_static.o
+	mpas_chemistry_init_gocart2G_static.o 
+endif
 
+#Include an option to build Plume Rise Model (PRM) modules in the chemistry directory (jpereira20260331)
+ifeq "$(PRM)" "true"
+OBJS += \
+	mpas_chemistry_init_plumerisemodel_lbc.o
+endif
 
 core_gocart2G: $(OBJS)
 	ar -ru ./../../core_init_atmosphere/libdycore.a $(OBJS)

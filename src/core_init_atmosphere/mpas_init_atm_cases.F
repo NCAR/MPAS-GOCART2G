@@ -24,6 +24,12 @@ module init_atm_cases
    use mpas_atmphys_functions
    use mpas_atmphys_initialize_real
    use mpas_log, only : mpas_log_write
+
+#ifdef DO_PRM
+   !Enable use of the module that initializes the PRM input variables (jpereira20260331)
+   use mpas_chemistry_init_plumerisemodel_lbc,only: init_plumerisemodel_lbc
+#endif
+
 #ifdef DO_GOCART2G
    use mpas_chemistry_init_gocart2G_climatology,only: init_gocart2G_climatology
    use mpas_chemistry_init_gocart2G_emissions,only: init_anth_emissions_bc,         &
@@ -84,6 +90,14 @@ module init_atm_cases
       logical, pointer :: config_native_gwd_gsl_static
       logical, pointer :: config_met_interp
       logical, pointer :: config_blend_bdy_terrain
+
+#ifdef DO_PRM
+      !Pointers controlling PRM initialization and accessing Fire Size/FRP pools (jpereira20260331)
+      logical, pointer :: config_init_bburnPRM
+      type (mpas_pool_type), pointer :: FINN_biob_prm_lbc
+      type (mpas_pool_type), pointer :: biob_prm_lbc
+#endif
+
 #ifdef DO_GOCART2G
       logical, pointer :: config_gocart2G_ANTHemis
       logical, pointer :: config_gocart2G_BIOBemis
@@ -299,6 +313,26 @@ module init_atm_cases
 
             block_ptr => block_ptr % next
          end do
+
+
+#ifdef DO_PRM
+         !Initialization of PRM input variables - Fire Size and FRP (jpereira20260331)
+         block_ptr => domain % blocklist
+         do while (associated(block_ptr))
+
+            call mpas_pool_get_config(block_ptr%configs,'config_init_bburnPRM',config_init_bburnPRM)
+
+            if(config_init_bburnPRM) then
+               call mpas_pool_get_subpool(block_ptr%structs,'mesh',mesh)
+               call mpas_pool_get_subpool(block_ptr%structs,'FINN_biob_prm_lbc',FINN_biob_prm_lbc)
+               call mpas_pool_get_subpool(block_ptr%structs,'biob_prm_lbc', biob_prm_lbc)
+               call init_plumerisemodel_lbc(domain%clock,stream_manager,mesh,FINN_biob_prm_lbc, biob_prm_lbc)
+            endif
+
+         block_ptr => block_ptr % next
+         end do
+#endif
+
 
 #ifdef DO_GOCART2G
          block_ptr => domain % blocklist

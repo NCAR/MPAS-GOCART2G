@@ -12,7 +12,7 @@ all: dummy core_gocart2G core_chemistry
 dummy:
 	echo "****** compiling chemistry ******"
 
-
+ifeq "$(GOCART2G)" "true"
 OBJS = \
 	mpas_chemistry_gocart2G_date_time.o \
 	mpas_chemistry_gocart2G_diagnostics.o \
@@ -28,8 +28,19 @@ OBJS = \
 	mpas_chemistry_gocart2G_manager.o \
 	mpas_chemistry_gocart2G_rrtmg.o \
 	mpas_chemistry_gocart2G_update.o \
-	mpas_chemistry_gocart2G_vars.o
+	mpas_chemistry_gocart2G_vars.o 
+endif
 
+#Include a compilation option for PRM modules (jpereira20260408)
+ifeq "$(PRM)" "true"
+OBJS += \
+	mpas_chemistry_plumerisemodel_manager.o \
+	mpas_chemistry_plumerisemodel_lbc_init.o \
+	mpas_chemistry_plumerisemodel_lbc.o \
+	mpas_chemistry_plumerisemodel_vars.o \
+	mpas_chemistry_plumerisemodel_interface.o 
+
+endif
 
 core_gocart2G:
 	( cd gocart2G; $(MAKE) all COREDEF="$(COREDEF)" )
@@ -77,6 +88,18 @@ mpas_chemistry_gocart2G_vars.o: \
 	mpas_chemistry_gocart2G_emissions.o \
 	mpas_chemistry_gocart2G_interface.o \
 	mpas_chemistry_gocart2G_forMPASphysics.o
+
+
+# PRM DEPENDENCIES (jpereira20260408):
+mpas_chemistry_plumerisemodel_lbc_init.o: \
+	mpas_chemistry_plumerisemodel_vars.o
+
+mpas_chemistry_plumerisemodel_vars.o: \
+	mpas_chemistry_plumerisemodel_interface.o \
+	mpas_chemistry_plumerisemodel_lbc.o 
+
+
+
 
 
 clean:

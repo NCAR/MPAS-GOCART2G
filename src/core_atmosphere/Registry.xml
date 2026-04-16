@@ -589,6 +589,13 @@
 			<var name="tslb"/>
 			<var name="h_oml_initial"/>
 #endif
+
+#ifdef DO_PRM
+               <!--  Include the PRM input variables as an input from initialization file: -->
+               <!-- (jpereira20260408) -->
+               <var_struct name="biob_prm_lbc"/>
+#endif
+
 #ifdef DO_GOCART2G
 			<var name="background_dms"/>
 			<var name="background_h2o2"/>
@@ -879,6 +886,13 @@
 			<var name="hv_oml"/>
 			<var_struct name="diag_physics_noahmp"/>
 #endif
+
+#ifdef DO_PRM
+               <!--  Include the PRM input variables as an output on restart files: -->
+               <!-- (jpereira20260408) -->
+               <var_struct name="biob_prm_lbc"/> 
+#endif
+
 #ifdef DO_GOCART2G
 			<var_struct name="anth_emissions"/>
 			<var_struct name="biob_emissions"/>
@@ -3990,6 +4004,13 @@
 
 #ifdef DO_PHYSICS
 #include "physics/Registry_noahmp.xml"
+#endif
+
+#ifdef DO_PRM
+<!-- ========================================================================================================== -->
+<!-- BIOMASS BURNING PLUME RISE MODEL PARAMETRIZATION (jpereira20260408):                                       -->
+#include "chemistry/Registry_do_bburnPRM.xml"
+<!-- ========================================================================================================== -->
 #endif
 
 #ifdef DO_GOCART2G

@@ -979,6 +979,14 @@ else
 	CHEMISTRY_MESSAGE="MPAS was built without GOCART-2G enabled."
 endif
 
+#Include a build option for Plume Rise Model (PRM) (jpereira20260331)
+ifeq "$(PRM)" "true"
+	MODEL_FORMULATION += -DDO_PRM
+	CHEMISTRY_MESSAGE+="MPAS was built with PRM enabled."
+else
+	CHEMISTRY_MESSAGE+="MPAS was built without PRM enabled."
+endif
+
 ifneq ($(wildcard namelist.$(NAMELIST_SUFFIX)), ) # Check for generated namelist file.
 	NAMELIST_MESSAGE="A default namelist file (namelist.$(NAMELIST_SUFFIX).defaults) has been generated, but namelist.$(NAMELIST_SUFFIX) has not been modified."
 else

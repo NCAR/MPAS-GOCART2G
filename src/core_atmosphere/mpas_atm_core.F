@@ -378,6 +378,15 @@ module atm_core
       use mpas_atmphys_init
       use mpas_atmphys_manager
 #endif
+
+#ifdef DO_PRM
+      !Enable use of the module that initializes alarms for PRM and PRM input data (jpereira20260402)
+      use mpas_chemistry_plumerisemodel_manager
+      
+      !Enable use of the module that initializes PRM input variables (jpereira20260408)
+      use mpas_chemistry_plumerisemodel_lbc_init
+#endif
+
 #ifdef DO_GOCART2G
       use mpas_chemistry_gocart2G_init
       use mpas_chemistry_gocart2G_emissions_init
@@ -401,6 +410,16 @@ module atm_core
       type (mpas_pool_type), pointer :: ngw_input
       type (mpas_pool_type), pointer :: atm_input
       type (mpas_pool_type), pointer :: output_noahmp
+
+#ifdef DO_PRM
+      !Pointers controlling PRM (jpereira20260402)
+      !local pointer:
+      logical,pointer:: config_do_bburnPRM
+
+      !Pointers controlling fire size and FRP inputs (jpereira20260408)
+      type (mpas_pool_type), pointer :: biob_prm_lbc
+#endif
+
 #ifdef DO_GOCART2G
       type (mpas_pool_type), pointer :: anth_emissions
       type (mpas_pool_type), pointer :: biob_emissions
@@ -590,6 +609,21 @@ module atm_core
                            diag_physics, diag_physics_noahmp, ngw_input, atm_input, sfc_input, output_noahmp)
       endif
 #endif
+
+
+#ifdef DO_PRM
+      call mpas_pool_get_config(block % configs, 'config_do_bburnPRM', config_do_bburnPRM )
+      if (config_do_bburnPRM) then
+         !Initialization of alarms for PRM and PRM input (jpereira20260402)
+         call plumerisemodel_timetracker_init(block % configs, clock)
+
+         !Initialization of PRM input variables from x1.*.init.nc file (jpereira20260408)
+         call mpas_pool_get_subpool(block % structs, 'biob_prm_lbc', biob_prm_lbc)
+         call plumerisemodel_lbc_init(mesh, biob_prm_lbc)
+      endif
+#endif
+
+
 #ifdef DO_GOCART2G
       call mpas_pool_get_subpool(block % structs, 'anth_emissions', anth_emissions)
       call mpas_pool_get_subpool(block % structs, 'biob_emissions', biob_emissions)

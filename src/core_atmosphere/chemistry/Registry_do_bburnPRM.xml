@@ -1,0 +1,57 @@
+<!-- ========================================================================================================== -->
+<!-- MAIN BIOMASS BURNING PLUME RISE MODEL REGISTRY (jpereira20260408):                                         -->
+<!-- ========================================================================================================== -->
+
+
+<!-- ===================== Namelist variables added for Biomass Burning Plume Rise Model  ===================== -->
+
+ <nml_record name="plumerisemodel" in_defaults="true">
+
+                <nml_option name="config_do_bburnPRM" type="logical" default_value="false"
+                     units="-"
+                     description="set to true to apply Plume Rise Model; false otherwise"
+                     possible_values="true or false"/>
+
+                <nml_option name="config_prm_lbc_interval" type="character" default_value="01_00:00:00"
+                     units="-"
+                     description="time interval between updates to Plume Rise Model input data (Fire Size, FRP)"
+                     possible_values="`DD_HH:MM:SS' or `none'"/>
+
+                <nml_option name="config_prm_interval" type="character" default_value="00_01:00:00"
+                     units="-"
+                     description="time interval between updates to Plume Rise Model"
+                     possible_values="`DD_HH:MM:SS' or `none'"/>
+
+
+ </nml_record>
+
+
+<!-- ===================== Streams added for Biomass Burning Plume Rise Model Output  ========================= -->
+
+ <streams>
+
+     <stream name="output_prm" 
+                    type="output" 
+                    filename_template="output_prm.$Y-$M-$D_$h.$m.$s.nc" 
+                    output_interval="3:00:00"
+                    runtime_format="separate_file">
+
+                         <var name="initial_time"/>
+                         <var name="xtime"/>
+                         <var name="Time"/>
+                         
+                         <var name="firesize_avg"/>
+                         <var name="firesize_std"/>
+                         <var name="frp_avg"/>
+                         <var name="frp_std"/>
+
+     </stream>
+
+</streams>
+
+
+
+<!-- ===================== Include registry shared between init and atm core  ================================= -->
+#include "Registry_global_bburnPRM.xml"
+<!-- ========================================================================================================== -->
+

@@ -1,0 +1,49 @@
+<!-- ========================================================================================================== -->
+<!-- MAIN BIOMASS BURNING PLUME RISE MODEL SHARED REGISTRY FOR INIT AND ATM CORE (jpereira20260408):            -->
+<!-- ========================================================================================================== -->
+
+
+<!-- ===================== Define arrays to read Fire Size and FRP from inventories as input streams ========== -->
+ 
+ <var_struct name="FINN_biob_prm_lbc" time_levs="1">
+
+      <var name="area_biob_modis" type="real" dimensions="nCells Time" units="m^{2}"
+           description="Active Fire Size Average from Wildfires (read from input stream (biob inventory))"/>
+
+      <var name="area_std_biob_modis" type="real" dimensions="nCells Time" units="m^{2}"
+           description="Active Fire Size Standard Deviation from Wildfires (read from input stream (biob inventory))"/>
+
+      <var name="frp_biob_modis" type="real" dimensions="nCells Time" units="MW"
+           description="Fire Radiative Power Average from Wildfires (read from input stream (biob inventory))"/>
+
+      <var name="frp_std_biob_modis" type="real" dimensions="nCells Time" units="MW"
+           description="Fire Radiative Power Standard Deviation from Wildfires (read from input stream (biob inventory))"/>
+
+ </var_struct>
+
+
+<!-- ======================== Define PRM arrays to receive Fire Size and FRP from input streams =============== -->
+ 
+ <var_struct name="biob_prm_lbc" time_levs="1">
+
+      <var name="firesize_avg" type="real" dimensions="nCells Time" units="m^{2}"
+           description="Active Fire Size Average from Wildfires"/>
+     
+      <var name="firesize_std" type="real" dimensions="nCells Time" units="m^{2}"
+           description="Active Fire Size Standard Deviation from Wildfires"/>
+
+      <var name="frp_avg" type="real" dimensions="nCells Time" units="MW"
+           description="Fire Radiative Power Average from Wildfires"/>
+
+      <var name="frp_std" type="real" dimensions="nCells Time" units="MW"
+           description="Fire Radiative Power Standard Deviation from Wildfires"/>
+
+ </var_struct>
+
+
+
+
+
+
+
+      
