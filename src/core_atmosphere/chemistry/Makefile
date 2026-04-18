@@ -38,7 +38,9 @@ OBJS += \
 	mpas_chemistry_plumerisemodel_lbc_init.o \
 	mpas_chemistry_plumerisemodel_lbc.o \
 	mpas_chemistry_plumerisemodel_vars.o \
-	mpas_chemistry_plumerisemodel_interface.o 
+	mpas_chemistry_plumerisemodel_interface.o \
+	mpas_chemistry_plumerisemodel_lbc_update.o 
+
 
 endif
 
@@ -98,6 +100,9 @@ mpas_chemistry_plumerisemodel_vars.o: \
 	mpas_chemistry_plumerisemodel_interface.o \
 	mpas_chemistry_plumerisemodel_lbc.o 
 
+mpas_chemistry_plumerisemodel_manager.o: \
+	mpas_chemistry_plumerisemodel_lbc_update.o \
+	mpas_chemistry_plumerisemodel_lbc_init.o
 
 
 

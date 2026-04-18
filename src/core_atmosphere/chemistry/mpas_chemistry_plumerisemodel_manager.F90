@@ -7,6 +7,7 @@
 !================================================================================================================== 
 !
 !Initialization of alarms for PRM and PRM input data. 
+!Update of PRM input data (Fire Size, FRP) 
 !Jaqueline Pereira (jaqueline.pereira@inpe.br) / 2026-04-02.
 !
 !==================================================================================================================
@@ -18,11 +19,14 @@
  use mpas_stream_manager
  use mpas_timekeeping
 
+ use mpas_chemistry_plumerisemodel_lbc_update
+ use mpas_chemistry_plumerisemodel_lbc_init
+
 
  implicit none
     
     private
-    public:: plumerisemodel_timetracker_init
+    public:: plumerisemodel_timetracker_init, plumerisemodel_timetracker_lbc
 
     !--- Global variables
 
@@ -139,6 +143,103 @@
  call mpas_log_write(' ')
  
  end subroutine plumerisemodel_timetracker_init
+!==================================================================================================================
+
+!==================================================================================================================
+ subroutine plumerisemodel_timetracker_lbc(domain,clock,stream_manager)
+!==================================================================================================================
+
+
+    !*******************************************************************************
+    !implicit none
+    !*******************************************************************************
+
+        !--- inout arguments:
+            
+            type(MPAS_Clock_type),intent(inout):: clock
+            type(domain_type),intent(inout):: domain
+            type(MPAS_streamManager_type),intent(inout):: stream_manager
+                    
+
+        !--- local variables:
+            
+            type(block_type),pointer:: block
+            type(MPAS_Time_Type):: currTime
+            type(mpas_pool_type),pointer:: mesh
+            type(mpas_pool_type),pointer:: FINN_biob_prm_lbc
+            type(mpas_pool_type),pointer:: biob_prm_lbc
+            
+            character(len=StrKIND):: timeStamp
+            character(len=StrKIND),pointer:: prm_lbc_interval
+
+            integer:: ierr
+
+            
+
+        call mpas_log_write(' ')
+        call mpas_log_write('--- enter subroutine plumerisemodel_timetracker_lbc:')
+        call mpas_log_write(' ')
+
+    !*******************************************************************************
+    ! Computes Current Time
+    !*******************************************************************************
+
+        !--- Get current time
+                
+            currTime = mpas_get_clock_time(clock,MPAS_NOW,ierr)
+
+
+        !--- Retrieve current year, month, etc
+
+            call mpas_get_time(curr_time=currTime,dateTimeString=timeStamp,YYYY=iyear,MM=imonth, &
+                        DD=iday,H=ihour,M=iminute,S=isecond,ierr=ierr)
+            
+            call mpas_log_write('    currTime:')
+            call mpas_log_write('    YEAR   = $i',intArgs=(/iyear/))
+            call mpas_log_write('    MONTH  = $i',intArgs=(/imonth/))
+            call mpas_log_write('    DAY    = $i',intArgs=(/iday/))
+            call mpas_log_write('    HOUR   = $i',intArgs=(/ihour/))
+            call mpas_log_write('    MINUTE = $i',intArgs=(/iminute/))
+            call mpas_log_write('    SECOND = $i',intArgs=(/isecond/))
+
+
+    !*******************************************************************************
+    ! Update PRM input data (Fire Size, FRP):
+    !*******************************************************************************
+
+        !--- check to see if it is time to update PRM input data:
+            
+            block => domain%blocklist
+            do while(associated(block))
+
+                call mpas_pool_get_config(domain%blocklist%configs,'config_prm_lbc_interval',prm_lbc_interval)
+                call mpas_log_write('    config_prm_lbc_interval = '//prm_lbc_interval)
+    
+
+                call mpas_pool_get_subpool(block%structs,'mesh'                ,mesh              )
+                call mpas_pool_get_subpool(block%structs,'FINN_biob_prm_lbc'   ,FINN_biob_prm_lbc )
+                call mpas_pool_get_subpool(block%structs,'biob_prm_lbc'        ,biob_prm_lbc      )
+                
+
+                if(mpas_is_alarm_ringing(clock,plumerisemodel_lbc_AlarmID,ierr=ierr)) then
+                    call mpas_reset_clock_alarm(clock, plumerisemodel_lbc_AlarmID, ierr=ierr)
+                    call mpas_log_write('    time to update PRM Input Data:')
+                    call plumerisemodel_lbc_update(clock,stream_manager,mesh,FINN_biob_prm_lbc, biob_prm_lbc)
+                else
+                    call mpas_log_write('    No need to update PRM Input Data')
+                endif
+
+                !--- Fills local arrays with updated values:
+                call plumerisemodel_lbc_init(mesh, biob_prm_lbc)
+
+            block => block%next
+            end do
+
+
+call mpas_log_write('--- end subroutine plumerisemodel_timetracker_lbc.')
+call mpas_log_write(' ')
+
+end subroutine plumerisemodel_timetracker_lbc
 !==================================================================================================================
 
 

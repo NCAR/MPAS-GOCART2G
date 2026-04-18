@@ -131,7 +131,7 @@ contains
         call mpas_log_write('     self%firesize_avg_biomass(i,j)=$r', realArgs=(/self%firesize_avg_biomass(53,1)/))
                     
 
- call mpas_log_write('--- end subroutine mpas_chemistry_plumerisemodel_initlbc.')
+ call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_initlbc.')
 
  end subroutine mpas_chemistry_plumerisemodel_initlbc
 !==================================================================================================================

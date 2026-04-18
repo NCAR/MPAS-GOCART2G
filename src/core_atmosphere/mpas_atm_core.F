@@ -1039,6 +1039,12 @@ module atm_core
       use mpas_atmphys_manager
       use mpas_atmphys_update
 #endif
+
+#ifdef DO_PRM
+      !Enable use of the module that updates PRM input data (jpereira20260410)
+      use mpas_chemistry_plumerisemodel_manager, only: plumerisemodel_timetracker_lbc
+#endif
+
 #ifdef DO_GOCART2G
       use mpas_chemistry_gocart2G_forMPASrestart,only: gocart2G_forMPASrestart
       use mpas_chemistry_gocart2G_manager,only: gocart2G_timetracker
@@ -1047,6 +1053,11 @@ module atm_core
       use mpas_atm_halos, only: exchange_halo_group
    
       implicit none
+
+      !Pointers controlling PRM (jpereira20260410)
+      !local pointer:
+      logical,pointer:: config_do_bburnPRM
+
    
       type (domain_type), intent(inout) :: domain 
       real (kind=RKIND), intent(in) :: dt
@@ -1081,6 +1092,17 @@ module atm_core
 #endif
 
       call atm_timestep(domain, dt, currTime, itimestep, exchange_halo_group)
+
+#ifdef DO_PRM      
+      call mpas_pool_get_config(domain % configs, 'config_do_bburnPRM', config_do_bburnPRM )
+      if (config_do_bburnPRM) then
+
+         !Updates PRM input data (Fire Size, FRP) (jpereira20260410)
+         call plumerisemodel_timetracker_lbc(domain, clock, domain % streamManager) 
+      
+      endif      
+#endif
+
 
 #ifdef DO_GOCART2G
       call gocart2G_timetracker(domain, clock, domain % streamManager)
