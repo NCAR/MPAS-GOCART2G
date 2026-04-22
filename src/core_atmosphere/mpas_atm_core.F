@@ -1043,6 +1043,9 @@ module atm_core
 #ifdef DO_PRM
       !Enable use of the module that updates PRM input data (jpereira20260410)
       use mpas_chemistry_plumerisemodel_manager, only: plumerisemodel_timetracker_lbc
+
+      !Enable use of the module that run PRM (jpereira20260420)
+      use mpas_chemistry_plumerisemodel_manager,only: plumerisemodel_timetracker_prm
 #endif
 
 #ifdef DO_GOCART2G
@@ -1099,6 +1102,9 @@ module atm_core
 
          !Updates PRM input data (Fire Size, FRP) (jpereira20260410)
          call plumerisemodel_timetracker_lbc(domain, clock, domain % streamManager) 
+
+         !Run PRM to calculate smoke injection height (jpereira20260420)
+         call plumerisemodel_timetracker_prm(domain, clock)
       
       endif      
 #endif

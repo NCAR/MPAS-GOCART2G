@@ -8,6 +8,7 @@
 !
 !Initialization of alarms for PRM and PRM input data. 
 !Update of PRM input data (Fire Size, FRP) 
+!Run PRM to calculate smoke injection height
 !Jaqueline Pereira (jaqueline.pereira@inpe.br) / 2026-04-02.
 !
 !==================================================================================================================
@@ -21,12 +22,13 @@
 
  use mpas_chemistry_plumerisemodel_lbc_update
  use mpas_chemistry_plumerisemodel_lbc_init
+ use mpas_chemistry_plumerisemodel_driver
 
 
  implicit none
     
     private
-    public:: plumerisemodel_timetracker_init, plumerisemodel_timetracker_lbc
+    public:: plumerisemodel_timetracker_init, plumerisemodel_timetracker_lbc, plumerisemodel_timetracker_prm
 
     !--- Global variables
 
@@ -242,6 +244,91 @@ call mpas_log_write(' ')
 end subroutine plumerisemodel_timetracker_lbc
 !==================================================================================================================
 
+
+!==================================================================================================================
+ subroutine plumerisemodel_timetracker_prm(domain,clock)
+!==================================================================================================================
+
+
+    !*******************************************************************************
+    !implicit none
+    !*******************************************************************************
+
+        !--- inout arguments:
+            
+            type(MPAS_Clock_type),intent(inout):: clock
+            type(domain_type),intent(inout):: domain
+                    
+
+        !--- local variables:
+
+            type(block_type),pointer:: block
+            type(MPAS_Time_Type):: currTime
+            type(mpas_pool_type),pointer:: mesh
+
+            character(len=StrKIND):: timeStamp
+            character(len=StrKIND),pointer:: prm_interval
+
+            integer:: ierr
+
+        call mpas_log_write(' ')
+        call mpas_log_write('--- enter subroutine plumerisemodel_timetracker_prm:')
+
+
+
+    !*******************************************************************************
+    ! Computes Current Time
+    !*******************************************************************************
+
+        !--- Get current time
+                
+            currTime = mpas_get_clock_time(clock,MPAS_NOW,ierr)
+
+
+        !--- Retrieve current year, month, etc
+
+            call mpas_get_time(curr_time=currTime,dateTimeString=timeStamp,YYYY=iyear,MM=imonth, &
+                        DD=iday,H=ihour,M=iminute,S=isecond,ierr=ierr)
+            
+            call mpas_log_write('    currTime:')
+            call mpas_log_write('    YEAR   = $i',intArgs=(/iyear/))
+            call mpas_log_write('    MONTH  = $i',intArgs=(/imonth/))
+            call mpas_log_write('    DAY    = $i',intArgs=(/iday/))
+            call mpas_log_write('    HOUR   = $i',intArgs=(/ihour/))
+            call mpas_log_write('    MINUTE = $i',intArgs=(/iminute/))
+            call mpas_log_write('    SECOND = $i',intArgs=(/isecond/))
+
+    !*******************************************************************************
+    ! Run PRM:
+    !*******************************************************************************
+
+        !--- check to see if it is time to run PRM:
+            
+            block => domain%blocklist
+            do while(associated(block))
+
+                call mpas_pool_get_config(domain%blocklist%configs,'config_prm_interval',prm_interval)
+                call mpas_log_write('    config_prm_interval = '//prm_interval)
+    
+
+                call mpas_pool_get_subpool(block%structs,'mesh'                ,mesh              )              
+
+                if(mpas_is_alarm_ringing(clock,plumerisemodel_AlarmID,ierr=ierr)) then
+                    call mpas_reset_clock_alarm(clock, plumerisemodel_AlarmID, ierr=ierr)
+                    call mpas_log_write('    time to run PRM:')
+                    call plumerisemodel_driver(domain, mesh)
+                else
+                    call mpas_log_write('    No need to run PRM')
+                endif
+
+            block => block%next
+            end do
+
+call mpas_log_write('--- end subroutine plumerisemodel_timetracker_prm.')
+call mpas_log_write(' ')
+
+end subroutine plumerisemodel_timetracker_prm
+!==================================================================================================================
 
 
 

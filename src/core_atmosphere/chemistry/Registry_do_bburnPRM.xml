@@ -26,6 +26,26 @@
  </nml_record>
 
 
+<!-- ===================== Arrays variables added for Biomass Burning Plume Rise Model  ===================== -->
+
+ <var_struct name="diag_prm" time_levs="1">
+               
+                <var name="k1_injH_bot" type="integer" dimensions="nCells Time" units="unitless"
+                     description="index level of lower plume injection height"/>
+
+                <var name="k2_injH_top" type="integer" dimensions="nCells Time" units="unitless"
+                     description="index level of upper plume injection height"/>
+
+                <var name="injH_bot" type="real" dimensions="nCells Time" units="m above surface"
+                     description="lower plume injection height"/>
+
+                <var name="injH_top" type="real" dimensions="nCells Time" units="m above surface"
+                     description="upper plume injection height"/>
+
+  </var_struct>
+
+
+
 <!-- ===================== Streams added for Biomass Burning Plume Rise Model Output  ========================= -->
 
  <streams>
@@ -44,6 +64,11 @@
                          <var name="firesize_std"/>
                          <var name="frp_avg"/>
                          <var name="frp_std"/>
+                         <var name="k1_injH_bot"/>
+                         <var name="k2_injH_top"/>
+                         <var name="injH_bot"/>
+                         <var name="injH_top"/>
+
 
      </stream>
 
