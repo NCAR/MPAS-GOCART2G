@@ -37,16 +37,16 @@
      <var name="brDP_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Dry deposition of hydrophilic brown carbon aerosols"/>
 
-     <var name="brWT_phobic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="brWT_phobic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of hydrophobic brown carbon aerosols"/>
 
-     <var name="brWT_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="brWT_philic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of hydrophilic brown carbon aerosols"/>
 
-     <var name="brSV_phobic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="brSV_phobic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of hydrophobic brown carbon aerosols"/>
 
-     <var name="brSV_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="brSV_philic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of hydrophilic brown carbon aerosols"/>
 
      <var name="brSMASS" type="real" dimensions="nCells Time" units="kg m^{-3}"

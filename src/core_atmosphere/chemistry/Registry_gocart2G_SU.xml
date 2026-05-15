@@ -54,28 +54,28 @@
      <var name="suDP_msa" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Dry deposition of MSA"/>
 
-     <var name="suWT_dms" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suWT_dms" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of DMS"/>
 
-     <var name="suWT_so2" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suWT_so2" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of SO2"/>
 
-     <var name="suWT_so4" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suWT_so4" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of SO4"/>
 
-     <var name="suWT_msa" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suWT_msa" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of MSA"/>
 
-     <var name="suSV_dms" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suSV_dms" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of DMS"/>
 
-     <var name="suSV_so2" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suSV_so2" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of SO2"/>
 
-     <var name="suSV_so4" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suSV_so4" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of SO4"/>
 
-     <var name="suSV_msa" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="suSV_msa" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of MSA"/>
 
      <var name="suPSO2" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"

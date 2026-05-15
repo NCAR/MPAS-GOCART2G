@@ -762,6 +762,8 @@
  real(kind=RKIND),dimension(:,:),pointer:: qhno3_fg
  real(kind=RKIND),dimension(:,:,:),pointer:: scalars_fg
 
+ real(kind=RKIND),dimension(:,:),pointer:: persistent_hno3
+
  real(kind=RKIND):: target_p
  real(kind=RKIND),dimension(:,:),allocatable:: sorted_arr
 
@@ -781,6 +783,8 @@
 
  call mpas_pool_get_array(gocart2G_backgrounds,'background_hno3',background_hno3)
 
+ call mpas_pool_get_array(gocart2G_backgrounds,'persistent_hno3',persistent_hno3)
+
  if(.not.allocated(sorted_arr)) allocate(sorted_arr(2,nAerLevels))
  do iCell = 1,nCells
     sorted_arr(1,1:nAerLevels) = 0._RKIND
@@ -793,6 +797,9 @@
        target_p = pressure(k,iCell)
        background_hno3(k,iCell) = pressure_interp(iCell,k,target_p,nAerLevels,sorted_arr(:,1:nAerLevels))
        if(target_p.gt.sorted_arr(1,1)) background_hno3(k,iCell) = background_hno3(k+1,iCell)
+
+       persistent_hno3(k,iCell) = background_hno3(k,iCell)
+
     enddo
  enddo
  if(allocated(sorted_arr)) deallocate(sorted_arr)

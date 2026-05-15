@@ -402,7 +402,7 @@
  end subroutine init_convection
 
 !=================================================================================================================
- subroutine driver_convection(itimestep,configs,mesh,sfc_input,diag_physics,tend_physics,its,ite)
+ subroutine driver_convection(itimestep,configs,mesh,sfc_input,diag_physics,tend_physics,block_structs,its,ite)
 !=================================================================================================================
 
 !input arguments:
@@ -416,6 +416,7 @@
 !inout arguments:
  type(mpas_pool_type),intent(inout):: diag_physics
  type(mpas_pool_type),intent(inout):: tend_physics
+ type(mpas_pool_type), intent(inout) :: block_structs
 
 !local variables and arrays:
  logical:: log_convection
@@ -457,6 +458,7 @@
  call mpas_pool_get_config(configs,'config_len_disp'         ,len_disp         )
  call mpas_pool_get_config(configs,'config_do_restart'       ,config_do_restart)
  call mpas_pool_get_config(configs,'config_convection_scheme',convection_scheme)
+
 
 !initialize instantaneous precipitation, and copy convective tendencies from the dynamics to
 !the physics grid:
@@ -607,6 +609,7 @@
              cp       = cp         ,                                                 &
              do_ctrchems  = cu_ntiedtke_ctrchems ,                                   &
              do_scavchems = cu_ntiedtke_scavchems,                                   &
+             block_structs = block_structs,                                          &
              errmsg   = errmsg     , errflg      = errflg      ,                     &
              ids = ids , ide = ide , jds = jds , jde = jde , kds = kds , kde = kde , &
              ims = ims , ime = ime , jms = jms , jme = jme , kms = kds , kme = kme , &
@@ -654,7 +657,6 @@
  real(kind=RKIND),dimension(:,:),pointer:: rthcuten,rqvcuten,rqccuten,rqicuten,rqrcuten,rqscuten 
  real(kind=RKIND),dimension(:,:),pointer:: rthblten,rthdynten,rthratenlw,rthratensw
  real(kind=RKIND),dimension(:,:),pointer:: rqvblten,rqvdynten,rucuten,rvcuten
-
 !local variables:
  integer:: i,j,k
  integer:: iEdge
@@ -890,14 +892,12 @@
  real(kind=RKIND),dimension(:,:),pointer:: w0avg
  real(kind=RKIND),dimension(:,:),pointer:: rthcuten,rqvcuten,rqccuten,rqicuten,rqrcuten,rqscuten
  real(kind=RKIND),dimension(:,:),pointer:: rucuten,rvcuten
-
 !-----------------------------------------------------------------------------------------------------------------
 
  call mpas_pool_get_config(configs,'config_convection_scheme',convection_scheme)
 
  call mpas_pool_get_array(diag_physics,'cuprec',cuprec)
  call mpas_pool_get_array(diag_physics,'raincv',raincv)
-
  call mpas_pool_get_array(tend_physics,'rthcuten',rthcuten)
  call mpas_pool_get_array(tend_physics,'rqvcuten',rqvcuten)
  call mpas_pool_get_array(tend_physics,'rqccuten',rqccuten)

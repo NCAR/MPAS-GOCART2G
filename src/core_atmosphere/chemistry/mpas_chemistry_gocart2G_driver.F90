@@ -110,7 +110,6 @@
  call mpas_pool_get_config(domain%configs,'config_gocart2G_toRRTMG'  ,to_RRTMG )
  call mpas_pool_get_config(domain%configs,'config_gocart2G_toTHOM'   ,to_THOM  )
 
-
  block => domain % blocklist
  do while(associated(block))
 
@@ -455,7 +454,6 @@
        call NI2G_diagnostics(mesh,NI2G,NI2G_diags,NI2G_aops,its,ite,jts,jte,kts,kte)
     endif
 
-
     !--- SS2G:
     if(do_SS2G) then
        SS2G_params%cdt = mpas_gocart2G%dt
@@ -564,8 +562,7 @@
 
 
     !--- fills global chemistry arrays with local chemistry arrays:
-    call mpas_gocart2G%gocart2G_toMPAS(state,time_lev)
-
+    call mpas_gocart2G%gocart2G_toMPAS(gocart2G_backgrounds,state,time_lev)
 
     !--- feedbacks to physics:
     if(to_MYNN .or. to_THOM) then

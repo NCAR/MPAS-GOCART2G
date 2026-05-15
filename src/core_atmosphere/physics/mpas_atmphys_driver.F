@@ -358,7 +358,7 @@
 !$OMP PARALLEL DO
        do thread=1,nThreads
           call driver_convection(itimestep,block%configs,mesh,sfc_input,diag_physics,tend_physics, &
-                                 cellSolveThreadStart(thread),cellSolveThreadEnd(thread))
+                                 block%structs,cellSolveThreadStart(thread),cellSolveThreadEnd(thread))
        end do
 !$OMP END PARALLEL DO
        call deallocate_convection(block%configs)

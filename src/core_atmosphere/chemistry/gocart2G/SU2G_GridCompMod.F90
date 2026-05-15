@@ -27,7 +27,8 @@
 
  use SU2G_instance,only: nbins,particle_radius_microns,particle_density,fscav,molecular_weight, &
                          fnum,rhFlag,pressure_lid_in_hPa,sigma,SO4_anthropogenic_fraction,      &
-                         aircraft_fuel_emission_factor,aviation_vertical_layers
+                         aircraft_fuel_emission_factor,aviation_vertical_layers,                &
+                         scav_data_gas_params => scav_data_gas
  use SU2G_StateSpecs,only: SU2G_State
 
 
@@ -141,7 +142,7 @@
  self%diurnal_bb = .false.
 
  call self%load_from_config(nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
-                            rhFlag,pressure_lid_in_hPa)
+                            rhFlag,pressure_lid_in_hPa, scav_data_gas_in = scav_data_gas_params)
 
  if(.not.allocated(self%sigma)) allocate(self%sigma(self%nbins))
  self%eAirCraftFuel = aircraft_fuel_emission_factor
