@@ -55,6 +55,10 @@
     real(kind=RKIND),dimension(:,:,:),pointer:: chemblten => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: chemcuten => null()
 
+    logical,dimension(:),pointer :: is_aerosol => null()
+
+    ! Gas scavenging metadata (6 params for each species index nchem)
+    real(kind=RKIND),dimension(:,:),pointer :: scav_data_gas => null()
 
     contains
        procedure:: gocart2G_dims       => gocart2G_forMPASphys_dims
@@ -188,6 +192,10 @@
  if(.not.associated(self%chemblten)) allocate(self%chemblten(its:ite,kts:kte,nchem))
  if(.not.associated(self%chemcuten)) allocate(self%chemcuten(its:ite,kts:kte,nchem))
 
+ if(.not.associated(self%is_aerosol)) allocate(self%is_aerosol(nchem))
+
+ if(.not.associated(self%scav_data_gas)) allocate(self%scav_data_gas(6, nchem))
+ self%scav_data_gas(:,:) = 0.0_RKIND ! Initialize to 0.0 (default for aerosols)
 
  call mpas_log_write('--- end subroutine gocart2G_forMPASphys_allocate.')
 
@@ -220,6 +228,7 @@
  if(associated(self%chemblten)) deallocate(self%chemblten)
  if(associated(self%chemcuten)) deallocate(self%chemcuten)
 
+ if(associated(self%is_aerosol)) deallocate(self%is_aerosol)
 
  call mpas_log_write('--- end subroutine gocart2G_forMPASphys_deallocate.')
 
@@ -254,6 +263,7 @@
  if(associated(self%fthom_w)) self%fthom_w(:) = .false.
  if(associated(self%fthom_i)) self%fthom_i(:) = .false.
 
+ if(associated(self%is_aerosol)) self%is_aerosol(:) = .true.
 
  n = 0
 !--- black carbon:
@@ -327,10 +337,15 @@
  self%fnum(n)    = SU2G_params%fnum(2)     ! so2
  self%fscav(n)   = SU2G_params%fscav(2)    ! so2
  self%fthom_w(n) = .false.                 ! so2
+ self%is_aerosol(n) = .false.
+
+ self%scav_data_gas(:,n) = SU2G_params%scav_data_gas(:,2)
+
  n = n+1
  self%fnum(n)    = SU2G_params%fnum(2)     ! volcanic so2
  self%fscav(n)   = SU2G_params%fscav(2)    ! volcanic so2
  self%fthom_w(n) = .false.                 ! volcanic so2
+ self%is_aerosol(n) = .false.
  n = n+1
  self%fnum(n)    = SU2G_params%fnum(3)     ! so4
  self%fscav(n)   = SU2G_params%fscav(3)    ! so4
@@ -367,20 +382,31 @@
  self%fnum(n)    = SU2G_params%fnum(1)     ! dms
  self%fscav(n)   = SU2G_params%fscav(1)    ! dms
  self%fthom_w(n) = .false.                 ! dms
+ self%is_aerosol(n) = .false.
+
+ self%scav_data_gas(:,n) = SU2G_params%scav_data_gas(:,1)
+
  n = n+1
  self%fnum(n)    = SU2G_params%fnum(4)     ! msa
  self%fscav(n)   = SU2G_params%fscav(4)    ! msa
  self%fthom_w(n) = .false.                 ! msa
+ self%is_aerosol(n) = .false.
+
+ self%scav_data_gas(:,n) = SU2G_params%scav_data_gas(:,4)
 
 !--- ammonia and ammonium ion needed for nitrate:
  n = n+1
  self%fnum(n)    = NI2G_params%fnum(1)     ! nh3
  self%fscav(n)   = NI2G_params%fscav(1)    ! nh3
  self%fthom_w(n) = .false.                 ! nh3
+ self%is_aerosol(n) = .false.
+
+ self%scav_data_gas(:,n) = NI2G_params%scav_data_gas(:,1)
+
  n = n+1
  self%fnum(n)    = NI2G_params%fnum(2)     ! nh4a
  self%fscav(n)   = NI2G_params%fscav(2)    ! nh4a
- self%fthom_w(n) = .false.                 ! nh4a
+ self%fthom_w(n) = .true.                  ! nh4a
 
 !--- secondary organic aerosols: here, we set the conversion factor between mass mixing ratios and
 !    wet scavenging coefficients to that of organic carbon:

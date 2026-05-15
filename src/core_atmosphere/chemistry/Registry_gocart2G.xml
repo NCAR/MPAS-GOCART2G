@@ -33,6 +33,11 @@
            description="time interval between updates to H2O2, OH, NO3, and PTROP climatological fields"
            possible_values="`DD_HH:MM:SS' or `none'"/>
 
+      <nml_option name="config_gocart2G_hno3_tau" type="real" default_value="86400.0"
+           units="seconds"
+           description="Relaxation timescale for nudging persistent_hno3 back to background_hno3"
+           possible_values="Any positive real value (86400.0 = 24 hours)"/>
+
       <nml_option name="config_gocart2G_anthemis_interval" type="character" default_value="01_00:00:00"
            units="-"
            description="time interval between updates to anthropogenic surface emissions"
@@ -297,6 +302,9 @@
 
       <var name="background_hno3" type="real" dimensions="nVertLevels nCells Time" units="mole mole^{-1}"
            description="Background of nitric acid (HNO3)"/>
+
+      <var name="persistent_hno3" type="real" dimensions="nVertLevels nCells Time" units="mole mole^{-1}"
+           description="Persistent HNO3 nudged towards background_HNO3 using config_gocart2G_hno3_tau"/>
 
  </var_struct>
 

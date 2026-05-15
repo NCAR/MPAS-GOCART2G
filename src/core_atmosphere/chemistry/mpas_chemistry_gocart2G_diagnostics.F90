@@ -48,8 +48,7 @@
  integer,pointer:: npAOPs,nvAOPs
 
  real(kind=RKIND),dimension(:),pointer:: bcEMAN,bcEMBB,bcEMBF,bcEMBG,bcEM_phobic,bcEM_philic
- real(kind=RKIND),dimension(:),pointer:: bcHYPHIL,bcSD_phobic,bcSD_philic,bcDP_phobic,bcDp_philic, &
-                                         bcWT_phobic,bcWT_philic,bcSV_phobic,bcSV_philic
+ real(kind=RKIND),dimension(:),pointer:: bcHYPHIL,bcSD_phobic,bcSD_philic,bcDP_phobic,bcDp_philic
  real(kind=RKIND),dimension(:),pointer:: bcSMASS,bcCMASS,bcFLUXU,bcFLUXV
  real(kind=RKIND),dimension(:,:),pointer:: bcMASS,bcCONC
 
@@ -74,10 +73,6 @@
  call mpas_pool_get_array(CA2G_bc_diags,'bcSD_philic',bcSD_philic)
  call mpas_pool_get_array(CA2G_bc_diags,'bcDP_phobic',bcDP_phobic)
  call mpas_pool_get_array(CA2G_bc_diags,'bcDP_philic',bcDP_philic)
- call mpas_pool_get_array(CA2G_bc_diags,'bcWT_phobic',bcWT_phobic)
- call mpas_pool_get_array(CA2G_bc_diags,'bcWT_philic',bcWT_philic)
- call mpas_pool_get_array(CA2G_bc_diags,'bcSV_phobic',bcSV_phobic)
- call mpas_pool_get_array(CA2G_bc_diags,'bcSV_philic',bcSV_philic)
 
  call mpas_pool_get_array(CA2G_bc_diags,'bcSMASS',bcSMASS)
  call mpas_pool_get_array(CA2G_bc_diags,'bcCMASS',bcCMASS)
@@ -103,10 +98,6 @@
        bcSD_philic(i) = CA2G_bc%bcsd(i,j,2)
        bcDP_phobic(i) = CA2G_bc%bcdp(i,j,1)
        bcDP_philic(i) = CA2G_bc%bcdp(i,j,2)
-       bcWT_phobic(i) = CA2G_bc%bcwt(i,j,1)
-       bcWT_philic(i) = CA2G_bc%bcwt(i,j,2)
-       bcSV_phobic(i) = CA2G_bc%bcsv(i,j,1)
-       bcSV_philic(i) = CA2G_bc%bcsv(i,j,2)
 
        bcSMASS(i) = CA2G_bc%bcsmass(i,j)
        bcCMASS(i) = CA2G_bc%bccmass(i,j)
@@ -197,8 +188,7 @@
  integer,pointer:: npAOPs,nvAOPs
 
  real(kind=RKIND),dimension(:),pointer:: brEMAN,brEMBB,brEMBF,brEMBG,brEM_phobic,brEM_philic
- real(kind=RKIND),dimension(:),pointer:: brHYPHIL,brSD_phobic,brSD_philic,brDP_phobic,brDp_philic, &
-                                         brWT_phobic,brWT_philic,brSV_phobic,brSV_philic
+ real(kind=RKIND),dimension(:),pointer:: brHYPHIL,brSD_phobic,brSD_philic,brDP_phobic,brDp_philic
  real(kind=RKIND),dimension(:),pointer:: brSMASS,brCMASS,brFLUXU,brFLUXV
  real(kind=RKIND),dimension(:,:),pointer:: brMASS,brCONC
 
@@ -223,10 +213,6 @@
  call mpas_pool_get_array(CA2G_br_diags,'brSD_philic',brSD_philic)
  call mpas_pool_get_array(CA2G_br_diags,'brDP_phobic',brDP_phobic)
  call mpas_pool_get_array(CA2G_br_diags,'brDP_philic',brDP_philic)
- call mpas_pool_get_array(CA2G_br_diags,'brWT_phobic',brWT_phobic)
- call mpas_pool_get_array(CA2G_br_diags,'brWT_philic',brWT_philic)
- call mpas_pool_get_array(CA2G_br_diags,'brSV_phobic',brSV_phobic)
- call mpas_pool_get_array(CA2G_br_diags,'brSV_philic',brSV_philic)
 
  call mpas_pool_get_array(CA2G_br_diags,'brSMASS',brSMASS)
  call mpas_pool_get_array(CA2G_br_diags,'brCMASS',brCMASS)
@@ -252,10 +238,6 @@
        brSD_philic(i) = CA2G_br%brsd(i,j,2)
        brDP_phobic(i) = CA2G_br%brdp(i,j,1)
        brDP_philic(i) = CA2G_br%brdp(i,j,2)
-       brWT_phobic(i) = CA2G_br%brwt(i,j,1)
-       brWT_philic(i) = CA2G_br%brwt(i,j,2)
-       brSV_phobic(i) = CA2G_br%brsv(i,j,1)
-       brSV_philic(i) = CA2G_br%brsv(i,j,2)
 
        brSMASS(i) = CA2G_br%brsmass(i,j)
        brCMASS(i) = CA2G_br%brcmass(i,j)
@@ -348,8 +330,7 @@
  integer,pointer:: npAOPs,nvAOPs
 
  real(kind=RKIND),dimension(:),pointer:: ocEMAN,ocEMBB,ocEMBF,ocEMBG,ocEM_phobic,ocEM_philic
- real(kind=RKIND),dimension(:),pointer:: ocHYPHIL,ocSD_phobic,ocSD_philic,ocDP_phobic,ocDp_philic, &
-                                         ocWT_phobic,ocWT_philic,ocSV_phobic,ocSV_philic
+ real(kind=RKIND),dimension(:),pointer:: ocHYPHIL,ocSD_phobic,ocSD_philic,ocDP_phobic,ocDp_philic
  real(kind=RKIND),dimension(:),pointer:: ocSMASS,ocCMASS,ocFLUXU,ocFLUXV
  real(kind=RKIND),dimension(:,:),pointer:: ocMASS,ocCONC
 
@@ -374,10 +355,6 @@
  call mpas_pool_get_array(CA2G_oc_diags,'ocSD_philic',ocSD_philic)
  call mpas_pool_get_array(CA2G_oc_diags,'ocDP_phobic',ocDP_phobic)
  call mpas_pool_get_array(CA2G_oc_diags,'ocDP_philic',ocDP_philic)
- call mpas_pool_get_array(CA2G_oc_diags,'ocWT_phobic',ocWT_phobic)
- call mpas_pool_get_array(CA2G_oc_diags,'ocWT_philic',ocWT_philic)
- call mpas_pool_get_array(CA2G_oc_diags,'ocSV_phobic',ocSV_phobic)
- call mpas_pool_get_array(CA2G_oc_diags,'ocSV_philic',ocSV_philic)
 
  call mpas_pool_get_array(CA2G_oc_diags,'ocSMASS',ocSMASS)
  call mpas_pool_get_array(CA2G_oc_diags,'ocCMASS',ocCMASS)
@@ -403,10 +380,6 @@
        ocSD_philic(i) = CA2G_oc%ocsd(i,j,2)
        ocDP_phobic(i) = CA2G_oc%ocdp(i,j,1)
        ocDP_philic(i) = CA2G_oc%ocdp(i,j,2)
-       ocWT_phobic(i) = CA2G_oc%ocwt(i,j,1)
-       ocWT_philic(i) = CA2G_oc%ocwt(i,j,2)
-       ocSV_phobic(i) = CA2G_oc%ocsv(i,j,1)
-       ocSV_philic(i) = CA2G_oc%ocsv(i,j,2)
 
        ocSMASS(i) = CA2G_oc%ocsmass(i,j)
        ocCMASS(i) = CA2G_oc%occmass(i,j)
@@ -501,8 +474,6 @@
  real(kind=RKIND),dimension(:),pointer:: duEM_bin1,duEM_bin2,duEM_bin3,duEM_bin4,duEM_bin5
  real(kind=RKIND),dimension(:),pointer:: duSD_bin1,duSD_bin2,duSD_bin3,duSD_bin4,duSD_bin5
  real(kind=RKIND),dimension(:),pointer:: duDP_bin1,duDP_bin2,duDP_bin3,duDP_bin4,duDP_bin5
- real(kind=RKIND),dimension(:),pointer:: duWT_bin1,duWT_bin2,duWT_bin3,duWT_bin4,duWT_bin5
- real(kind=RKIND),dimension(:),pointer:: duSV_bin1,duSV_bin2,duSV_bin3,duSV_bin4,duSV_bin5
  real(kind=RKIND),dimension(:),pointer:: duSMASS,duSMASS25,duCMASS,duCMASS25,duFLUXU,duFLUXV
  real(kind=RKIND),dimension(:,:),pointer:: duMASS,duMASS25,duCONC
 
@@ -534,18 +505,6 @@
  call mpas_pool_get_array(DU2G_diags,'duDP_bin4',duDP_bin4)
  call mpas_pool_get_array(DU2G_diags,'duDP_bin5',duDP_bin5)
 
- call mpas_pool_get_array(DU2G_diags,'duWT_bin1',duWT_bin1)
- call mpas_pool_get_array(DU2G_diags,'duWT_bin2',duWT_bin2)
- call mpas_pool_get_array(DU2G_diags,'duWT_bin3',duWT_bin3)
- call mpas_pool_get_array(DU2G_diags,'duWT_bin4',duWT_bin4)
- call mpas_pool_get_array(DU2G_diags,'duWT_bin5',duWT_bin5)
-
- call mpas_pool_get_array(DU2G_diags,'duSV_bin1',duSV_bin1)
- call mpas_pool_get_array(DU2G_diags,'duSV_bin2',duSV_bin2)
- call mpas_pool_get_array(DU2G_diags,'duSV_bin3',duSV_bin3)
- call mpas_pool_get_array(DU2G_diags,'duSV_bin4',duSV_bin4)
- call mpas_pool_get_array(DU2G_diags,'duSV_bin5',duSV_bin5)
-
  call mpas_pool_get_array(DU2G_diags,'duSMASS'  ,duSMASS  )
  call mpas_pool_get_array(DU2G_diags,'duCMASS'  ,duCMASS  )
  call mpas_pool_get_array(DU2G_diags,'duSMASS25',duSMASS25)
@@ -574,16 +533,6 @@
        duDP_bin3(i) = DU2G%dudp(i,j,3)
        duDP_bin4(i) = DU2G%dudp(i,j,4)
        duDP_bin5(i) = DU2G%dudp(i,j,5)
-       duWT_bin1(i) = DU2G%duwt(i,j,1)
-       duWT_bin2(i) = DU2G%duwt(i,j,2)
-       duWT_bin3(i) = DU2G%duwt(i,j,3)
-       duWT_bin4(i) = DU2G%duwt(i,j,4)
-       duWT_bin5(i) = DU2G%duwt(i,j,5)
-       duSV_bin1(i) = DU2G%dusv(i,j,1)
-       duSV_bin2(i) = DU2G%dusv(i,j,2)
-       duSV_bin3(i) = DU2G%dusv(i,j,3)
-       duSV_bin4(i) = DU2G%dusv(i,j,4)
-       duSV_bin5(i) = DU2G%dusv(i,j,5)
 
        duSMASS(i)   = DU2G%dusmass(i,j)
        duCMASS(i)   = DU2G%ducmass(i,j)
@@ -687,11 +636,9 @@
  real(kind=RKIND),dimension(:),pointer:: niHT_bin1,niHT_bin2,niHT_bin3
  real(kind=RKIND),dimension(:),pointer:: niSD_bin1,niSD_bin2,niSD_bin3
  real(kind=RKIND),dimension(:),pointer:: niDP_bin1,niDP_bin2,niDP_bin3
- real(kind=RKIND),dimension(:),pointer:: niWT_bin1,niWT_bin2,niWT_bin3
- real(kind=RKIND),dimension(:),pointer:: niSV_bin1,niSV_bin2,niSV_bin3
 
- real(kind=RKIND),dimension(:),pointer:: nh3EM,nh3DP,nh3WT,nh3SV
- real(kind=RKIND),dimension(:),pointer:: nh4SD,nh4DP,nh4WT,nh4SV
+ real(kind=RKIND),dimension(:),pointer:: nh3EM,nh3DP
+ real(kind=RKIND),dimension(:),pointer:: nh4SD,nh4DP
  real(kind=RKIND),dimension(:),pointer:: niPNO3AQ,niPNH4AQ,niPNH3AQ
  real(kind=RKIND),dimension(:),pointer:: hno3SMASS,nh3SMASS,nh4SMASS,niSMASS,niSMASS25
  real(kind=RKIND),dimension(:),pointer:: hno3CMASS,nh3CMASS,nh4CMASS,niCMASS,niCMASS25
@@ -719,21 +666,11 @@
  call mpas_pool_get_array(NI2G_diags,'niDP_bin1',niDP_bin1)
  call mpas_pool_get_array(NI2G_diags,'niDP_bin2',niDP_bin2)
  call mpas_pool_get_array(NI2G_diags,'niDP_bin3',niDP_bin3)
- call mpas_pool_get_array(NI2G_diags,'niWT_bin1',niWT_bin1)
- call mpas_pool_get_array(NI2G_diags,'niWT_bin2',niWT_bin2)
- call mpas_pool_get_array(NI2G_diags,'niWT_bin3',niWT_bin3)
- call mpas_pool_get_array(NI2G_diags,'niSV_bin1',niSV_bin1)
- call mpas_pool_get_array(NI2G_diags,'niSV_bin2',niSV_bin2)
- call mpas_pool_get_array(NI2G_diags,'niSV_bin3',niSV_bin3)
 
  call mpas_pool_get_array(NI2G_diags,'nh3EM',nh3EM)
  call mpas_pool_get_array(NI2G_diags,'nh3DP',nh3DP)
- call mpas_pool_get_array(NI2G_diags,'nh3WT',nh3WT)
- call mpas_pool_get_array(NI2G_diags,'nh3SV',nh3SV)
  call mpas_pool_get_array(NI2G_diags,'nh4SD',nh4SD)
  call mpas_pool_get_array(NI2G_diags,'nh4DP',nh4DP)
- call mpas_pool_get_array(NI2G_diags,'nh4WT',nh4WT)
- call mpas_pool_get_array(NI2G_diags,'nh4SV',nh4SV)
 
  call mpas_pool_get_array(NI2G_diags,'hno3SMASS',hno3SMASS)
  call mpas_pool_get_array(NI2G_diags,'hno3CMASS',hno3CMASS)
@@ -774,21 +711,11 @@
        niDP_bin1(i) = NI2G%nidp(i,j,1)
        niDP_bin2(i) = NI2G%nidp(i,j,2)
        niDP_bin3(i) = NI2G%nidp(i,j,3)
-       niWT_bin1(i) = NI2G%niwt(i,j,1)
-       niWT_bin2(i) = NI2G%niwt(i,j,2)
-       niWT_bin3(i) = NI2G%niwt(i,j,3)
-       niSV_bin1(i) = NI2G%nisv(i,j,1)
-       niSV_bin2(i) = NI2G%nisv(i,j,2)
-       niSV_bin3(i) = NI2G%nisv(i,j,3)
 
        nh3EM(i) = NI2G%nh3em(i,j)
        nh3DP(i) = NI2G%nh3dp(i,j)
-       nh3WT(i) = NI2G%nh3wt(i,j)
-       nh3SV(i) = NI2G%nh3sv(i,j)
        nh4SD(i) = NI2G%nh4sd(i,j)
        nh4DP(i) = NI2G%nh4dp(i,j)
-       nh4WT(i) = NI2G%nh4wt(i,j)
-       nh4SV(i) = NI2G%nh4sv(i,j)
 
        hno3SMASS(i) = NI2G%hno3smass(i,j)
        hno3CMASS(i) = NI2G%hno3cmass(i,j)
@@ -907,8 +834,6 @@
  real(kind=RKIND),dimension(:),pointer:: ssEM_bin1,ssEM_bin2,ssEM_bin3,ssEM_bin4,ssEM_bin5
  real(kind=RKIND),dimension(:),pointer:: ssSD_bin1,ssSD_bin2,ssSD_bin3,ssSD_bin4,ssSD_bin5
  real(kind=RKIND),dimension(:),pointer:: ssDP_bin1,ssDP_bin2,ssDP_bin3,ssDP_bin4,ssDP_bin5
- real(kind=RKIND),dimension(:),pointer:: ssWT_bin1,ssWT_bin2,ssWT_bin3,ssWT_bin4,ssWT_bin5
- real(kind=RKIND),dimension(:),pointer:: ssSV_bin1,ssSV_bin2,ssSV_bin3,ssSV_bin4,ssSV_bin5
  real(kind=RKIND),dimension(:),pointer:: ssSMASS,ssSMASS25,ssCMASS,ssCMASS25,ssFLUXU,ssFLUXV
  real(kind=RKIND),dimension(:,:),pointer:: ssMASS,ssMASS25,ssCONC
 
@@ -940,18 +865,6 @@
  call mpas_pool_get_array(SS2G_diags,'ssDP_bin4',ssDP_bin4)
  call mpas_pool_get_array(SS2G_diags,'ssDP_bin5',ssDP_bin5)
 
- call mpas_pool_get_array(SS2G_diags,'ssWT_bin1',ssWT_bin1)
- call mpas_pool_get_array(SS2G_diags,'ssWT_bin2',ssWT_bin2)
- call mpas_pool_get_array(SS2G_diags,'ssWT_bin3',ssWT_bin3)
- call mpas_pool_get_array(SS2G_diags,'ssWT_bin4',ssWT_bin4)
- call mpas_pool_get_array(SS2G_diags,'ssWT_bin5',ssWT_bin5)
-
- call mpas_pool_get_array(SS2G_diags,'ssSV_bin1',ssSV_bin1)
- call mpas_pool_get_array(SS2G_diags,'ssSV_bin2',ssSV_bin2)
- call mpas_pool_get_array(SS2G_diags,'ssSV_bin3',ssSV_bin3)
- call mpas_pool_get_array(SS2G_diags,'ssSV_bin4',ssSV_bin4)
- call mpas_pool_get_array(SS2G_diags,'ssSV_bin5',ssSV_bin5)
-
  call mpas_pool_get_array(SS2G_diags,'ssSMASS'  ,ssSMASS  )
  call mpas_pool_get_array(SS2G_diags,'ssCMASS'  ,ssCMASS  )
  call mpas_pool_get_array(SS2G_diags,'ssSMASS25',ssSMASS25)
@@ -980,16 +893,6 @@
        ssDP_bin3(i) = SS2G%ssdp(i,j,3)
        ssDP_bin4(i) = SS2G%ssdp(i,j,4)
        ssDP_bin5(i) = SS2G%ssdp(i,j,5)
-       ssWT_bin1(i) = SS2G%sswt(i,j,1)
-       ssWT_bin2(i) = SS2G%sswt(i,j,2)
-       ssWT_bin3(i) = SS2G%sswt(i,j,3)
-       ssWT_bin4(i) = SS2G%sswt(i,j,4)
-       ssWT_bin5(i) = SS2G%sswt(i,j,5)
-       ssSV_bin1(i) = SS2G%sssv(i,j,1)
-       ssSV_bin2(i) = SS2G%sssv(i,j,2)
-       ssSV_bin3(i) = SS2G%sssv(i,j,3)
-       ssSV_bin4(i) = SS2G%sssv(i,j,4)
-       ssSV_bin5(i) = SS2G%sssv(i,j,5)
 
        ssSMASS(i)   = SS2G%sssmass(i,j)
        ssCMASS(i)   = SS2G%sscmass(i,j)
@@ -1093,8 +996,7 @@
  real(kind=RKIND),dimension(:),pointer:: suEM_dms,suEM_so2,suEM_so4,suEM_msa
  real(kind=RKIND),dimension(:),pointer:: suSD_dms,suSD_so2,suSD_so4,suSD_msa
  real(kind=RKIND),dimension(:),pointer:: suDP_dms,suDP_so2,suDP_so4,suDP_msa
- real(kind=RKIND),dimension(:),pointer:: suWT_dms,suWT_so2,suWT_so4,suWT_msa
- real(kind=RKIND),dimension(:),pointer:: suSV_dms,suSV_so2,suSV_so4,suSV_msa
+
  real(kind=RKIND),dimension(:),pointer:: SO4eman,SO2eman,SO2embb,SO2emvn,SO2emve
  real(kind=RKIND),dimension(:),pointer:: suPSO2,suPMSA,suPSO4,suPSO4g,suPSO4aq,suPSO4wt
  real(kind=RKIND),dimension(:),pointer:: SO2smass,SO2cmass,SO4smass,SO4cmass,DMSsmass,DMScmass,MSAsmass,MSAcmass
@@ -1123,16 +1025,6 @@
  call mpas_pool_get_array(SU2G_diags,'suDP_so2',suDP_so2)
  call mpas_pool_get_array(SU2G_diags,'suDP_so4',suDP_so4)
  call mpas_pool_get_array(SU2G_diags,'suDP_msa',suDP_msa)
-
- call mpas_pool_get_array(SU2G_diags,'suWT_dms',suWT_dms)
- call mpas_pool_get_array(SU2G_diags,'suWT_so2',suWT_so2)
- call mpas_pool_get_array(SU2G_diags,'suWT_so4',suWT_so4)
- call mpas_pool_get_array(SU2G_diags,'suWT_msa',suWT_msa)
-
- call mpas_pool_get_array(SU2G_diags,'suSV_dms',suSV_dms)
- call mpas_pool_get_array(SU2G_diags,'suSV_so2',suSV_so2)
- call mpas_pool_get_array(SU2G_diags,'suSV_so4',suSV_so4)
- call mpas_pool_get_array(SU2G_diags,'suSV_msa',suSV_msa)
 
  call mpas_pool_get_array(SU2G_diags,'suPSO2'  ,suPSO2  )
  call mpas_pool_get_array(SU2G_diags,'suPMSA'  ,suPMSA  )
@@ -1182,16 +1074,6 @@
        suDP_so2(i) = SU2G%sudp(i,j,2)
        suDP_so4(i) = SU2G%sudp(i,j,3)
        suDP_msa(i) = SU2G%sudp(i,j,4)
-
-       suWT_dms(i) = SU2G%suwt(i,j,1)
-       suWT_so2(i) = SU2G%suwt(i,j,2)
-       suWT_so4(i) = SU2G%suwt(i,j,3)
-       suWT_msa(i) = SU2G%suwt(i,j,4)
-
-       suSV_dms(i) = SU2G%susv(i,j,1)
-       suSV_so2(i) = SU2G%susv(i,j,2)
-       suSV_so4(i) = SU2G%susv(i,j,3)
-       suSV_msa(i) = SU2G%susv(i,j,4)
 
        suPSO2(i)   = SU2G%supso2(i,j)
        suPMSA(i)   = SU2G%supmsa(i,j)

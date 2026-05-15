@@ -595,6 +595,7 @@
 			<var name="background_oh"/>
 			<var name="background_no3"/>
 			<var name="background_hno3"/>
+			<var name="persistent_hno3"/>
 			<var name="background_ptrop"/>
 			<var_struct name="anth_emissions"/>
 			<var_struct name="biob_emissions"/>
@@ -887,6 +888,7 @@
 			<var name="background_oh"/>
 			<var name="background_no3"/>
 			<var name="background_hno3"/>
+			<var name="persistent_hno3"/>
 			<var name="background_ptrop"/>
 			<var_array name="bl_chemistry"/>
 			<var_array name="bl_drydepv"/>
@@ -2703,7 +2705,6 @@
                 <var name="qi_cu" type="real" dimensions="nVertLevels nCells Time" units="kg kg^{-1}"
                      description="in-cloud cloud ice mixing ratio in Grell-Freitas cloud model"
                      packages="cu_grell_freitas_in"/>
-
 
                 <!-- ... KAIN_FRITSCH AND GRELL-FREITAS: -->
                 <var name="cubot" type="real" dimensions="nCells Time" units="unitless"

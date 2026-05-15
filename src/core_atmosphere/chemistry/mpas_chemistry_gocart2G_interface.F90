@@ -456,7 +456,7 @@
  real(kind=RKIND),dimension(:),pointer:: background_ptrop
  real(kind=RKIND),dimension(:),pointer:: background_dms
  real(kind=RKIND),dimension(:,:),pointer:: background_h2o2,background_oh,background_no3
- real(kind=RKIND),dimension(:,:),pointer:: background_hno3
+ real(kind=RKIND),dimension(:,:),pointer:: persistent_hno3
 
  real(kind=RKIND),pointer:: dt
  real(kind=RKIND),dimension(:),pointer:: hfx,hpbl,raincv,rainncv,u10,v10,ust,z0h
@@ -572,7 +572,7 @@
  call mpas_pool_get_array(gocart2G_backgrounds,'background_h2o2',background_h2o2)
  call mpas_pool_get_array(gocart2G_backgrounds,'background_oh'  ,background_oh  )
  call mpas_pool_get_array(gocart2G_backgrounds,'background_no3' ,background_no3 )
- call mpas_pool_get_array(gocart2G_backgrounds,'background_hno3',background_hno3)
+ call mpas_pool_get_array(gocart2G_backgrounds,'persistent_hno3',persistent_hno3)
 
  do j = jts,jte
     do i = its,ite
@@ -584,7 +584,7 @@
           self%backg_h2o2(i,j,kk) = background_h2o2(k,i)
           self%backg_oh(i,j,kk)   = background_oh(k,i)
           self%backg_no3(i,j,kk)  = background_no3(k,i)
-          self%backg_hno3(i,j,kk) = background_hno3(k,i)
+          self%backg_hno3(i,j,kk) = persistent_hno3(k,i)
        enddo
     enddo
  enddo
@@ -831,7 +831,7 @@
  end subroutine mpas_chemistry_gocart2G_fromMPAS
 
 !==================================================================================================================
- subroutine mpas_chemistry_gocart2G_toMPAS(self,state,time_lev)
+ subroutine mpas_chemistry_gocart2G_toMPAS(self,gocart2G_backgrounds,state,time_lev)
 !==================================================================================================================
 
 !--- input arguments:
@@ -840,6 +840,7 @@
 
 !--- inout arguments:
  class(atm_gocart2G),intent(inout):: self
+ type(mpas_pool_type),intent(inout):: gocart2G_backgrounds
 
 !--- local variables and pointers:
  integer,pointer:: index_qbcphobic,index_qbcphilic
@@ -855,6 +856,8 @@
  integer:: i,its,ite,j,jts,jte,k,kk,kts,kte
 
  real(kind=RKIND),dimension(:,:,:),pointer:: scalars
+
+ real(kind=RKIND),dimension(:,:),pointer:: persistent_hno3
 
 !------------------------------------------------------------------------------------------------------------------
  call mpas_log_write(' ')
@@ -901,6 +904,9 @@
  call mpas_pool_get_dimension(state,'index_qsoapbg'  ,index_qsoapbg  )
 
  call mpas_pool_get_array(state,'scalars',scalars,time_lev)
+
+ call mpas_pool_get_array(gocart2G_backgrounds,'persistent_hno3',persistent_hno3)
+
  do k = kts,kte
     kk = kte+1-k
     do j = jts,jte
@@ -935,10 +941,10 @@
           scalars(index_qsoapa,kk,i)    = self%qsoap_a(i,j,k)
           scalars(index_qsoapbb,kk,i)   = self%qsoap_bb(i,j,k)
           scalars(index_qsoapbg,kk,i)   = self%qsoap_bg(i,j,k)
+          persistent_hno3(kk,i)         = self%backg_hno3(i,j,k)
        enddo
     enddo
  enddo
-
 
  call mpas_log_write('--- end subroutine mpas_chemistry_gocart2G_toMPAS.')
 

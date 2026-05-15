@@ -62,6 +62,15 @@
 !sigma of lognormal number distribution:
  real(kind=RKIND),dimension(nbins),parameter:: sigma = (/-1.,-1.,2.03,-1./)
 
+! Add to the parameter section
+! nDMS=1, nSO2=2, nSO4=3, nMSA=4
+ real(kind=RKIND), dimension(6, nbins), parameter :: scav_data_gas = reshape((/ &
+    0.54,   3460.0, 0.0,    0.0,    0.0,     0.0,    & ! Bin 1: DMS
+    1.36,   3100.0, 0.013,  1960.0, 6.6e-08, 1500.0, & ! Bin 2: SO2
+    0.0,    0.0,    0.0,    0.0,    0.0,     0.0,    & ! Bin 3: SO4 (Aerosol)
+    1.0e11, 0.0,    0.0,    0.0,    0.0,     0.0     & ! Bin 4: MSA
+ /), (/6, nbins/))
+
 !==================================================================================================================
  end module SU2G_instance
 !==================================================================================================================

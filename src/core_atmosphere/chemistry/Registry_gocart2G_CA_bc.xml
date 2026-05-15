@@ -37,16 +37,16 @@
      <var name="bcDP_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Dry deposition of hydrophilic black carbon aerosols"/>
 
-     <var name="bcWT_phobic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="bcWT_phobic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of hydrophobic black carbon aerosols"/>
 
-     <var name="bcWT_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="bcWT_philic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Wet deposition of hydrophilic black carbon aerosols"/>
 
-     <var name="bcSV_phobic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="bcSV_phobic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of hydrophobic black carbon aerosols"/>
 
-     <var name="bcSV_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
+     <var name="bcSV_philic" type="real" dimensions="nCells Time" units="kg m^{-2}"
                description="Convective scavenging of hydrophilic black carbon aerosols"/>
 
      <var name="bcSMASS" type="real" dimensions="nCells Time" units="kg m^{-3}"

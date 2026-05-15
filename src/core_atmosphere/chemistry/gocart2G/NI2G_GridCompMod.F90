@@ -20,9 +20,9 @@
  use SS2G_GridCompMod
 
  use NI2G_instance,only: nbins,particle_radius_microns,particle_density,fscav,molecular_weight, &
-                         fnum,rhFlag,pressure_lid_in_hPa
+                         fnum,rhFlag,pressure_lid_in_hPa,  &
+                         scav_data_gas_params => scav_data_gas
  use NI2G_StateSpecs,only: NI2G_State
-
 
  implicit none
  private
@@ -126,7 +126,7 @@
 
 !--- initialization of variables in GA_Environment:
  call self%load_from_config(nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
-                            rhFlag,pressure_lid_in_hPa)
+                            rhFlag,pressure_lid_in_hPa, scav_data_gas_in = scav_data_gas_params)
 
 
 !--- initialization of all other variables in NI2_GridComp:

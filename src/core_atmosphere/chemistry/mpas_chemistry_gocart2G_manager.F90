@@ -8,7 +8,8 @@
 !==================================================================================================================
  module mpas_chemistry_gocart2G_manager
  use mpas_kind_types
- use mpas_pool_routines,only: mpas_pool_get_config,mpas_pool_get_subpool
+ use mpas_pool_routines,only: mpas_pool_get_config,mpas_pool_get_subpool, &
+                              mpas_pool_get_dimension,mpas_pool_get_array
  use mpas_timekeeping
  use mpas_stream_manager
 
@@ -25,6 +26,7 @@
  character(len=*),parameter:: gocart2GanthAlarmID = 'gocart2G_anth'
  character(len=*),parameter:: gocart2GbiobAlarmID = 'gocart2G_biob'
  character(len=*),parameter:: gocart2GbiogAlarmID = 'gocart2G_biog'
+ character(len=*),parameter:: gocart2Ghno3AlarmID = 'gocart2G_hno3'
 
  integer,public:: iyear
  integer,public:: imonth
@@ -65,6 +67,14 @@
  character(len=StrKIND),pointer:: biob_interval
  character(len=StrKIND),pointer:: biog_interval
 
+ real(kind=RKIND), pointer:: hno3_tau      ! relaxation time
+ real(kind=RKIND) :: nudging_factor        ! Local scalar
+ real(kind=RKIND), pointer:: dt            ! Model time step
+ real(kind=RKIND),dimension(:,:),pointer:: persistent_hno3
+ real(kind=RKIND),dimension(:,:),pointer:: background_hno3
+ integer,pointer:: nCells, nVertLevels 
+ integer :: i, k
+
  integer:: ierr
 
 !------------------------------------------------------------------------------------------------------------------
@@ -96,6 +106,30 @@
        call mpas_log_write('--- time to update gocart2G climatology:')
        call update_gocart2G_climatology(timeStamp,mesh,gocart2G_met,gocart2G_backgrounds)
     endif
+
+! Apply HNO3 nudging
+    call mpas_pool_get_config(block%configs, 'config_gocart2G_hno3_tau', hno3_tau)
+    call mpas_pool_get_config(block%configs, 'config_dt', dt)
+    call mpas_pool_get_dimension(mesh,'nCells'     ,nCells     )
+    call mpas_pool_get_dimension(mesh,'nVertLevels' ,nVertLevels )
+    call mpas_pool_get_array(gocart2G_backgrounds,'background_hno3',background_hno3)
+    call mpas_pool_get_array(gocart2G_backgrounds,'persistent_hno3',persistent_hno3)
+
+
+! Perform the Nudging Calculation
+    ! We use 'hno3_tau' directly; Fortran automatically dereferences the pointer
+    if (hno3_tau > 0.0_RKIND) then
+        
+        nudging_factor = dt / hno3_tau
+
+        do i = 1, nCells
+            do k = 1, nVertLevels
+                ! Equation: C_new = C_old + (C_bg - C_old) * (dt/tau)
+                  persistent_hno3(k,i) = persistent_hno3(k,i) + &
+                    (background_hno3(k,i) - persistent_hno3(k,i)) * nudging_factor
+            end do
+        end do
+    endif    
 
     block => block%next
 
@@ -217,7 +251,6 @@
  if(ierr /= 0) &
  call mpas_log_write('--- gocart2G_timetracker_init: error creating gocart2GAlarmID', &
                           messageType=MPAS_LOG_CRIT)
-
 
 !--- initializes alarm to update anthropogenic, biomass burning, and biogenic surface emissions:
  call mpas_pool_get_config(configs,'config_gocart2G_anthemis_interval',anth_interval)

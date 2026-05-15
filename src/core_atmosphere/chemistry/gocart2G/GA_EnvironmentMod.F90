@@ -40,6 +40,9 @@
     real(kind=RKIND),dimension(:),allocatable:: wavelengths_profile ! wavelengths for profile aop [nm]
     real(kind=RKIND),dimension(:),allocatable:: wavelengths_vertint ! wavelengths for vertically integrated aop [nm]
 
+! Gas scavenging metadata (6 params per bin) ---
+    real(kind=RKIND),dimension(:,:),allocatable:: scav_data_gas
+
     contains
        procedure:: load_from_config
  end type GA_Environment
@@ -56,7 +59,7 @@
 
 !=================================================================================================================
  subroutine load_from_config(self,nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
-                             rhFlag,pressure_lid_in_hPa)
+                             rhFlag,pressure_lid_in_hPa,scav_data_gas_in)
 !=================================================================================================================
 
 !--- input arguments:
@@ -70,6 +73,8 @@
  real(kind=RKIND),intent(in),dimension(nbins):: fscav
  real(kind=RKIND),intent(in),dimension(nbins):: fnum
 
+!--- NEW: Optional input for Gas Scavenging ---
+    real(kind=RKIND), intent(in), dimension(6, nbins), optional :: scav_data_gas_in
 
 !--- inout arguments:
  class(GA_Environment),intent(inout) :: self
@@ -106,6 +111,16 @@
  self%rhFlag = rhFlag
  self%plid   = pressure_lid_in_hPa
 
+!--- NEW: Initialize Gas Scavenging Data ---
+    if(.not.allocated(self%scav_data_gas)) allocate(self%scav_data_gas(6, nbins))
+
+    if (present(scav_data_gas_in)) then
+        ! For NH3, SO2, etc., load the MOZCART constants
+        self%scav_data_gas = scav_data_gas_in
+    else
+        ! For Dust, Sea Salt, etc., initialize to zero
+        self%scav_data_gas = 0.0_RKIND
+    end if
 
 !--- DO NOT KNOW YET HOW TO INITIALIZE THOSE ARRAYS:
  n_wavelengths_profile = size(wavelengths_for_profile_aop_in_nm)
