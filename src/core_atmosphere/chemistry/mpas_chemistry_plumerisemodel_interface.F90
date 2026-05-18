@@ -13,7 +13,7 @@
  module mpas_chemistry_plumerisemodel_interface
  use mpas_log
  use mpas_kind_types
- use mpas_derived_types,only: mpas_pool_type, mpas_log_err
+ use mpas_derived_types,only: mpas_pool_type
  use mpas_pool_routines,only: mpas_pool_get_array,mpas_pool_get_config,mpas_pool_get_dimension
  use mpas_atmphys_constants,only: R_d, R_v
   
@@ -37,7 +37,7 @@
         real(kind=RKIND),dimension(:,:,:),pointer:: v                   => null()
         real(kind=RKIND),dimension(:,:,:),pointer:: rho_moist           => null()
         real(kind=RKIND),dimension(:,:,:),pointer:: pres                => null()
-        real(kind=RKIND),dimension(:,:,:),pointer:: qv                  => null()
+        real(kind=RKIND),dimension(:,:,:),pointer:: qvapor              => null()
         
         integer        , dimension(:,:)  ,pointer:: ivgtyp              => null()
 
@@ -89,7 +89,7 @@ contains
             integer,pointer:: nCellsSolve,nVertLevels
 
 
-        call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_dims:')
+        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_dims:')
 
     !*******************************************************************************
     !Get MPAS mesh dimensions
@@ -106,7 +106,7 @@ contains
         call mpas_log_write('     KTS = $i   KTE = $i',intArgs=(/self%kts,self%kte/))
 
  
- call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_dims.')
+ !call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_dims.')
 
  end subroutine mpas_chemistry_plumerisemodel_dims
 !==================================================================================================================
@@ -128,8 +128,8 @@ contains
             integer:: its,ite,jts,jte,kts,kte,ktep1
   
 
-        call mpas_log_write(' ')
-        call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_allocate:')
+      
+        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_allocate:')
 
     !*******************************************************************************
     !Allocate local arrays needed to run PRM
@@ -146,16 +146,16 @@ contains
         
         !--- allocate atmospheric fields:
 
-            if(.not.associated(self%z)    )             allocate( self%z                   (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%zmid) )             allocate( self%zmid                (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%dz)   )             allocate( self%dz                  (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%th)   )             allocate( self%th                  (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%t)    )             allocate( self%t                   (   its:ite, jts:jte, kts:kte)  )        
-            if(.not.associated(self%u)    )             allocate( self%u                   (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%v)    )             allocate( self%v                   (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%rho_moist))         allocate( self%rho_moist           (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%pres))              allocate( self%pres                (   its:ite, jts:jte, kts:kte)  )
-            if(.not.associated(self%qv))                allocate( self%qv                  (   its:ite, jts:jte, kts:kte)  )
+            if(.not.associated(self%z)    )             allocate( self%z                   (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%zmid) )             allocate( self%zmid                (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%dz)   )             allocate( self%dz                  (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%th)   )             allocate( self%th                  (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%t)    )             allocate( self%t                   (   its:ite, kts:kte, jts:jte)  )        
+            if(.not.associated(self%u)    )             allocate( self%u                   (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%v)    )             allocate( self%v                   (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%rho_moist))         allocate( self%rho_moist           (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%pres))              allocate( self%pres                (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%qvapor))            allocate( self%qvapor              (   its:ite, kts:kte, jts:jte)  )
             if(.not.associated(self%ivgtyp))            allocate( self%ivgtyp              (   its:ite, jts:jte)           )
 
 
@@ -176,7 +176,7 @@ contains
 
             
 
- call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_allocate.')
+ !call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_allocate.')
  end subroutine mpas_chemistry_plumerisemodel_allocate
 !==================================================================================================================
 
@@ -215,8 +215,8 @@ contains
             integer:: i,its,ite,j,jts,jte,k,kts,kte
 
 
-        call mpas_log_write(' ')
-        call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_fromMPAS:')
+        
+        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_fromMPAS:')
 
 
     !*******************************************************************************
@@ -243,40 +243,44 @@ contains
             call mpas_pool_get_array(diag,      'exner'                 ,  exner                )
             call mpas_pool_get_array(diag,      'uReconstructZonal'     ,  u                    )
             call mpas_pool_get_array(diag,      'uReconstructMeridional',  v                    )
-            call mpas_pool_get_array(diag,      'rho'                   ,  rho                  )
+            call mpas_pool_get_array(diag,      'rho'                   ,  rho                  ) 
             call mpas_pool_get_array(diag,      'pressure_p'            ,  pressure_p           )
             call mpas_pool_get_array(diag,      'pressure_base'         ,  pressure_b           )
             call mpas_pool_get_array(sfc_input, 'ivgtyp'                ,  ivgtyp               )
 
-            call mpas_pool_get_array(state      ,'scalars'              ,  scalars,     time_lev)
             call mpas_pool_get_dimension(state  ,'index_qv'             ,  index_qv             )
+            call mpas_pool_get_array(state      ,'scalars'              ,  scalars,     time_lev)
             qv => scalars(index_qv,:,:)
             
 
             
-            do k = kts,kte
-                do j = jts,jte
-                    do i = its,ite
+            do j = jts, jte
+                do k = kts, kte
+                    do i = its, ite
 
                         !--- arrays located at w points:
-                        self%z(i,j,k)          = zgrid(k,i)
+                        self%z(i,k,j)           = zgrid(k,i)
 
                         !--- arrays located at theta points:
-                        self%qv(i,j,k)          = max(0._RKIND,qv(k,i))
-                        self%zmid(i,j,k)        = 0.5*(zgrid(k+1,i)+zgrid(k,i))
-                        self%dz(i,j,k)          = zgrid(k+1,i)-zgrid(k,i)
-                        self%th(i,j,k)          = theta_m(k,i) / (1._RKIND + R_v/R_d * self%qv(i,j,k))
-                        self%t(i,j,k)           = self%th(i,j,k)*exner(k,i)
-                        self%u(i,j,k)           = u(k,i)
-                        self%v(i,j,k)           = v(k,i)
-                        self%rho_moist(i,j,k)   = rho(k,i)*(1._RKIND+self%qv(i,j,k))
-                        self%pres(i,j,k)        = pressure_p(k,i) + pressure_b(k,i)
+                        self%qvapor(i,k,j)      = max(0._RKIND,qv(k,i))
+
+                        self%zmid(i,k,j)        = 0.5 * (zgrid(k+1,i) + zgrid(k,i))
+                        self%dz(i,k,j)          = zgrid(k+1,i) - zgrid(k,i) 
+
+                        self%th(i,k,j)          = theta_m(k,i) / (1._RKIND + R_v/R_d * max(0._RKIND,qv(k,i))) 
+                        self%t(i,k,j)           = self%th(i,k,j)*exner(k,i)
+
+                        self%u(i,k,j)           = u(k,i) 
+                        self%v(i,k,j)           = v(k,i) 
+
+                        self%rho_moist(i,k,j)   = rho(k,i)*(1._RKIND + max(0._RKIND,qv(k,i)) )
+                        self%pres(i,k,j)        = pressure_p(k,i) + pressure_b(k,i)
 
                     enddo
                 enddo
             enddo
 
-
+            
             do j = jts,jte
                 do i = its,ite
                     self%ivgtyp(i,j)   = ivgtyp(i)
@@ -321,7 +325,7 @@ contains
                 enddo
             
 
- call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_fromMPAS.')
+ !call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_fromMPAS.')
  end subroutine mpas_chemistry_plumerisemodel_fromMPAS
 !==================================================================================================================
 
@@ -348,7 +352,7 @@ contains
        
 
 
-        call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_toMPAS:')
+        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_toMPAS:')
 
 
         !*******************************************************************************
@@ -356,7 +360,7 @@ contains
         !*******************************************************************************
         
 
-        !--- 
+        !--- Get Dimensions
             its = self%its
             ite = self%ite
             jts = self%jts
@@ -364,9 +368,9 @@ contains
             kts = self%kts
             kte = self%kte
 
-        !--- 
+        !--- Fills global PRM arrays
            
-           call mpas_pool_get_array(diag_prm,'k1_injH_bot', k1_injH_bot )
+            call mpas_pool_get_array(diag_prm,'k1_injH_bot', k1_injH_bot )
             call mpas_pool_get_array(diag_prm,'k2_injH_top', k2_injH_top )
             call mpas_pool_get_array(diag_prm,'injH_bot', injH_bot)
             call mpas_pool_get_array(diag_prm,'injH_top', injH_top )
@@ -382,7 +386,7 @@ contains
   
 
 
- call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_toMPAS.')
+ !call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_toMPAS.')
  end subroutine mpas_chemistry_plumerisemodel_toMPAS
 !==================================================================================================================
 
@@ -399,8 +403,7 @@ contains
         !--- inout arguments:
             class(atm_prm),intent(inout):: self
 
-        call mpas_log_write(' ')
-        call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_deallocate:')
+        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_deallocate:')
 
 
     !*******************************************************************************
@@ -419,7 +422,7 @@ contains
             if(associated(self%v)    )              deallocate( self%v                  )
             if(associated(self%rho_moist))          deallocate( self%rho_moist          )
             if(associated(self%pres))               deallocate( self%pres               )
-            if(associated(self%qv))                 deallocate( self%qv                 )
+            if(associated(self%qvapor))             deallocate( self%qvapor             )
             if(associated(self%ivgtyp))             deallocate( self%ivgtyp             )
 
 
@@ -439,8 +442,10 @@ contains
             if(associated(self%frp_std_corr))       deallocate( self%frp_std_corr       ) 
 
 
- call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_deallocate.')
+  !call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_deallocate.')
  end subroutine mpas_chemistry_plumerisemodel_deallocate
+!==================================================================================================================
+
 !==================================================================================================================
  end module mpas_chemistry_plumerisemodel_interface
 !==================================================================================================================
