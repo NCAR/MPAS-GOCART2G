@@ -176,9 +176,34 @@
                      
                 !--- Run the PRM to calculate smoke injection height
 
-                    call plumerisemodel_run( )
+                    call plumerisemodel_run( &
+                            
+                            !variables from MPAS-A:
+                            its = its, ite = ite, jts = jts, jte = jte, kts = kts, kte = kte                      , &
+                            temp_in             = mpas_prm%t                                                      , &
+                            pres_in             = mpas_prm%pres                                                   , &
+                            u_in                = mpas_prm%u                                                      , &
+                            v_in                = mpas_prm%v                                                      , &
+                            hml_in              = mpas_prm%zmid                                                   , &
+                            qv_in               = mpas_prm%qvapor                                                 , &
+                            z_in                = mpas_prm%z                                                      , &  
+                            
+                            !variables to PRM (input)
+                            iveg_ag_in          = mpas_prm%iveg_ag                                                , & 
+                            firesize_avg_corr   = mpas_prm%firesize_avg_corr                                      , &
+                            firesize_std_corr   = mpas_prm%firesize_std_corr                                      , &
+                            frp_avg_corr        = mpas_prm%frp_avg_corr                                           , &
+                            frp_std_corr        = mpas_prm%frp_std_corr                                           , &
+                            
+                            !variables from PRM (output)
+                            k1_zbot_out         = mpas_prm%k1_zbot                                                , &
+                            k2_ztop_out         = mpas_prm%k2_ztop                                                , & 
+                            zbot_out            = mpas_prm%zbot                                                   , &
+                            ztop_out            = mpas_prm%ztop                                                     & 
+                    )
 
-                    
+
+                                       
             !-------------------------------------------------------------------------------
             !Fills global chemistry arrays with local chemistry arrays:
             !-------------------------------------------------------------------------------
@@ -190,7 +215,7 @@
             ! Deallocate local arrays: (need to move to after gocart2 run)
             !-------------------------------------------------------------------------------
 
-                call mpas_prm%prm_deallocate()
+                call mpas_prm%prm_deallocate() !Need to move to after applying injH to gocart2g emissions
 
         block => block % next
         end do
