@@ -209,10 +209,15 @@ function(mpas_core_target)
     get_git_version(git_version)
     string(TOUPPER ${ARG_CORE} ARG_CORE_UPPER)
     set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DCORE_${ARG_CORE_UPPER} -DMPAS_NAMELIST_SUFFIX=${ARG_CORE} -DMPAS_EXE_NAME=mpas_${ARG_CORE} -DMPAS_GIT_VERSION=${git_version} -DMPAS_BUILD_TARGET=${CMAKE_Fortran_COMPILER_ID})
-    message("CPP_EXTRA_FLAGS: ${CPP_EXTRA_FLAGS}")
+    #message("CPP_EXTRA_FLAGS: ${CPP_EXTRA_FLAGS}")
     if (${DO_PHYSICS})
         set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_PHYSICS)
     endif()
+    if (${DO_GOCART2G})
+        set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_GOCART2G)
+    endif()
+    message("CPP_EXTRA_FLAGS: ${CPP_EXTRA_FLAGS}")
+
 
 add_custom_command(OUTPUT Registry_processed.xml
             COMMAND ${CPP_EXECUTABLE} -E -P ${CPP_EXTRA_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/Registry.xml > Registry_processed.xml
