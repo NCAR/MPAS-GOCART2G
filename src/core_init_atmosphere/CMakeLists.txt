@@ -48,6 +48,20 @@ add_library(core_init_atmosphere ${init_atm_core_srcs})
 if (${DO_PHYSICS})
     target_compile_definitions(core_init_atmosphere PRIVATE DO_PHYSICS)
 endif ()
+
+if (${DO_GOCART2G})
+    set(init_atm_core_chem_srcs
+        mpas_chemistry_init_gocart2G_climatology.F90
+        mpas_chemistry_init_gocart2G_interp.F90
+        mpas_chemistry_init_gocart2G_static.F90
+        mpas_chemistry_init_gocart2G_emissions.F90
+        mpas_chemistry_init_gocart2G_lbcs.F90
+    )
+    list(TRANSFORM init_atm_core_chem_srcs PREPEND ../core_atmosphere/chemistry/)
+    target_sources(core_init_atmosphere PRIVATE ${init_atm_core_chem_srcs})
+    target_compile_definitions(core_init_atmosphere PRIVATE DO_GOCART2G)
+endif ()
+
 if (MPAS_DOUBLE_PRECISION)
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-real-8 -fdefault-double-8")
 else ()
