@@ -38,6 +38,7 @@ set(ATMOSPHERE_CORE_PHYSICS_SOURCES
     mpas_atmphys_packages.F
     mpas_atmphys_todynamics.F
     mpas_atmphys_vars.F
+    mpas_atmphys_vars_noahmp.F
     mpas_atmphys_driver_lsm_noahmp.F
     mpas_atmphys_lsm_noahmpfinalize.F
     mpas_atmphys_lsm_noahmpinit.F
@@ -48,6 +49,8 @@ list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_SOURCES PREPEND physics/)
 # physics/physics_wrf/
 set(ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES
     libmassv.F
+    cu_ntiedtke_ctrans_post.F
+    cu_ntiedtke_ctrans_pre.F
     cu_ntiedtke_post.F
     cu_ntiedtke_pre.F
     module_bep_bem_helper.F
@@ -96,26 +99,22 @@ set(ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES
 
 list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES PREPEND physics/physics_wrf/)
 
-
-set(ATMOSPHERE_CORE_PHYSICS_MMM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/physics/physics_mmm)
-
-if(NOT EXISTS ${ATMOSPHERE_CORE_PHYSICS_MMM_DIR})
-    set(PHYSICS_MMM_REPO_URL "https://github.com/NCAR/MMM-physics")
-    execute_process(COMMAND git clone ${PHYSICS_MMM_REPO_URL} ${ATMOSPHERE_CORE_PHYSICS_MMM_DIR}
-                    RESULT_VARIABLE GIT_CLONE_RESULT
-                    OUTPUT_VARIABLE GIT_CLONE_OUTPUT
-                    ERROR_VARIABLE GIT_CLONE_ERROR)
-    if(NOT GIT_CLONE_RESULT EQUAL 0)
-        message(FATAL_ERROR "Git clone failed with error: ${GIT_CLONE_ERROR}")
-    endif()
-
+set(CHECKOUT ${CMAKE_CURRENT_SOURCE_DIR}/tools/manage_externals/checkout_externals )
+execute_process( COMMAND
+                 ${CHECKOUT} --externals ${CMAKE_CURRENT_SOURCE_DIR}/Externals.cfg
+                 WORKING_DIRECTORY       ${CMAKE_CURRENT_SOURCE_DIR}/physics/
+                 RESULT_VARIABLE         MANAGE_EXTERNALS_STATUS
+                )
+if ( ${MANAGE_EXTERNALS_STATUS} AND NOT ${MANAGE_EXTERNALS_STATUS} EQUAL 0 )
+    message( FATAL_ERROR "Failed to checkout external repos via manage_externals" )
 else()
-    message(STATUS "Directory ${DIR_TO_CHECK} already exists, skipping clone")
+    message( STATUS "Finished checking out external repos via manage_externals" )
 endif()
 
 set(ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES
     bl_gwdo.F90
     bl_ysu.F90
+    cu_ntiedtke_ctrans.F90
     cu_ntiedtke.F90
     module_libmassv.F90
     mp_wsm6.F90
@@ -129,22 +128,6 @@ set(ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES
 )
 
 list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES PREPEND physics/physics_mmm/)
-
-set(ATMOSPHERE_CORE_PHYSICS_NOAA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/physics/physics_noaa/UGWP)
-
-if(NOT EXISTS ${ATMOSPHERE_CORE_PHYSICS_NOAA_DIR})
-    set(PHYSICS_NOAA_REPO_URL "https://github.com/NOAA-GSL/UGWP.git")
-    execute_process(COMMAND git clone ${PHYSICS_NOAA_REPO_URL} ${ATMOSPHERE_CORE_PHYSICS_NOAA_DIR}
-                    RESULT_VARIABLE GIT_CLONE_RESULT
-                    OUTPUT_VARIABLE GIT_CLONE_OUTPUT
-                    ERROR_VARIABLE GIT_CLONE_ERROR)
-    if(NOT GIT_CLONE_RESULT EQUAL 0)
-        message(FATAL_ERROR "Git clone failed with error: ${GIT_CLONE_ERROR}")
-    endif()
-
-else()
-    message(STATUS "Directory ${DIR_TO_CHECK} already exists, skipping clone")
-endif()
 
 set(ATMOSPHERE_CORE_PHYSICS_NOAA_SOURCES
     bl_ugwp.F
@@ -365,6 +348,61 @@ set(ATMOSPHERE_CORE_INCLUDES
     setup_immutable_streams.inc
     structs_and_variables.inc)
 
+set(ATMOSPHERE_CORE_CHEM_SOURCES
+    mpas_chemistry_gocart2G_date_time.F90
+    mpas_chemistry_gocart2G_diagnostics.F90
+    mpas_chemistry_gocart2G_driver.F90
+    mpas_chemistry_gocart2G_emissions.F90
+    mpas_chemistry_gocart2G_emissions_init.F90
+    mpas_chemistry_gocart2G_emissions_update.F90
+    mpas_chemistry_gocart2G_finalize.F90
+    mpas_chemistry_gocart2G_forMPASphysics.F90
+    mpas_chemistry_gocart2G_forMPASrestart.F90
+    mpas_chemistry_gocart2G_init.F90
+    mpas_chemistry_gocart2G_interface.F90
+    mpas_chemistry_gocart2G_manager.F90
+    mpas_chemistry_gocart2G_rrtmg.F90
+    mpas_chemistry_gocart2G_update.F90
+    mpas_chemistry_gocart2G_vars.F90
+)
+list(TRANSFORM ATMOSPHERE_CORE_CHEM_SOURCES PREPEND chemistry/)
+
+set(ATMOSPHERE_CORE_CHEM_GOCART2G_SOURCES
+    CA2G_bc_GridCompMod.F90
+    CA2G_bc_StateSpecs.F90
+    CA2G_bc_instance.F90
+    CA2G_br_GridCompMod.F90
+    CA2G_br_StateSpecs.F90
+    CA2G_br_instance.F90
+    CA2G_oc_GridCompMod.F90
+    CA2G_oc_StateSpecs.F90
+    CA2G_oc_instance.F90
+    DU2G_GridCompMod.F90
+    DU2G_StateSpecs.F90
+    DU2G_instance.F90
+    GA_EnvironmentMod.F90
+    GOCART2G_AeroGeneric.F90
+    GOCART2G_GridCompMod.F90
+    GOCART2G_MieMod_smiol.F90
+    GOCART2G_Process.F90
+    GOCART2G_StateSpecs.F90
+    GOCART2G_instance.F90
+    MAPL.F90
+    MieQuery.H
+    NI2G_GridCompMod.F90
+    NI2G_StateSpecs.F90
+    NI2G_instance.F90
+    SOA2G_GridCompMod.F90
+    SOA2G_StateSpecs.F90
+    SS2G_GridCompMod.F90
+    SS2G_StateSpecs.F90
+    SS2G_instance.F90
+    SU2G_GridCompMod.F90
+    SU2G_StateSpecs.F90
+    SU2G_instance.F90
+)
+list(TRANSFORM ATMOSPHERE_CORE_CHEM_GOCART2G_SOURCES PREPEND chemistry/gocart2G/)
+
 
 add_library(core_atmosphere ${ATMOSPHERE_CORE_SOURCES}
             ${ATMOSPHERE_CORE_PHYSICS_NOAMP_UTILITY_SOURCES}
@@ -374,6 +412,8 @@ add_library(core_atmosphere ${ATMOSPHERE_CORE_SOURCES}
             ${ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES}
             ${ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES}
             ${ATMOSPHERE_CORE_PHYSICS_NOAA_SOURCES}
+            ${ATMOSPHERE_CORE_CHEM_SOURCES}
+            ${ATMOSPHERE_CORE_CHEM_GOCART2G_SOURCES}
             ${ATMOSPHERE_CORE_DIAGNOSTIC_SOURCES}
             ${ATMOSPHERE_CORE_DYNAMICS_SOURCES})
 
@@ -383,6 +423,9 @@ set(CORE_ATMOSPHERE_COMPILE_DEFINITIONS
 )
 if (${DO_PHYSICS})
     list(APPEND CORE_ATMOSPHERE_COMPILE_DEFINITIONS DO_PHYSICS)
+endif ()
+if (${DO_GOCART2G})
+    list(APPEND CORE_ATMOSPHERE_COMPILE_DEFINITIONS DO_GOCART2G)
 endif ()
 target_compile_definitions(core_atmosphere PRIVATE ${CORE_ATMOSPHERE_COMPILE_DEFINITIONS})
 set_MPAS_DEBUG_flag(core_atmosphere)
