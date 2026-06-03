@@ -13,7 +13,8 @@
 
 #define __RHINTERP2__(table,rh,ah,bin,sh) reshape((table(rh,bin) * (1-ah) + table(rh+1,bin)*ah), shape(sh))
 #define __RHINTERP3__(table,rh,ah,ch,bin,sh) reshape((table(rh,ch,bin) * (1-ah) + table(rh+1,ch,bin)*ah), shape(sh))
-#define __RHINTERP5__(table,rh,ah,ch,bin,k,l,sh) reshape((table(rh,ch,bin,k,l) * (1-ah) + table(rh+1,ch,bin,k,l)*ah), shape(sh))
+
+! #define __RHINTERP5__(table,rh,ah,ch,bin,k,l,sh) reshape((table(rh,ch,bin,k,l) * (1-ah) + table(rh+1,ch,bin,k,l)*ah), shape(sh))
 
 #define SUBCHANNEL_ IDENTITY_(QueryByChannel)IDENTITY_(SUFFIX_)
 #define SUBWAVELENGTH_ IDENTITY_(QueryByWavelength)IDENTITY_(SUFFIX_)
@@ -26,7 +27,9 @@
 !
 !INTERFACE:
 !
- subroutine SUBCHANNEL_ (this,channel,bin,q_mass,rh,tau,ssa,gasym,bext,bsca,bbck,reff,pmom,p11,p22, &
+ subroutine SUBCHANNEL_ (this,channel,bin,q_mass,rh,tau,ssa,gasym,bext,bsca,bbck,reff, &
+!                         pmom, &
+                          p11,p22, &
                          gf,rhop,rhod,vol,area,refr,refi,rc)
 !==================================================================================================================
 
@@ -46,7 +49,7 @@
      real(kind=RKIND),optional,intent(out):: bsca (__DIMS__)    ! mass scattering efficiency [m2 (kg dry mass)-1]
      real(kind=RKIND),optional,intent(out):: bbck (__DIMS__)    ! mass backscatter efficiency [m2 (kg dry mass)-1]
      real(kind=RKIND),optional,intent(out):: reff (__DIMS__)    ! effective radius (micron)
-     real(kind=RKIND),optional,intent(out):: pmom (__DIMS__,:,:)! moments of phase function 
+!     real(kind=RKIND),optional,intent(out):: pmom (__DIMS__,:,:)! moments of phase function
      real(kind=RKIND),optional,intent(out):: p11  (__DIMS__)    ! P11 phase function at backscatter
      real(kind=RKIND),optional,intent(out):: p22  (__DIMS__)    ! P22 phase function at backscatter
      real(kind=RKIND),optional,intent(out):: gf   (__DIMS__)    ! Growth factor (ratio of wet to dry radius)
@@ -146,13 +149,13 @@
        refi =  __RHINTERP3__(this%refi, irh, arh, channel, bin, refi)
      endif
 
-     if (present(pmom)) then
-       do j = 1, size(this%pmom,5)
-          do i = 1, size(this%pmom,4)
-             pmom(__DIMS__,i,j)  =  __RHINTERP5__(this%pmom, irh, arh, channel, bin, i, j, rh)
-          enddo
-       enddo
-     endif
+!     if (present(pmom)) then
+!       do j = 1, size(this%pmom,5)
+!          do i = 1, size(this%pmom,4)
+!             pmom(__DIMS__,i,j)  =  __RHINTERP5__(this%pmom, irh, arh, channel, bin, i, j, rh)
+!          enddo
+!       enddo
+!     endif
 
      if(present(tau  )) tau   = bext_ * q_mass
      if(present(ssa  )) ssa   = bsca_/bext_
@@ -169,7 +172,9 @@
 !
 !INTERFACE:
 !
- subroutine SUBWAVELENGTH_ (this,wavelength,bin,q_mass,rh,tau,ssa,gasym,bext,bsca,bbck,reff,pmom,p11,p22,gf, &
+ subroutine SUBWAVELENGTH_ (this,wavelength,bin,q_mass,rh,tau,ssa,gasym,bext,bsca,bbck,reff, &
+!                           pmom, &
+                            p11,p22,gf, &
                             rhop,rhod,vol,area,refr,refi,rc)
 !==================================================================================================================
 
@@ -189,7 +194,7 @@
      real(kind=RKIND),optional,intent(out) :: bsca (__DIMS__)    ! mass scattering efficiency [m2 (kg dry mass)-1]
      real(kind=RKIND),optional,intent(out) :: bbck (__DIMS__)    ! mass backscatter efficiency [m2 (kg dry mass)-1]
      real(kind=RKIND),optional,intent(out) :: reff (__DIMS__)    ! effective radius (micron)
-     real(kind=RKIND),optional,intent(out) :: pmom (__DIMS__,:,:)! moments of phase function
+!     real(kind=RKIND),optional,intent(out) :: pmom (__DIMS__,:,:)! moments of phase function
      real(kind=RKIND),optional,intent(out) :: p11  (__DIMS__)    ! P11 phase function at backscatter
      real(kind=RKIND),optional,intent(out) :: p22  (__DIMS__)    ! P22 phase function at backscatter
      real(kind=RKIND),optional,intent(out) :: gf   (__DIMS__)    ! Growth factor (ratio of wet to dry radius)
@@ -230,7 +235,9 @@
        if (rc /=0) return
     endif
 
-    call this%Query(channel,bin,q_mass,rh,tau,ssa,gasym,bext,bsca,bbck,reff,pmom,p11,p22, &
+    call this%Query(channel,bin,q_mass,rh,tau,ssa,gasym,bext,bsca,bbck,reff, &
+!                    pmom, &
+                    p11,p22, &
                     gf,rhop,rhod,vol,area,refr,refi,rc)
 
  end subroutine SUBWAVELENGTH_
@@ -241,7 +248,7 @@
 #undef SUBCHANNEL_
 #undef __RHINTERP2__
 #undef __RHINTERP3__
-#undef __RHINTERP5__
+! #undef __RHINTERP5__
 #undef __DIMS__
 #undef SUFFIX_
 #undef IDENTITY_

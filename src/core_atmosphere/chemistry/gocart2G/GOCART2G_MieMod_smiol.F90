@@ -38,7 +38,7 @@
     !--- pointers available in netCDF files with the "wavelength" option:
     real(kind=RKIND),dimension(:),pointer        :: wavelengths => null() ! (c) wavelengths [m]
     real(kind=RKIND),dimension(:,:,:,:),pointer  :: pback  => null() ! (r,c,b,m,p) backscatter phase function
-    real(kind=RKIND),dimension(:,:,:,:,:),pointer:: pmom   => null() ! (r,c,b,m,p) moments of phase function
+    ! real(kind=RKIND),dimension(:,:,:,:,:),pointer:: pmom   => null() ! (r,c,b,m,p) moments of phase function
 
     !--- pointers (and derived pointers) that are sometimes available in netCDF with the "wavelength" option:
     real(kind=RKIND),dimension(:,:),pointer      :: gf     => null() ! (r,b) hygroscopic growth factor
@@ -113,17 +113,23 @@
  real(kind=R4KIND),dimension(:,:),pointer      :: rEff,rMass,gf,rhop
  real(kind=R4KIND),dimension(:,:,:),pointer    :: qsca,qext,bsca,bext,g,bbck,refreal,refimag
  real(kind=R4KIND),dimension(:,:,:,:),pointer  :: pback
- real(kind=R4KIND),dimension(:,:,:,:,:),pointer:: pmom
+ ! real(kind=R4KIND),dimension(:,:,:,:,:),pointer:: pmom
 
 !--- intermediate allocatable arrays used to interpolate the netCDF variables to the prescribed wavelengths:
  real(kind=RKIND),dimension(:),allocatable        :: lambda_r,input_r
  real(kind=RKIND),dimension(:,:,:),allocatable    :: bext_r,bsca_r,bbck_r,g_r,refreal_r,refimag_r
  real(kind=RKIND),dimension(:,:,:,:),allocatable  :: pback_r
- real(kind=RKIND),dimension(:,:,:,:,:),allocatable:: pmom_r
+ ! real(kind=RKIND),dimension(:,:,:,:,:),allocatable:: pmom_r
 
 !------------------------------------------------------------------------------------------------------------------
 !call mpas_log_write(' ')
  call mpas_log_write('--- enter function GOCART2G_MieCreate:  '//MieFile)
+
+ nullify(rh, lambda, radius, rLow, rUp)
+ nullify(rEff, rMass, gf, rhop)
+ nullify(qsca, qext, bsca, bext, g, bbck, refreal, refimag)
+ nullify(pback)
+ ! nullify(pmom)
 
 
 !
@@ -247,8 +253,8 @@
  if(present(wavelengths)) then
     nullify(decomp)
     call read_real_4d(aop_file,decomp,'pback',pback)
-    nullify(decomp)
-    call read_real_5d(aop_file,decomp,'pmom',pmom)
+    ! nullify(decomp)
+    ! call read_real_5d(aop_file,decomp,'pmom',pmom)
 
     !growth factor:
     nullify(decomp)
@@ -317,7 +323,7 @@
     if(.not.associated(self%area) ) allocate(self%area(self%nrh,self%nbin)         )
 
     if(.not.associated(self%pback)) allocate(self%pback(self%nrh,self%nch,self%nbin,self%nPol)         )
-    if(.not.associated(self%pmom) ) allocate(self%pmom(self%nrh,self%nch,self%nbin,self%nMom,self%nPol))
+    ! if(.not.associated(self%pmom) ) allocate(self%pmom(self%nrh,self%nch,self%nbin,self%nMom,self%nPol))
  endif
 
 
@@ -332,7 +338,7 @@
  if(.not.allocated(refimag_r) ) allocate(refimag_r(int(lambda_size),self%nrh,self%nbin))
  if(present(wavelengths)) then
     if(.not.allocated(pback_r)) allocate(pback_r(int(lambda_size),self%nrh,self%nbin,self%nPol)         )
-    if(.not.allocated(pmom_r) ) allocate(pmom_r(int(lambda_size),self%nrh,self%nbin,self%nMom,self%nPol))
+    ! if(.not.allocated(pmom_r) ) allocate(pmom_r(int(lambda_size),self%nrh,self%nbin,self%nMom,self%nPol))
  endif
 
 
@@ -363,9 +369,20 @@
  g_r       = real(g,kind=RKIND)
  refreal_r = real(refreal,kind=RKIND)
  refimag_r = real(refimag,kind=RKIND)
+
+ if (associated(bext))    then; deallocate(bext);    nullify(bext);    endif
+ if (associated(bsca))    then; deallocate(bsca);    nullify(bsca);    endif
+ if (associated(bbck))    then; deallocate(bbck);    nullify(bbck);    endif
+ if (associated(g))       then; deallocate(g);       nullify(g);       endif
+ if (associated(refreal)) then; deallocate(refreal); nullify(refreal); endif
+ if (associated(refimag)) then; deallocate(refimag); nullify(refimag); endif
+
  if(present(wavelengths)) then
     pback_r = real(pback,kind=RKIND)
-    pmom_r  = real(pmom,kind=RKIND)
+    ! pmom_r  = real(pmom,kind=RKIND)
+
+    if (associated(pback)) then; deallocate(pback); nullify(pback); endif
+    ! if (associated(pmom))  then; deallocate(pmom);  nullify(pmom);  endif
  endif
 
 
@@ -397,15 +414,15 @@
                 call polint(lambda_r,input_r,int(lambda_size),self%wavelengths(n),self%pback(i,n,j,ipol),yerr)
              enddo
 
-             if(nMom > 0) then
-                do imom = 1,self%nMom
-                   do ipol = 1,self%nPol
-                      input_r(:) = pmom_r(:,i,j,imom,ipol)
-                      call polint(lambda_r,input_r,int(lambda_size),self%wavelengths(n), &
-                                  self%pmom(i,n,j,imom,ipol),yerr)
-                   enddo
-                enddo
-             endif
+             ! if(nMom > 0) then
+             !    do imom = 1,self%nMom
+             !       do ipol = 1,self%nPol
+             !          input_r(:) = pmom_r(:,i,j,imom,ipol)
+             !          call polint(lambda_r,input_r,int(lambda_size),self%wavelengths(n), &
+             !                      self%pmom(i,n,j,imom,ipol),yerr)
+             !       enddo
+             !    enddo
+             ! endif
 
           enddo
        enddo
@@ -429,7 +446,7 @@
  if(allocated(refimag_r)) deallocate(refimag_r)
  if(present(wavelengths)) then
     if(allocated(pback_r)  ) deallocate(pback_r  )
-    if(allocated(pmom_r)   ) deallocate(pmom_r   )
+    ! if(allocated(pmom_r)   ) deallocate(pmom_r   )
  endif
 
  if(present(wavelengths)) then
@@ -439,6 +456,18 @@
     self%p11 = 1._RKIND
     self%p22 = 2._RKIND
  endif
+
+ if(associated(rh))     then; deallocate(rh);     nullify(rh);     endif
+ if(associated(lambda)) then; deallocate(lambda); nullify(lambda); endif
+ if(associated(radius)) then; deallocate(radius); nullify(radius); endif
+ if(associated(rLow))   then; deallocate(rLow);   nullify(rLow);   endif
+ if(associated(rUp))    then; deallocate(rUp);    nullify(rUp);    endif
+ if(associated(rEff))   then; deallocate(rEff);   nullify(rEff);   endif
+ if(associated(rMass))  then; deallocate(rMass);  nullify(rMass);  endif
+ if(associated(qsca))   then; deallocate(qsca);   nullify(qsca);   endif
+ if(associated(qext))   then; deallocate(qext);   nullify(qext);   endif
+ if(associated(gf))     then; deallocate(gf);     nullify(gf);     endif
+ if(associated(rhop))   then; deallocate(rhop);   nullify(rhop);   endif
 
 
 !
