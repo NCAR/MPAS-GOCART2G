@@ -433,8 +433,8 @@ mpas_core_target(CORE atmosphere TARGET core_atmosphere INCLUDES ${ATMOSPHERE_CO
 
 #Get physics_wrf tables from MPAS-Data
 include(FetchContent)
-if (${PROJECT_VERSION} VERSION_GREATER_EQUAL 7.0)
-    set(MPAS_DATA_GIT_TAG v${PROJECT_VERSION_MAJOR}.0)
+if (${PROJECT_VERSION} VERSION_GREATER_EQUAL 8.2)
+    set(MPAS_DATA_GIT_TAG v${PROJECT_VERSION_MAJOR}.2)
 else ()
     set(MPAS_DATA_GIT_TAG master)
 endif ()
