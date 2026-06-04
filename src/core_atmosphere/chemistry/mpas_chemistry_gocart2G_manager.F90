@@ -67,13 +67,19 @@
  character(len=StrKIND),pointer:: biob_interval
  character(len=StrKIND),pointer:: biog_interval
 
+ type(mpas_pool_type),pointer:: state
  real(kind=RKIND), pointer:: hno3_tau      ! relaxation time
  real(kind=RKIND) :: nudging_factor        ! Local scalar
+ real(kind=RKIND) :: tno3_model, nitrogen_deficit
+ real(kind=RKIND), parameter :: kg_to_mole_nitrate = 0.46712_RKIND  ! MW_air (28.964) / MW_NO3 (62.004)
  real(kind=RKIND), pointer:: dt            ! Model time step
  real(kind=RKIND),dimension(:,:),pointer:: persistent_hno3
  real(kind=RKIND),dimension(:,:),pointer:: background_hno3
- integer,pointer:: nCells, nVertLevels 
+ real(kind=RKIND),dimension(:,:,:),pointer:: scalars
+ integer,pointer:: index_qni1,index_qni2,index_qni3
+ integer,pointer:: nCells, nVertLevels
  integer :: i, k
+ integer :: time_lev
 
  integer:: ierr
 
@@ -119,17 +125,46 @@
 ! Perform the Nudging Calculation
     ! We use 'hno3_tau' directly; Fortran automatically dereferences the pointer
     if (hno3_tau > 0.0_RKIND) then
-        
+        time_lev = 2 ! Sync with gocart2G_driver
+        call mpas_pool_get_subpool(block%structs, 'state', state)
+        call mpas_pool_get_array(state, 'scalars', scalars, time_lev)
+        call mpas_pool_get_dimension(state,'index_qni1' ,index_qni1)
+        call mpas_pool_get_dimension(state,'index_qni2' ,index_qni2)
+        call mpas_pool_get_dimension(state,'index_qni3' ,index_qni3)
+
         nudging_factor = dt / hno3_tau
 
         do i = 1, nCells
-            do k = 1, nVertLevels
-                ! Equation: C_new = C_old + (C_bg - C_old) * (dt/tau)
-                  persistent_hno3(k,i) = persistent_hno3(k,i) + &
-                    (background_hno3(k,i) - persistent_hno3(k,i)) * nudging_factor
-            end do
+           do k = 1, nVertLevels
+
+            ! 1. Sum components converting the aerosol mass (kg/kg) to molar equivalents (mol/mol)
+            tno3_model = persistent_hno3(k,i) + (scalars(index_qni1,k,i) + &
+                         scalars(index_qni2,k,i) + scalars(index_qni3,k,i)) * kg_to_mole_nitrate
+
+            ! 2. Compute the true atmospheric depletion gap against background molar climatology
+            nitrogen_deficit = background_hno3(k,i) - tno3_model
+
+            ! 3. Conditional mass relaxation boundary
+            if (nitrogen_deficit > 0.0_RKIND) then
+                ! Total nitrogen pool is depleted: nudge gas upward safely
+                persistent_hno3(k,i) = persistent_hno3(k,i) + nitrogen_deficit * nudging_factor
+            else
+                ! MERRA-2 particles + existing gas meet or exceed target envelope: idle the pump
+                persistent_hno3(k,i) = persistent_hno3(k,i) + 0.0_RKIND
+            end if
+
+           end do
         end do
-    endif    
+
+! OLD Nudging
+!        do i = 1, nCells
+!            do k = 1, nVertLevels
+                ! Equation: C_new = C_old + (C_bg - C_old) * (dt/tau)
+!                  persistent_hno3(k,i) = persistent_hno3(k,i) + &
+!                    (background_hno3(k,i) - persistent_hno3(k,i)) * nudging_factor
+!            end do
+!        end do
+    endif
 
     block => block%next
 
