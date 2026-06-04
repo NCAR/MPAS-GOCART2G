@@ -631,6 +631,7 @@
        istep = istep + 1
        enddo
        do j = jts,jte
+          ! Large-scale Gas Scavenging 
           call gs_scavenging_thermo(its, ite, kts, kte, &
                                     mpas_chem_gocart2G%nchem, dt_microp, itimestep, &
                                     th_p(:,:,j), pi_p(:,:,j), rho_p(:,:,j), & 
@@ -1111,8 +1112,8 @@
                                      th_p, pi_p, rho, dz, qc, qi, rainprod, rainncv, &
                                      chem, is_aerosol, scav_data_gas)
 !=================================================================================================================
-! Comprehensive Scavenging Routine
-! 1. Hydrophobic Aerosols: Laakso et al. (2003) empirical washout
+! Comprehensive Scavenging Routine (Grid-Scale Resolved Precipitation)
+! 1. Hydrophobic Aerosols: Harmonized Phase-Dependent Fine Washout (Laakso and UFS-scaled ratio)
 ! 2. Gases: Dynamic T and dz dependent Henry's Law scavenging
 !=================================================================================================================
         implicit none
@@ -1154,13 +1155,20 @@
                 do jn = 1, nchem
 
                     ! ---------------------------------------------------------
-                    ! PHASE A: AEROSOL SCAVENGING
+                    ! PHASE A: AEROSOL SCAVENGING (PHASE-DEPENDENT FINE MODE)
                     ! ---------------------------------------------------------
                     if (is_aerosol(jn)) then
-                        ! Apply Laakso (2003) to Hydrophobic portions: BC(1), OC(3), BrC(5)
+                        ! Apply parameterization to Hydrophobic fine portions: BC(1), OC(3), BrC(5)
                         if (jn == 1 .or. jn == 3 .or. jn == 5) then
                             if (rain_mm_hr > 0.01_RKIND) then
-                                lambda = laakso_a * (rain_mm_hr**laakso_b)
+                                if (t_local >= 268.15_RKIND) then
+                                    ! Liquid rain regime: Baseline Laakso (2003)
+                                    lambda = laakso_a * (rain_mm_hr**laakso_b)
+                                else
+                                    ! Ice/Snow regime: Harmonized UFS phase-scaling ratio for fine particles
+                                    ! (3.4 * 1.0e-4 = 3.4e-4) to match convective impaction scavenging code.
+                                    lambda = 3.4e-4_RKIND * (rain_mm_hr**0.96_RKIND)
+                                end if
                             else
                                 lambda = 0.0_RKIND
                             end if

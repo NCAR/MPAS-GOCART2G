@@ -56,6 +56,7 @@
     real(kind=RKIND),dimension(:,:,:),pointer:: chemcuten => null()
 
     logical,dimension(:),pointer :: is_aerosol => null()
+    logical,dimension(:),pointer :: is_coarse  => null()
 
     ! Gas scavenging metadata (6 params for each species index nchem)
     real(kind=RKIND),dimension(:,:),pointer :: scav_data_gas => null()
@@ -193,6 +194,7 @@
  if(.not.associated(self%chemcuten)) allocate(self%chemcuten(its:ite,kts:kte,nchem))
 
  if(.not.associated(self%is_aerosol)) allocate(self%is_aerosol(nchem))
+ if(.not.associated(self%is_coarse)) allocate(self%is_coarse(nchem))
 
  if(.not.associated(self%scav_data_gas)) allocate(self%scav_data_gas(6, nchem))
  self%scav_data_gas(:,:) = 0.0_RKIND ! Initialize to 0.0 (default for aerosols)
@@ -229,6 +231,7 @@
  if(associated(self%chemcuten)) deallocate(self%chemcuten)
 
  if(associated(self%is_aerosol)) deallocate(self%is_aerosol)
+ if(associated(self%is_coarse)) deallocate(self%is_coarse)
 
  call mpas_log_write('--- end subroutine gocart2G_forMPASphys_deallocate.')
 
@@ -264,6 +267,7 @@
  if(associated(self%fthom_i)) self%fthom_i(:) = .false.
 
  if(associated(self%is_aerosol)) self%is_aerosol(:) = .true.
+ if(associated(self%is_coarse) ) self%is_coarse(:)  = .false.
 
  n = 0
 !--- black carbon:
@@ -305,18 +309,22 @@
  self%fnum(n)    = DU2G_params%fnum(2)     ! dust bin 2
  self%fscav(n)   = DU2G_params%fscav(2)    ! dust bin 2
  self%fthom_w(n) = .true.                  ! dust bin 2
+ self%is_coarse(n) = .true.                ! dust bin 2
  n = n+1
  self%fnum(n)    = DU2G_params%fnum(3)     ! dust bin 3
  self%fscav(n)   = DU2G_params%fscav(3)    ! dust bin 3
  self%fthom_w(n) = .true.                  ! dust bin 3
+ self%is_coarse(n) = .true.                ! dust bin 3
  n = n+1
  self%fnum(n)    = DU2G_params%fnum(4)     ! dust bin 4
  self%fscav(n)   = DU2G_params%fscav(4)    ! dust bin 4
  self%fthom_w(n) = .true.                  ! dust bin 4
+ self%is_coarse(n) = .true.                ! dust bin 4
  n = n+1
  self%fnum(n)    = DU2G_params%fnum(5)     ! dust bin 5
  self%fscav(n)   = DU2G_params%fscav(5)    ! dust bin 5
  self%fthom_i(n) = .true.                  ! dust bin 5
+ self%is_coarse(n) = .true.                ! dust bin 5
 
 !--- nitrate:
  n = n+1
@@ -327,10 +335,12 @@
  self%fnum(n)    = NI2G_params%fnum(4)     ! no3an2
  self%fscav(n)   = NI2G_params%fscav(4)    ! no3an2
  self%fthom_w(n) = .true.                  ! no3an2
+ self%is_coarse(n) = .true.                ! no3an2
  n = n+1
  self%fnum(n)    = NI2G_params%fnum(5)     ! no3an3
  self%fscav(n)   = NI2G_params%fscav(5)    ! no3an3
  self%fthom_w(n) = .true.                  ! no3an3
+ self%is_coarse(n) = .true.                ! no3an3
 
 !--- sulfate:
  n = n+1
@@ -368,14 +378,17 @@
  self%fnum(n)    = SS2G_params%fnum(3)     ! sea salt bin 3
  self%fscav(n)   = SS2G_params%fscav(3)    ! sea salt bin 3
  self%fthom_w(n) = .true.                  ! sea salt bin 3
+ self%is_coarse(n) = .true.                ! sea salt bin 3
  n = n+1
  self%fnum(n)    = SS2G_params%fnum(4)     ! sea salt bin 4
  self%fscav(n)   = SS2G_params%fscav(4)    ! sea salt bin 4
  self%fthom_w(n) = .true.                  ! sea salt bin 4
+ self%is_coarse(n) = .true.                ! sea salt bin 4
  n = n+1
  self%fnum(n)    = SS2G_params%fnum(5)     ! sea salt bin 5
  self%fscav(n)   = SS2G_params%fscav(5)    ! sea salt bin 5
  self%fthom_w(n) = .true.                  ! sea salt bin 5
+ self%is_coarse(n) = .true.                ! sea salt bin 5
 
 !--- dms and msa needed for sulfate:
  n = n+1

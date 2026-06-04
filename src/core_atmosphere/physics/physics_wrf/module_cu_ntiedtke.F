@@ -183,7 +183,7 @@
  type (mpas_pool_type), pointer :: CA2G_bc_diags, CA2G_br_diags, CA2G_oc_diags
  type (mpas_pool_type), pointer :: DU2G_diags, NI2G_diags, SS2G_diags, SU2G_diags 
 
- logical, dimension(:), allocatable:: is_aerosol
+ logical, dimension(:), allocatable:: is_aerosol, is_coarse
  real(kind=kind_phys), dimension(:,:), allocatable:: rate_incloud, rate_washout
  real(kind=kind_phys), dimension(:), pointer :: bcSV_phobic,bcSV_philic 
  real(kind=kind_phys), dimension(:), pointer :: brSV_phobic,brSV_philic
@@ -422,6 +422,7 @@
     if(do_ctrchems) then
        if(.not.allocated(fscav) ) allocate(fscav(nchem))
        if(.not.allocated(is_aerosol)) allocate(is_aerosol(nchem))
+       if(.not.allocated(is_coarse)) allocate(is_coarse(nchem))
        if(.not.allocated(rate_incloud)) allocate(rate_incloud(its:ite,nchem))
        if(.not.allocated(rate_washout)) allocate(rate_washout(its:ite,nchem))
        if(.not.allocated(chem)  ) allocate(chem(its:ite,kts:kte,nchem)  )
@@ -436,6 +437,7 @@
           fscav(ic) = mpas_chem_gocart2G%fscav(ic)
           chem(:,:,ic) = mpas_chem_gocart2G%chem_mr(:,:,ic)
           is_aerosol(ic) = mpas_chem_gocart2G%is_aerosol(ic)
+          is_coarse(ic) = mpas_chem_gocart2G%is_coarse(ic)
        enddo
        call cu_ntiedtke_ctrans_pre_run( &
                its    = its    , ite  = ite  , kts   = kts   , kte    = kte    , &
@@ -482,7 +484,7 @@
        if (do_scavchems) then
           call cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, delt, itimestep, &
                                                 kcbot, pratec_hv, prsi_hv, t_hv, dz_hv, rho_hv, chem, is_aerosol, &
-                                                mpas_chem_gocart2G%scav_data_gas, rate_washout, ptencf)   
+                                                is_coarse, mpas_chem_gocart2G%scav_data_gas, rate_washout, ptencf)
        endif
 
 ! --- Final Transfer to Diagnostic Pointers (Cumulative kg/m2) ---
@@ -551,6 +553,7 @@
        if(allocated(ptenc) ) deallocate(ptenc )
        if(allocated(ptencf)) deallocate(ptencf)
        if(allocated(is_aerosol)) deallocate(is_aerosol)
+       if(allocated(is_coarse)) deallocate(is_coarse)
        if(allocated(rate_incloud)) deallocate(rate_incloud)
        if(allocated(rate_washout)) deallocate(rate_washout)
     else
@@ -642,10 +645,10 @@
 !=================================================================================================================
 subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itimestep, &
                                             kcbot, pratec, prsi, t_hv, dz, rho, chem, is_aerosol, &
-                                            scav_data_gas, rate_washout, ptencf)
+                                            is_coarse, scav_data_gas, rate_washout, ptencf)
 !=================================================================================================================
-! CONVECTIVE BELOW-CLOUD SCAVENGING (V7.1 PRODUCTION)
-! 1. Aerosols: Consistent Laakso et al. (2003) washout for ALL aerosol species
+! CONVECTIVE BELOW-CLOUD SCAVENGING (V8.1 PRODUCTION - METADATA DRIVEN)
+! 1. Aerosols: Size-split scavenging (Laakso fine mode vs. UFS coarse mode via is_coarse flag)
 ! 2. Gases: Dynamic T and dz dependent Henry's Law scavenging
 !=================================================================================================================
         implicit none
@@ -661,7 +664,8 @@ subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itime
         real(kind=kind_phys), dimension(its:ite, kts:kte, nchem), intent(inout) :: chem, ptencf
         real(kind=kind_phys), dimension(its:ite, nchem), intent(inout) :: rate_washout
         logical, dimension(nchem), intent(in) :: is_aerosol
-        
+        logical, dimension(nchem), intent(in) :: is_coarse ! <--- New: Clean size classification flag  
+
         real(kind=kind_phys), dimension(6, nchem), intent(in) :: scav_data_gas
 
         ! Local variables
@@ -691,11 +695,30 @@ subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itime
                         lambda = 0.0_kind_phys
 
                         ! ---------------------------------------------------------
-                        ! PHASE A: AEROSOL SCAVENGING (ALL SPECIES)
+                        ! PHASE A: AEROSOL SCAVENGING (SIZE-SEGREGATED BRANCH)
                         ! ---------------------------------------------------------
                         if (is_aerosol(jn)) then
-                            ! Per user request: Apply Laakso (2003) washout to all aerosols below-cloud
-                            lambda = laakso_a * (rain_rate_mm_hr**laakso_b)
+
+                            if (.not. is_coarse(jn)) then
+                                ! --- FINE MODE BRANCH (Phase-Dependent) ---
+                                if (t_hv(i,k) >= 268.15_kind_phys) then
+                                    ! Liquid rain regime: Baseline Laakso (2003)
+                                    lambda = laakso_a * (rain_rate_mm_hr**laakso_b)
+                                else
+                                    ! Ice/Snow regime: Amplified UFS-style structural scavenging
+                                    ! (3.4 * 1.0e-4 = 3.4e-4) derived from coarse-mode coeffs (8.72e-4/2.56e-4 = 3.4)
+                                    lambda = 3.4e-4_kind_phys * (rain_rate_mm_hr**0.96_kind_phys)
+                                end if
+                            else
+                                ! --- COARSE MODE: UFS/GEOS-Chem Inertial Impaction Logic ---
+                                if (t_hv(i,k) >= 268.15_kind_phys) then
+                                    ! Liquid rain collection regime
+                                    lambda = 2.56e-4_kind_phys * (rain_rate_mm_hr**0.79_kind_phys)
+                                else
+                                    ! Ice/Snow collection regime
+                                    lambda = 8.72e-4_kind_phys * (rain_rate_mm_hr**0.96_kind_phys)
+                                end if
+                            end if
 
                         ! ---------------------------------------------------------
                         ! PHASE B: GAS SCAVENGING (DYNAMIC THERMO)
