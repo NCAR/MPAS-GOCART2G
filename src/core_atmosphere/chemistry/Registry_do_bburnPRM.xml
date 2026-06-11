@@ -22,6 +22,10 @@
                      description="time interval between updates to Plume Rise Model"
                      possible_values="`DD_HH:MM:SS' or `none'"/>
 
+                <nml_option name="config_do_FRP" type="logical" default_value="false"
+                     units="-"
+                     description="set to true to use heat flux calculated from Fire Radiative Power data; false otherwise"
+                     possible_values="true or false"/>
 
  </nml_record>
 

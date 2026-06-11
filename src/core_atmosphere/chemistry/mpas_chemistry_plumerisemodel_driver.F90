@@ -51,6 +51,9 @@
             type(mpas_pool_type),pointer:: diag_prm
             type(block_type),pointer:: block
 
+            logical,pointer:: config_do_FRP 
+            integer :: heat_flag
+
             integer:: time_lev
             integer:: i,its,ite,j,jts,jte,k,kts,kte
 
@@ -174,6 +177,18 @@
                     enddo
 
                      
+
+                !--- Determines the heat_flag based on availability of FRP Data
+
+                    call mpas_pool_get_config(block % configs, 'config_do_FRP', config_do_FRP )
+                    if (config_do_FRP) then
+                        heat_flag = 2  ! set 2 to use heat flux from FRP
+                    else
+                        heat_flag = 1  ! set 1 for use prescribed heat flux values.
+                    endif
+
+
+
                 !--- Run the PRM to calculate smoke injection height
 
                     call plumerisemodel_run( &
@@ -194,6 +209,7 @@
                             firesize_std_corr   = mpas_prm%firesize_std_corr                                      , &
                             frp_avg_corr        = mpas_prm%frp_avg_corr                                           , &
                             frp_std_corr        = mpas_prm%frp_std_corr                                           , &
+                            heat_flag           = heat_flag                                                       , &
                             
                             !variables from PRM (output)
                             k1_zbot_out         = mpas_prm%k1_zbot                                                , &

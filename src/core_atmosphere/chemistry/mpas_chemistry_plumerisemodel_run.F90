@@ -29,9 +29,9 @@
 ! fires in numerical simulations of associated atmospheric pollutants. Geophys. Res. Lett., !
 ! 33, L17808, doi:10.1029/2006GL026608, 2006.                                               !
 !                                                                                           !
-! Questions/bugs/comments: 
-! Saulo Freitas (saulo.freitas@inpe.br, saulo.r.de.freitas@gmail.com) 	                                          !
-! Jaqueline Pereira (jaqueline.pereira@inpe.br, pereira.njaqueline@gmail.com)                                          !
+! Questions/bugs/comments:                                                                  !
+! Saulo Freitas (saulo.freitas@inpe.br, saulo.r.de.freitas@gmail.com) 	                 !
+! Jaqueline Pereira (jaqueline.pereira@inpe.br, pereira.njaqueline@gmail.com)               !
 !-------------------------------------------------------------------------------------------!
 
 !==================================================================================================================
@@ -52,7 +52,7 @@
 
           logical :: do_windeffect = .true.       !- turn ON (true), OFF (false) the env wind effect on plume rise
           integer :: sound_type = 0               !- set it to zero for the coupling with 3d host model. set 1 for reading a precreated sound already defined at PRM vertical grid
-          integer, parameter :: heat_flag = 1     !- set 1 for use prescribed heat flux values. set 2 to use heat flux from FRP
+          !integer, parameter :: heat_flag = 1    !- set 1 for use prescribed heat flux values. set 2 to use heat flux from FRP
           logical :: use_zv_mtt = .true.          !- set true for MTT solution. set false for turn ON the virtual boundary height from Tarshish and Romps (2022)
           logical :: use_bott_adv = .true.        !- set true for using Bott's adv scheme. set false to use original adv scheme
           integer :: lflag = 1                    !- if using Bott's scheme: set the desired order (0-8).0 for 1st order. 1 for 2nd order, 2 for 4a. order...
@@ -231,6 +231,7 @@
                firesize_std_corr                        , &
                frp_avg_corr                             , &
                frp_std_corr                             , &
+               heat_flag                                , &
 
                !variables from PRM (output)
                k1_zbot_out                              , &
@@ -249,9 +250,9 @@
           
 
                integer,  intent(in   )   ::     &
-                    its,ite,                    & !index for the host model horizontal grid (its=1, ite = nCellsSolve)
-                    jts,jte,                    & !index for local horizontal grid (jts=jte=1)
-                    kts,kte                       !index for the host model vertical grid (kts=1, kte = nVertLevels)
+                    its,ite,                    & ! index for the host model horizontal grid (its=1, ite = nCellsSolve)
+                    jts,jte,                    & ! index for local horizontal grid (jts=jte=1)
+                    kts,kte                       ! index for the host model vertical grid (kts=1, kte = nVertLevels)
 
                real(kind=kind_phys), dimension( its:ite, kts:kte, jts:jte ) ::     &
                     temp_in,                    & ! 3D Temperature of the host model (k)interpolated to theta points
@@ -273,6 +274,10 @@
                     frp_avg_corr,               & ! 2d wildfire average FRP (corrected) [MW] read in by the host model
                     frp_std_corr                  ! 2d wildfire std deviation FRP (corrected) [MW] read in by the host model
                     
+               integer,  intent(in   )   ::     &
+                    heat_flag                     ! parameter for calculate heat flux (1 - use prescribed values, 2 - use FRP)
+               
+               
                integer, intent(inout   ),  dimension( its:ite, jts:jte ) :: &
                     k1_zbot_out,                & ! 2d index for lower plume injection height in host model grid 
                     k2_ztop_out                   ! 2d index for upper plume injection height in host model grid  
@@ -369,42 +374,37 @@
 
                          !call mpas_log_write('    Fire detected: run PRM ')
 
-                    endif
 
-                    !---------------------------------------------------------------
-                    ! read variables of host model  
-                    !----------------------------------------------------------------
-                
-                         !--- fill local 1D variables with the host model 3D variables (MPAS grid)
-                         
-                              do k = kts,m1                                      ! z-direction of the host model 
-                                   
-                                   rvcon (k) = qv_in(i,k,j)                      ! fill with the water vapor mixing ratio (kg/kg) of the host model 
-                                   zcon  (k) = hml_in(i,k,j) - z_in(i,kts,j)     ! fill with the cartesian height (meters above surface) of the termodynamic grid point  !(half-levels) above local surface--> muss full level sein, siehe aufruf htint
-                                   zzcon (k) = z_in(i,k,j) - z_in(i,kts,j)       ! fill with the cartesian height (meters above surface) of the dynamic grid point  ! interface levels
-                                   tmpcon(k) = temp_in(i,k,j)                    ! fill with the temperature of the host model (k) 
-                                   prcon (k) = pres_in(i,k,j)                    ! fill with the pressure of the host model (Pa) . 
-                                   ucon  (k) = u_in(i,k,j)                       ! fill with the zonal wind (m/s) of the host model
-                                   vcon  (k) = v_in(i,k,j)                       ! fill with the meridional wind (m/s) of the host model
-                               
-                              enddo
-
-                         !--- fill with the vegetation type combinated in the plumerismodel_driver
-                         
-                              iveg_ag = iveg_ag_in(i,j)  
-                              
-                    !------------------------------------------------------------------------------
-                    ! get envinronmental state in the PRM grid (temp, water vapor mix ratio, ...)  
-                    !----------------------------------------------------------------------------
+                         !---------------------------------------------------------------
+                         ! read variables of host model  
+                         !----------------------------------------------------------------
                     
-                        call get_env_condition(kte,kmt,ucon,zcon,vcon,tmpcon,prcon,rvcon)
-            
+                              !--- fill local 1D variables with the host model 3D variables (MPAS grid)
+                              
+                                   do k = kts,m1                                      ! z-direction of the host model 
+                                        
+                                        rvcon (k) = qv_in(i,k,j)                      ! fill with the water vapor mixing ratio (kg/kg) of the host model 
+                                        zcon  (k) = hml_in(i,k,j) - z_in(i,kts,j)     ! fill with the cartesian height (meters above surface) of the termodynamic grid point  !(half-levels) above local surface--> muss full level sein, siehe aufruf htint
+                                        zzcon (k) = z_in(i,k,j) - z_in(i,kts,j)       ! fill with the cartesian height (meters above surface) of the dynamic grid point  ! interface levels
+                                        tmpcon(k) = temp_in(i,k,j)                    ! fill with the temperature of the host model (k) 
+                                        prcon (k) = pres_in(i,k,j)                    ! fill with the pressure of the host model (Pa) . 
+                                        ucon  (k) = u_in(i,k,j)                       ! fill with the zonal wind (m/s) of the host model
+                                        vcon  (k) = v_in(i,k,j)                       ! fill with the meridional wind (m/s) of the host model
+                                   
+                                   enddo
 
-                    !--------------------------------------------------------------------------------
-          
-                    !Loop on vegetation type
-                    !uncomment the loop in iveg_ag in case of the host model has more than 1 ivgtyp in the same grid cell 
-                    !do iveg_ag = 1, nveg_ag 
+                              !--- fill with the vegetation type combinated in the plumerismodel_driver
+                              
+                                   iveg_ag = iveg_ag_in(i,j)  
+                                   
+                         !------------------------------------------------------------------------------
+                         ! get envinronmental state in the PRM grid (temp, water vapor mix ratio, ...)  
+                         !----------------------------------------------------------------------------
+                         
+                         call get_env_condition(kte,kmt,ucon,zcon,vcon,tmpcon,prcon,rvcon)
+               
+
+                         !--------------------------------------------------------------------------------
                     
                          !Loop over the heat_flux or FRP min and max
                          do imm=1,2         
@@ -461,15 +461,17 @@
                               !------------------------------------------------------------------------------
                               ! get fire properties (burned area, plume radius, heating rates ...)  
                               !------------------------------------------------------------------------------
-                                   call get_fire_properties(burnt_area, FRP, iveg_ag, imm)
+                                   call get_fire_properties(burnt_area, FRP, iveg_ag, heat_flag, imm)
 
 
                               !------------------------------------------------------------------------------
                               ! generate plume rise 
                               !------------------------------------------------------------------------------
+                                   
                                    call makeplume (kmt,ztopmax(imm),imm)
 
-                         enddo    !end loop on imm (heat_flux min and max)        
+
+                         enddo !end loop on imm (heat_flux min and max)        
 
 
                          !----------------------------------------------------------------------------
@@ -498,8 +500,9 @@
                               zbot_out (i,j) = zbot_plume
                               ztop_out (i,j) = ztop_plume
 
+                    
+                    endif
 
-                    !enddo !end loop on vegetation type. uncomment when has more than one ivgtyp per cell
                enddo !end loop on i
           enddo !end loop on j
 
@@ -773,7 +776,7 @@ end subroutine htint
 
 
 !=================================================================================================================
-subroutine get_fire_properties(burnt_area, FRP, iveg_ag, imm)
+subroutine get_fire_properties(burnt_area, FRP, iveg_ag, heat_flag, imm)
 
    !*******************************************************************************
     implicit none
@@ -783,7 +786,7 @@ subroutine get_fire_properties(burnt_area, FRP, iveg_ag, imm)
          burnt_area,     &  ! burnt area read in by the host model
          FRP                ! Fire Radiative Power read in by the host model
        
-    integer, intent(in) :: iveg_ag, imm  
+    integer, intent(in) :: iveg_ag, heat_flag, imm  
     
 
     integer :: &
@@ -887,7 +890,7 @@ subroutine get_fire_properties(burnt_area, FRP, iveg_ag, imm)
      ! for the first few minutes (5min) the convective energy is lower for stability
 
      icount = 1  
-     if(mdur > ntime) STOP 'Increase time duration (ntime) in min - see file "plumerise_mod.f90"'
+     if(mdur > ntime) STOP 'Increase time duration (ntime) in min - see file "mpas_chemistry_plumerisemodel_run.F90"'
 
      do while (icount.le.mdur)                             
           heating (icount) = heat_fluxW  * 0.55     ! W/m**2 (0.55 converts to convective energy)
@@ -1141,9 +1144,9 @@ subroutine makeplume(kmt,ztopmax,imm)
 
                 !-- gravity wave damping using Rayleigh friction layer fot T
                 call damp_grav_wave(1,nm1,deltak,zt,w,t,tt,qv,qh,qi,qc,te,pe,qvenv, &
-                                    vel_p,vel_t,vel_e) !its not passing dt and zm. ?
-
-
+                                    vel_p,vel_t,vel_e) 
+                
+                
                 !-- microphysics
                 if(do_microphysics) then     
                                   
@@ -1972,9 +1975,7 @@ subroutine melt
           dtmelt = 0.
 
       !selection criteria for melting
-
-          !!call mpas_log_write('l=$i', intArgs=(/l/),messageType=MPAS_LOG_ERR)
-          !!call mpas_log_write('qi(l)=$r', realArgs=(/qi(l)/),messageType=MPAS_LOG_ERR)        
+  
           if (qi (l) .le. 0.0  ) return  !case no ice
           if (t (l)  .lt. tmelt) return  !case temperature is not high enough
     
@@ -1993,19 +1994,12 @@ subroutine melt
                qh (l) = qh (l) + dtmelt  
                qi (l) = qi (l) - dtmelt  
                t  (l) = t  (l) - frc * dtmelt     !cools air
-               
-               !!call mpas_log_write('l=$i', intArgs=(/l/),messageType=MPAS_LOG_ERR)
-               !!call mpas_log_write('qi(l)=$r', realArgs=(/qi(l)/),messageType=MPAS_LOG_ERR)
-               !!call mpas_log_write('dtmelt=$r', realArgs=(/dtmelt/),messageType=MPAS_LOG_ERR)
 
                return  
           else  
                qh (l) = qh (l) + qi (l)   !get all there is to get
                t  (l) = t (l) - frc * qi (l)  
                qi (l) = 0.0  
-
-               !!call mpas_log_write('l=$i', intArgs=(/l/),messageType=MPAS_LOG_ERR)
-               !!call mpas_log_write('qi(l)=$r', realArgs=(/qi(l)/),messageType=MPAS_LOG_ERR)
                
           endif
    
@@ -2599,7 +2593,6 @@ subroutine scl_advectc_plumerise2(mzp)
           !- gas/particle advection tendency (SCT)
                u(1:mzp)= rho(1:mzp)*sc(1:mzp)
                u(-5:0)=u(1)
-               !call mpas_log_write('         gas/particle advection tendency',messageType=MPAS_LOG_ERR)
                call bott(u,v,mzp,deltat,p,advtnd)
                sct(2:mzp) = sct(2:mzp)+advtnd(2:mzp)/rho(2:mzp) - &
                               (sc (2:mzp)/rho(2:mzp))*scr1(2:mzp)
