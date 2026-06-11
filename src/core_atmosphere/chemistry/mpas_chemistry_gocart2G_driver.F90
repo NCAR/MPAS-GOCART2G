@@ -29,6 +29,10 @@
                                         SOA2G,SOA2G_params,      &
                                         GOCART2G,GOCART2G_params
 
+#ifdef DO_PRM
+   !Enable use of the module that updates the aerosol concentrations based on PRM injH (jpereira20260520)
+   use mpas_chemistry_gocart2G_plumerisemodel, only: gocart2G_plumerisemodel
+#endif
 
  implicit none
  private
@@ -89,6 +93,12 @@
  integer:: time_lev
  integer:: i,its,ite,j,jts,jte,k,kts,kte,n,nerod
  integer:: nbndlw,nbndsw
+
+#ifdef DO_PRM
+   !Pointers controlling PRM (jpereira20260520)
+   !local pointer:
+   logical,pointer:: config_do_bburnPRM
+#endif
 
 !-----------------------------------------------------------------------------------------------------------------
 !call mpas_log_write(' ')
@@ -155,6 +165,24 @@
     nbndlw = mpas_gocart2G%nbndlw
     nbndsw = mpas_gocart2G%nbndsw
 
+
+#ifdef DO_PRM
+      call mpas_pool_get_config(block % configs, 'config_do_bburnPRM', config_do_bburnPRM )
+      if (config_do_bburnPRM) then
+         
+         !update the aerosol concentrations (ex. qbcphobic) on the MPAS grid  due to emissions distributed at PRM injH (jpereira20260520)
+         call gocart2G_plumerisemodel(block%configs, state, time_lev) 
+         
+         !Turn to zero the emissions from biomass, so the CAemission routine will run but wiht emissions zero, so it will not double count the emissions. 
+         mpas_emis_gocart2G%bc_biomass(:,:)   = 0._RKIND 
+         mpas_emis_gocart2G%br_biomass(:,:)   = 0._RKIND
+         mpas_emis_gocart2G%oc_biomass(:,:)   = 0._RKIND
+         mpas_emis_gocart2G%su_biomass(:,:)   = 0._RKIND
+         mpas_emis_gocart2G%nh3_bb(:,:)       = 0._RKIND
+         mpas_emis_gocart2G%soap_biomass(:,:) = 0._RKIND
+
+      endif
+#endif
 
     !--- fills local chemistry arrays with global chemistry arrays:
     call mpas_gocart2G%gocart2G_fromMPAS(gocart2G_backgrounds,gocart2G_met,block%configs, &

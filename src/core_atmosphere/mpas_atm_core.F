@@ -1057,9 +1057,11 @@ module atm_core
    
       implicit none
 
+#ifdef DO_PRM
       !Pointers controlling PRM (jpereira20260410)
       !local pointer:
       logical,pointer:: config_do_bburnPRM
+#endif
 
    
       type (domain_type), intent(inout) :: domain 

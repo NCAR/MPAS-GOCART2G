@@ -74,6 +74,7 @@
             call mpas_pool_get_subpool(block%structs,'diag'                ,diag                )
             call mpas_pool_get_subpool(block%structs,'sfc_input'           ,sfc_input           )
             call mpas_pool_get_subpool(block%structs,'diag_prm'            ,diag_prm            )
+                          
 
             !-------------------------------------------------------------------------------
             ! Defines dimensions needed to run PRM:
@@ -226,12 +227,6 @@
                 
                 call mpas_prm%prm_toMPAS(diag_prm)
 
-
-            !-------------------------------------------------------------------------------
-            ! Deallocate local arrays: (need to move to after gocart2 run)
-            !-------------------------------------------------------------------------------
-
-                call mpas_prm%prm_deallocate() !Need to move to after applying injH to gocart2g emissions
 
         block => block % next
         end do

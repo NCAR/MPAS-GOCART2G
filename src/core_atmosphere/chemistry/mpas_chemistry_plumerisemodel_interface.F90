@@ -35,6 +35,7 @@
         real(kind=RKIND),dimension(:,:,:),pointer:: th                  => null()
         real(kind=RKIND),dimension(:,:,:),pointer:: u                   => null()
         real(kind=RKIND),dimension(:,:,:),pointer:: v                   => null()
+        real(kind=RKIND),dimension(:,:,:),pointer:: rho_dry             => null()
         real(kind=RKIND),dimension(:,:,:),pointer:: rho_moist           => null()
         real(kind=RKIND),dimension(:,:,:),pointer:: pres                => null()
         real(kind=RKIND),dimension(:,:,:),pointer:: qvapor              => null()
@@ -89,7 +90,7 @@ contains
             integer,pointer:: nCellsSolve,nVertLevels
 
 
-        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_dims:')
+        call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_dims:')
 
     !*******************************************************************************
     !Get MPAS mesh dimensions
@@ -129,7 +130,7 @@ contains
   
 
       
-        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_allocate:')
+        call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_allocate:')
 
     !*******************************************************************************
     !Allocate local arrays needed to run PRM
@@ -153,6 +154,7 @@ contains
             if(.not.associated(self%t)    )             allocate( self%t                   (   its:ite, kts:kte, jts:jte)  )        
             if(.not.associated(self%u)    )             allocate( self%u                   (   its:ite, kts:kte, jts:jte)  )
             if(.not.associated(self%v)    )             allocate( self%v                   (   its:ite, kts:kte, jts:jte)  )
+            if(.not.associated(self%rho_dry  ))         allocate( self%rho_dry             (   its:ite, kts:kte, jts:jte)  )
             if(.not.associated(self%rho_moist))         allocate( self%rho_moist           (   its:ite, kts:kte, jts:jte)  )
             if(.not.associated(self%pres))              allocate( self%pres                (   its:ite, kts:kte, jts:jte)  )
             if(.not.associated(self%qvapor))            allocate( self%qvapor              (   its:ite, kts:kte, jts:jte)  )
@@ -216,7 +218,7 @@ contains
 
 
         
-        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_fromMPAS:')
+        call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_fromMPAS:')
 
 
     !*******************************************************************************
@@ -273,6 +275,7 @@ contains
                         self%u(i,k,j)           = u(k,i) 
                         self%v(i,k,j)           = v(k,i) 
 
+                        self%rho_dry(i,k,j)     = rho(k,i)
                         self%rho_moist(i,k,j)   = rho(k,i)*(1._RKIND + max(0._RKIND,qv(k,i)) )
                         self%pres(i,k,j)        = pressure_p(k,i) + pressure_b(k,i)
 
@@ -286,7 +289,7 @@ contains
                     self%ivgtyp(i,j)   = ivgtyp(i)
                 enddo
             enddo
-
+            
 
         !-------------------------------------------------------------------------------
         ! Initialize PRM fields 
@@ -352,7 +355,7 @@ contains
        
 
 
-        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_toMPAS:')
+        call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_toMPAS:')
 
 
         !*******************************************************************************
@@ -411,7 +414,7 @@ contains
     !*******************************************************************************
 
         
-        !--- allocate atmospheric fields:
+        !--- deallocate atmospheric fields:
 
             if(associated(self%z)    )              deallocate( self%z                  )
             if(associated(self%zmid) )              deallocate( self%zmid               ) 
@@ -420,13 +423,14 @@ contains
             if(associated(self%t)    )              deallocate( self%t                  )        
             if(associated(self%u)    )              deallocate( self%u                  )
             if(associated(self%v)    )              deallocate( self%v                  )
+            if(associated(self%rho_dry))            deallocate( self%rho_dry            )
             if(associated(self%rho_moist))          deallocate( self%rho_moist          )
             if(associated(self%pres))               deallocate( self%pres               )
             if(associated(self%qvapor))             deallocate( self%qvapor             )
             if(associated(self%ivgtyp))             deallocate( self%ivgtyp             )
 
 
-        !--- allocate smoke plume fields:
+        !--- deallocate smoke plume fields:
 
             if(associated(self%k1_zbot))            deallocate( self%k1_zbot            )
             if(associated(self%k2_ztop))            deallocate( self%k2_ztop            )
