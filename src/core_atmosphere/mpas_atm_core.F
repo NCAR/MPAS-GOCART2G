@@ -1136,11 +1136,21 @@ module atm_core
       use mpas_chemistry_gocart2G_finalize,only: gocart2G_finalize
 #endif
 
+#ifdef DO_PRM
+      !(jpereira20260614)
+      use mpas_chemistry_plumerisemodel_finalize,only: plumerisemodel_finalize
+#endif
+
       implicit none
    
       type (domain_type), intent(inout) :: domain
       type (block_type), pointer :: block_ptr 
       integer :: ierr
+
+#ifdef DO_PRM
+      !Pointers controlling PRM (jpereira20260614)
+      logical,pointer:: config_do_bburnPRM
+#endif
 
       ierr = 0
 
@@ -1170,6 +1180,18 @@ module atm_core
          do while (associated(block_ptr))
             call gocart2G_finalize(block_ptr%configs)
 
+            block_ptr => block_ptr%next
+         end do
+#endif
+
+#ifdef DO_PRM
+         block_ptr => domain % blocklist
+         do while (associated(block_ptr))
+            call mpas_pool_get_config(block_ptr % configs, 'config_do_bburnPRM', config_do_bburnPRM )
+            if (config_do_bburnPRM) then
+               !Deallocate PRM arrays (jpereira20260614)
+               call plumerisemodel_finalize(block_ptr%configs)
+            endif
             block_ptr => block_ptr%next
          end do
 #endif

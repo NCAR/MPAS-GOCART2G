@@ -406,7 +406,7 @@ contains
         !--- inout arguments:
             class(atm_prm),intent(inout):: self
 
-        !call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_deallocate:')
+        !call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_deallocate:')
 
 
     !*******************************************************************************

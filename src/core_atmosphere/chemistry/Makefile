@@ -41,7 +41,8 @@ OBJS += \
 	mpas_chemistry_plumerisemodel_interface.o \
 	mpas_chemistry_plumerisemodel_lbc_update.o \
 	mpas_chemistry_plumerisemodel_driver.o \
-	mpas_chemistry_plumerisemodel_run.o  
+	mpas_chemistry_plumerisemodel_run.o \
+	mpas_chemistry_plumerisemodel_finalize.o
 endif
 
 #Include a compilation option for modules that depends on both GOCART and PRM (jpereira20260527)
@@ -120,7 +121,8 @@ mpas_chemistry_plumerisemodel_driver.o: \
 	mpas_chemistry_plumerisemodel_vars.o \
 	mpas_chemistry_plumerisemodel_run.o
 
-
+mpas_chemistry_plumerisemodel_finalize.o: \
+	mpas_chemistry_plumerisemodel_vars.o 
 
 
 # GOCART2G and PRM DEPENDENCIES (jpereira20260527)

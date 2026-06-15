@@ -33,6 +33,7 @@
     contains
        procedure:: prm_allocate   => mpas_chemistry_plumerisemodel_lbc_allocate
        procedure:: prm_initlbc    => mpas_chemistry_plumerisemodel_initlbc
+       procedure:: prm_deallocate => mpas_chemistry_plumerisemodel_lbc_deallocate
 
  end type
 
@@ -54,7 +55,7 @@ contains
             class(lbc_prm),intent(inout):: self
 
 
-        call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_lbc_allocate:')
+        call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_lbc_allocate:')
 
 
     !*******************************************************************************
@@ -69,7 +70,7 @@ contains
 
 
 
- call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_lbc_allocate.')
+ !call mpas_log_write('--- end subroutine mpas_chemistry_plumerisemodel_lbc_allocate.')
 
  end subroutine mpas_chemistry_plumerisemodel_lbc_allocate
 !==================================================================================================================
@@ -97,7 +98,7 @@ contains
         !--- local variables and arrays:
             integer:: i,j,k
 
-        call mpas_log_write(' --- enter subroutine mpas_chemistry_plumerisemodel_lbcinit:')
+        call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_lbcinit:')
 
 
 
@@ -116,26 +117,48 @@ contains
                 self%firesize_std_biomass(i,j) = firesize_std(i)
                 self%frp_avg_biomass(i,j)      = frp_avg(i)
                 self%frp_std_biomass(i,j)      = frp_std(i)
-                
-                !DEBUG - Tracking variables:
-                    !call mpas_log_write('  ncell(i)=$i', intArgs=(/i/))
-                    !call mpas_log_write('  firesize_avg(i)=$r', realArgs=(/firesize_avg(i)/))
-                    !call mpas_log_write('  self%firesize_avg_biomass(i,j)=$r', realArgs=(/self%firesize_avg_biomass(i,j)/))
-                    
+                                    
             enddo
         enddo
 
-        call mpas_log_write('     fill local arrays, ex:')
-        call mpas_log_write('     ncell(i)=$i', intArgs=(/53/))
-        call mpas_log_write('     firesize_avg(i)=$r', realArgs=(/firesize_avg(53)/))
-        call mpas_log_write('     self%firesize_avg_biomass(i,j)=$r', realArgs=(/self%firesize_avg_biomass(53,1)/))
-                    
 
- call mpas_log_write(' --- end subroutine mpas_chemistry_plumerisemodel_initlbc.')
+ !call mpas_log_write('--- end subroutine mpas_chemistry_plumerisemodel_initlbc.')
 
  end subroutine mpas_chemistry_plumerisemodel_initlbc
 !==================================================================================================================
 
+!==================================================================================================================
+ subroutine mpas_chemistry_plumerisemodel_lbc_deallocate(self)
+!==================================================================================================================
+
+
+    !*******************************************************************************
+    !implicit none
+    !*******************************************************************************
+
+        !inout arguments:
+            class(lbc_prm),intent(inout):: self
+
+
+        !call mpas_log_write('--- enter subroutine mpas_chemistry_plumerisemodel_lbc_deallocate:')
+
+
+    !*******************************************************************************
+    !Allocate biomass burning input arrays for PRM:
+    !*******************************************************************************
+
+        
+        if(associated(self%firesize_avg_biomass) ) deallocate(self%firesize_avg_biomass       )
+        if(associated(self%firesize_std_biomass) ) deallocate(self%firesize_std_biomass       )
+        if(associated(self%frp_avg_biomass)     )  deallocate(self%frp_avg_biomass            )
+        if(associated(self%frp_std_biomass)     )  deallocate(self%frp_std_biomass            )
+
+
+
+ !call mpas_log_write('--- end subroutine mpas_chemistry_plumerisemodel_lbc_deallocate.')
+
+ end subroutine mpas_chemistry_plumerisemodel_lbc_deallocate
+!==================================================================================================================
 
 
 
