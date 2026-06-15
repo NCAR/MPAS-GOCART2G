@@ -1103,12 +1103,17 @@ module atm_core
       if (config_do_bburnPRM) then
 
          !Updates PRM input data (Fire Size, FRP) (jpereira20260410)
+         call mpas_timer_start('prm_lbc_update')
          call plumerisemodel_timetracker_lbc(domain, clock, domain % streamManager) 
+         call mpas_timer_stop('prm_lbc_update')
 
          !Run PRM to calculate smoke injection height (jpereira20260420)
+         call mpas_timer_start('prm_run')
          call plumerisemodel_timetracker_prm(domain, clock)
+         call mpas_timer_stop('prm_run')
+
+      endif  
       
-      endif      
 #endif
 
 
