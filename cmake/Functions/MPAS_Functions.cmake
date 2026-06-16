@@ -216,6 +216,9 @@ function(mpas_core_target)
     if (${DO_GOCART2G})
         set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_GOCART2G)
     endif()
+    if (${DO_PRM})
+        set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_PRM)
+    endif()
     message("CPP_EXTRA_FLAGS: ${CPP_EXTRA_FLAGS}")
 
 
