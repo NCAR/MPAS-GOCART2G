@@ -1,6 +1,6 @@
 
 
-# MPAS-GOCART2G_MERRA_IC Python Workflow
+# init_MPAS-GOCART2G Python Workflow
 
 This package provides modernized Python routines for processing satellite data, replacing legacy Fortran scripts. It supports flexible configuration via YAML and outputs MPAS-compatible binary files.
 
@@ -33,11 +33,11 @@ control_params:
   start_hour: 0
   num_days: 1
   interval_hr: 6
-  prefix_in_1: "/glade/derecho/scratch/$USER/MPAS-GOCART2G_MERRA_IC/DATA/MERRA2_400.inst3_3d_aer_Nv."
+  prefix_in_1: "/glade/derecho/scratch/$USER/init_MPAS-GOCART2G/DATA/MERRA2_400.inst3_3d_aer_Nv."
   suffix_in_1: ".nc4"
-  prefix_in_2: "/glade/derecho/scratch/$USER/MPAS-GOCART2G_MERRA_IC/DATA/MERRA2_GMI.inst0_3d_ovp_Nv."
+  prefix_in_2: "/glade/derecho/scratch/$USER/init_MPAS-GOCART2G/DATA/MERRA2_GMI.inst0_3d_ovp_Nv."
   suffix_in_2: "_1200z.nc4"
-  prefix_out: "/glade/derecho/scratch/$USER/MPAS-GOCART2G_MERRA_IC/MERRA2:"
+  prefix_out: "/glade/derecho/scratch/$USER/init_MPAS-GOCART2G/MERRA2:"
 
 species_map:
   - {source: "BCPHILIC", file: "prefix_in_1", target: "BCPHILIC", desc: "Hydrophilic Black Carbon Mixing Ratio", units: "kg kg^-1"}
