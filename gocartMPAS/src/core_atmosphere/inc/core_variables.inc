@@ -1,0 +1,6 @@
+       core % modelName = 'mpas'
+       core % coreName = 'atmosphere'
+       core % modelVersion = '8.3.1'
+       core % executableName = 'atmosphere_model'
+       core % git_version = 'unknown'
+       core % build_target = 'gnu'
