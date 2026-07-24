@@ -979,13 +979,6 @@ else
 	CHEMISTRY_MESSAGE="MPAS was built without GOCART-2G enabled."
 endif
 
-#Include a build option for Plume Rise Model (PRM) (jpereira20260331) removed PRM functionality from public release (fgl20200710)
-ifeq "$(PRM)" "true"
-	CHEMISTRY_MESSAGE+="MPAS was built without PRM enabled. PRM is in development and not ready for public release."
-else
-	CHEMISTRY_MESSAGE+="MPAS was built without PRM enabled."
-endif
-
 ifneq ($(wildcard namelist.$(NAMELIST_SUFFIX)), ) # Check for generated namelist file.
 	NAMELIST_MESSAGE="A default namelist file (namelist.$(NAMELIST_SUFFIX).defaults) has been generated, but namelist.$(NAMELIST_SUFFIX) has not been modified."
 else

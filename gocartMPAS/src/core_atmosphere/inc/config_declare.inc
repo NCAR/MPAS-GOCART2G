@@ -167,11 +167,6 @@
       integer, pointer :: config_noahmp_iopt_infdv
       integer, pointer :: config_noahmp_iopt_tdrn
 
-      logical, pointer :: config_do_bburnPRM
-      character (len=StrKIND), pointer :: config_prm_lbc_interval
-      character (len=StrKIND), pointer :: config_prm_interval
-      logical, pointer :: config_do_FRP
-
       integer, pointer :: config_CAMchem_levels
       integer, pointer :: config_chems_bck_levels
       character (len=StrKIND), pointer :: config_gocart2G_backg_interval

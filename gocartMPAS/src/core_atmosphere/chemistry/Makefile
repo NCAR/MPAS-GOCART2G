@@ -31,29 +31,6 @@ OBJS = \
 	mpas_chemistry_gocart2G_vars.o 
 endif
 
-#Include a compilation option for PRM modules (jpereira20260408)
-ifeq "$(PRM)" "true"
-OBJS += \
-	mpas_chemistry_plumerisemodel_manager.o \
-	mpas_chemistry_plumerisemodel_lbc_init.o \
-	mpas_chemistry_plumerisemodel_lbc.o \
-	mpas_chemistry_plumerisemodel_vars.o \
-	mpas_chemistry_plumerisemodel_interface.o \
-	mpas_chemistry_plumerisemodel_lbc_update.o \
-	mpas_chemistry_plumerisemodel_driver.o \
-	mpas_chemistry_plumerisemodel_run.o \
-	mpas_chemistry_plumerisemodel_finalize.o
-endif
-
-#Include a compilation option for modules that depends on both GOCART and PRM (jpereira20260527)
-ifeq "$(GOCART2G)" "true"
-ifeq "$(PRM)" "true"
-GOCART2G_PRM_OBJS = mpas_chemistry_gocart2G_plumerisemodel.o
-OBJS += \
-	$(GOCART2G_PRM_OBJS)
-endif
-endif
-
 core_gocart2G:
 	( cd gocart2G; $(MAKE) all COREDEF="$(COREDEF)" )
 
@@ -72,7 +49,6 @@ mpas_chemistry_gocart2G_driver.o: \
 	mpas_chemistry_gocart2G_manager.o \
 	mpas_chemistry_gocart2G_rrtmg.o \
 	mpas_chemistry_gocart2G_vars.o \
-	$(GOCART2G_PRM_OBJS) #(jpereira20260527)
 
 mpas_chemistry_gocart2G_emissions_init.o: \
 	mpas_chemistry_gocart2G_vars.o
@@ -101,35 +77,6 @@ mpas_chemistry_gocart2G_vars.o: \
 	mpas_chemistry_gocart2G_emissions.o \
 	mpas_chemistry_gocart2G_interface.o \
 	mpas_chemistry_gocart2G_forMPASphysics.o
-
-
-# PRM DEPENDENCIES (jpereira20260408):
-mpas_chemistry_plumerisemodel_lbc_init.o: \
-	mpas_chemistry_plumerisemodel_vars.o
-
-mpas_chemistry_plumerisemodel_vars.o: \
-	mpas_chemistry_plumerisemodel_interface.o \
-	mpas_chemistry_plumerisemodel_lbc.o 
-
-mpas_chemistry_plumerisemodel_manager.o: \
-	mpas_chemistry_plumerisemodel_lbc_update.o \
-	mpas_chemistry_plumerisemodel_lbc_init.o \
-	mpas_chemistry_plumerisemodel_driver.o
-
-mpas_chemistry_plumerisemodel_driver.o: \
-	mpas_chemistry_plumerisemodel_interface.o \
-	mpas_chemistry_plumerisemodel_vars.o \
-	mpas_chemistry_plumerisemodel_run.o
-
-mpas_chemistry_plumerisemodel_finalize.o: \
-	mpas_chemistry_plumerisemodel_vars.o 
-
-
-# GOCART2G and PRM DEPENDENCIES (jpereira20260527)
-mpas_chemistry_gocart2G_plumerisemodel.o: \
-	mpas_chemistry_plumerisemodel_vars.o \
-	mpas_chemistry_gocart2G_vars.o
-
 
 clean:
 	$(RM) *.f90 *.o *.mod libchem.a

@@ -22,13 +22,6 @@ ifeq "$(GOCART2G)" "true"
     CHEM_OBJS = libchem/*.o
 endif
 
-#Include an option to compile PRM modules in the chemistry directory(jpereira20260527)
-ifeq "$(PRM)" "true"
-    CHEMISTRY += -DDO_PRM
-    CHEMCORE = chemcore
-    CHEM_OBJS = libchem/*.o
-endif
-
 OBJS = mpas_atm_core.o \
        mpas_atm_core_interface.o \
        mpas_atm_dimensions.o \

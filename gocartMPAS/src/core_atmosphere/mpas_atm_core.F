@@ -379,14 +379,6 @@ module atm_core
       use mpas_atmphys_manager
 #endif
 
-#ifdef DO_PRM
-      !Enable use of the module that initializes alarms for PRM and PRM input data (jpereira20260402)
-      use mpas_chemistry_plumerisemodel_manager
-      
-      !Enable use of the module that initializes PRM input variables (jpereira20260408)
-      use mpas_chemistry_plumerisemodel_lbc_init
-#endif
-
 #ifdef DO_GOCART2G
       use mpas_chemistry_gocart2G_init
       use mpas_chemistry_gocart2G_emissions_init
@@ -410,15 +402,6 @@ module atm_core
       type (mpas_pool_type), pointer :: ngw_input
       type (mpas_pool_type), pointer :: atm_input
       type (mpas_pool_type), pointer :: output_noahmp
-
-#ifdef DO_PRM
-      !Pointers controlling PRM (jpereira20260402)
-      !local pointer:
-      logical,pointer:: config_do_bburnPRM
-
-      !Pointers controlling fire size and FRP inputs (jpereira20260408)
-      type (mpas_pool_type), pointer :: biob_prm_lbc
-#endif
 
 #ifdef DO_GOCART2G
       type (mpas_pool_type), pointer :: anth_emissions
@@ -609,20 +592,6 @@ module atm_core
                            diag_physics, diag_physics_noahmp, ngw_input, atm_input, sfc_input, output_noahmp)
       endif
 #endif
-
-
-#ifdef DO_PRM
-      call mpas_pool_get_config(block % configs, 'config_do_bburnPRM', config_do_bburnPRM )
-      if (config_do_bburnPRM) then
-         !Initialization of alarms for PRM and PRM input (jpereira20260402)
-         call plumerisemodel_timetracker_init(block % configs, clock)
-
-         !Initialization of PRM input variables from x1.*.init.nc file (jpereira20260408)
-         call mpas_pool_get_subpool(block % structs, 'biob_prm_lbc', biob_prm_lbc)
-         call plumerisemodel_lbc_init(mesh, biob_prm_lbc)
-      endif
-#endif
-
 
 #ifdef DO_GOCART2G
       call mpas_pool_get_subpool(block % structs, 'anth_emissions', anth_emissions)
@@ -1040,14 +1009,6 @@ module atm_core
       use mpas_atmphys_update
 #endif
 
-#ifdef DO_PRM
-      !Enable use of the module that updates PRM input data (jpereira20260410)
-      use mpas_chemistry_plumerisemodel_manager, only: plumerisemodel_timetracker_lbc
-
-      !Enable use of the module that run PRM (jpereira20260420)
-      use mpas_chemistry_plumerisemodel_manager,only: plumerisemodel_timetracker_prm
-#endif
-
 #ifdef DO_GOCART2G
       use mpas_chemistry_gocart2G_forMPASrestart,only: gocart2G_forMPASrestart
       use mpas_chemistry_gocart2G_manager,only: gocart2G_timetracker
@@ -1057,13 +1018,6 @@ module atm_core
    
       implicit none
 
-#ifdef DO_PRM
-      !Pointers controlling PRM (jpereira20260410)
-      !local pointer:
-      logical,pointer:: config_do_bburnPRM
-#endif
-
-   
       type (domain_type), intent(inout) :: domain 
       real (kind=RKIND), intent(in) :: dt
       integer, intent(in) :: itimestep
@@ -1098,25 +1052,6 @@ module atm_core
 
       call atm_timestep(domain, dt, currTime, itimestep, exchange_halo_group)
 
-#ifdef DO_PRM      
-      call mpas_pool_get_config(domain % configs, 'config_do_bburnPRM', config_do_bburnPRM )
-      if (config_do_bburnPRM) then
-
-         !Updates PRM input data (Fire Size, FRP) (jpereira20260410)
-         call mpas_timer_start('prm_lbc_update')
-         call plumerisemodel_timetracker_lbc(domain, clock, domain % streamManager) 
-         call mpas_timer_stop('prm_lbc_update')
-
-         !Run PRM to calculate smoke injection height (jpereira20260420)
-         call mpas_timer_start('prm_run')
-         call plumerisemodel_timetracker_prm(domain, clock)
-         call mpas_timer_stop('prm_run')
-
-      endif  
-      
-#endif
-
-
 #ifdef DO_GOCART2G
       call gocart2G_timetracker(domain, clock, domain % streamManager)
       call gocart2G_driver(domain, itimestep, xtime_s)
@@ -1141,21 +1076,11 @@ module atm_core
       use mpas_chemistry_gocart2G_finalize,only: gocart2G_finalize
 #endif
 
-#ifdef DO_PRM
-      !(jpereira20260614)
-      use mpas_chemistry_plumerisemodel_finalize,only: plumerisemodel_finalize
-#endif
-
       implicit none
    
       type (domain_type), intent(inout) :: domain
       type (block_type), pointer :: block_ptr 
       integer :: ierr
-
-#ifdef DO_PRM
-      !Pointers controlling PRM (jpereira20260614)
-      logical,pointer:: config_do_bburnPRM
-#endif
 
       ierr = 0
 
@@ -1185,18 +1110,6 @@ module atm_core
          do while (associated(block_ptr))
             call gocart2G_finalize(block_ptr%configs)
 
-            block_ptr => block_ptr%next
-         end do
-#endif
-
-#ifdef DO_PRM
-         block_ptr => domain % blocklist
-         do while (associated(block_ptr))
-            call mpas_pool_get_config(block_ptr % configs, 'config_do_bburnPRM', config_do_bburnPRM )
-            if (config_do_bburnPRM) then
-               !Deallocate PRM arrays (jpereira20260614)
-               call plumerisemodel_finalize(block_ptr%configs)
-            endif
             block_ptr => block_ptr%next
          end do
 #endif

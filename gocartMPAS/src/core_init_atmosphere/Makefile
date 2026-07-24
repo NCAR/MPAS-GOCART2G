@@ -6,13 +6,6 @@ ifeq "$(GOCART2G)" "true"
     #CHEM_OBJS = libchem/*.o #jpereira20260331
 endif
 
-#Include an option for build Plume Rise Model (PRM) modules in the chemistry directory (jpereira20260331)
-ifeq "$(PRM)" "true"
-    CHEMISTRY += -DDO_PRM
-    CHEMCORE = core_gocart2G
-    CHEM_OBJS += ../core_atmosphere/chemistry/mpas_chemistry_init_plumerisemodel_lbc.o
-endif
-
 OBJS_INIT = \
 	mpas_atmphys_date_time.o \
 	mpas_init_atm_hinterp.o \

@@ -35,7 +35,6 @@
       call atm_setup_nmlrec_physics(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_soundings(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_physics_lsm_noahmp(configPool, unitNumber, dminfo)
-      call atm_setup_nmlrec_plumerisemodel(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_chemistry(configPool, unitNumber, dminfo)
 
       close(unitNumber)

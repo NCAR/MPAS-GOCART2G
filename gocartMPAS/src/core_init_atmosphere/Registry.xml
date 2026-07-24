@@ -636,12 +636,6 @@
                         <var name="rh2" packages="met_stage_out"/>
                         <var name="t2m" packages="met_stage_out"/>
 
-#ifdef DO_PRM
-                        <!--  Include the PRM input data (Fire Size, FRP) as an output inside the init file: -->
-                        <!-- (jpereira20260331) -->
-                        <var_struct name="biob_prm_lbc"/>
-#endif
-
 #ifdef DO_GOCART2G
                         <var name="erod" packages="gocart2G_static_out"/>
                         <var name="clayfrac" packages="gocart2G_static_out"/>
