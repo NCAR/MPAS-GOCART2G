@@ -403,20 +403,6 @@ set(ATMOSPHERE_CORE_CHEM_GOCART2G_SOURCES
 )
 list(TRANSFORM ATMOSPHERE_CORE_CHEM_GOCART2G_SOURCES PREPEND chemistry/gocart2G/)
 
-set(ATMOSPHERE_CORE_CHEM_PRM_SOURCES
-    mpas_chemistry_gocart2G_plumerisemodel.F90
-    mpas_chemistry_init_plumerisemodel_lbc.F90
-    mpas_chemistry_plumerisemodel_driver.F90
-    mpas_chemistry_plumerisemodel_interface.F90
-    mpas_chemistry_plumerisemodel_lbc.F90
-    mpas_chemistry_plumerisemodel_lbc_init.F90
-    mpas_chemistry_plumerisemodel_lbc_update.F90
-    mpas_chemistry_plumerisemodel_manager.F90
-    mpas_chemistry_plumerisemodel_run.F90
-    mpas_chemistry_plumerisemodel_vars.F90
-)
-list(TRANSFORM ATMOSPHERE_CORE_CHEM_PRM_SOURCES PREPEND chemistry/)
-
 add_library(core_atmosphere ${ATMOSPHERE_CORE_SOURCES}
             ${ATMOSPHERE_CORE_PHYSICS_NOAMP_UTILITY_SOURCES}
             ${ATMOSPHERE_CORE_PHYSICS_NOAMP_MPAS_DRIVER_SOURCES}

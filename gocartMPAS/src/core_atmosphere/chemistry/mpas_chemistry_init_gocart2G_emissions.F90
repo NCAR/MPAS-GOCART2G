@@ -1250,7 +1250,11 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     bc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*bc_biob_modis(:)
+ else 
+    call mpas_log_write('--- sets bc_biob_em(:) = biob_modis(:)')
+    bc_biob_em(:) = biob_modis(:) ! 20250119_jpereira_bugfix_start
  endif
+ ! 20250119_jpereira_bugfix_end
 
 
 !biomass burning of organic carbon:
@@ -1267,7 +1271,11 @@
 !interpolation of organic carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     oc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*oc_biob_modis(:)
+ else
+    call mpas_log_write('--- sets oc_biob_em(:) = biob_modis(:)')
+    oc_biob_em(:) = biob_modis(:) ! 20250119_jpereira_bugfix_start
  endif
+ ! 20250119_jpereira_bugfix_end
 
 
 !biomass burning of nitrate:
@@ -1281,10 +1289,14 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
+!interpolation of nitrate biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     ni_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*nh3_biob_modis(:)
+ else
+    call mpas_log_write('--- sets ni_biob_em(:) = biob_modis(:)')
+    ni_biob_em(:) = biob_modis(:) ! 20250119_jpereira_bugfix_start
  endif
+ ! 20250119_jpereira_bugfix_end
 
 
 !biomass burning of sulphur dioxide:
@@ -1298,10 +1310,14 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
+!interpolation of sulphur dioxide biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     su_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*so2_biob_modis(:)
+ else
+    call mpas_log_write('--- sets su_biob_em(:) = biob_modis(:)')
+    su_biob_em(:) = biob_modis(:) ! 20250119_jpereira_bugfix_start
  endif
+ ! 20250119_jpereira_bugfix_end
 
 
 !biomass burning of carbon monoxide:
@@ -1315,10 +1331,14 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
+!interpolation of carbon monoxide biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     co_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*co_biob_modis(:)
+ else
+    call mpas_log_write('--- sets co_biob_em(:) = biob_modis(:)')
+    co_biob_em(:) = biob_modis(:) ! 20250119_jpereira_bugfix_start
  endif
+ ! 20250119_jpereira_bugfix_end
 
 
 !biomass burning of isoprene:
@@ -1332,10 +1352,15 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
+!interpolation of isoprene biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     iso_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*iso_biob_modis(:)
+ else
+    call mpas_log_write('--- sets iso_biob_em(:) = biob_modis(:)')
+    iso_biob_em(:) = biob_modis(:) ! 20250119_jpereira_bugfix_start
  endif
+ ! 20250119_jpereira_bugfix_end
+
 
 
 !biomass burning of monoterpenes:
@@ -1349,10 +1374,15 @@
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-!interpolation of organic carbon biomass burning emissions to the current time:
+!interpolation of monoterpenes biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     mnt_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*mnt_biob_modis(:)
+ else
+    call mpas_log_write('--- sets mnt_biob_em(:) = biob_modis(:)')
+    mnt_biob_em(:) = biob_modis(:) ! 20250119_jpereira_bugfix_start
  endif
+ ! 20250119_jpereira_bugfix_end
+
 
  deallocate(biob_modis)
 

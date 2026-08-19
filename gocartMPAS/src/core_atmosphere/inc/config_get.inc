@@ -167,11 +167,6 @@
       call mpas_pool_get_config(configPool, 'config_noahmp_iopt_infdv', config_noahmp_iopt_infdv)
       call mpas_pool_get_config(configPool, 'config_noahmp_iopt_tdrn', config_noahmp_iopt_tdrn)
 
-      call mpas_pool_get_config(configPool, 'config_do_bburnPRM', config_do_bburnPRM)
-      call mpas_pool_get_config(configPool, 'config_prm_lbc_interval', config_prm_lbc_interval)
-      call mpas_pool_get_config(configPool, 'config_prm_interval', config_prm_interval)
-      call mpas_pool_get_config(configPool, 'config_do_FRP', config_do_FRP)
-
       call mpas_pool_get_config(configPool, 'config_CAMchem_levels', config_CAMchem_levels)
       call mpas_pool_get_config(configPool, 'config_chems_bck_levels', config_chems_bck_levels)
       call mpas_pool_get_config(configPool, 'config_gocart2G_backg_interval', config_gocart2G_backg_interval)

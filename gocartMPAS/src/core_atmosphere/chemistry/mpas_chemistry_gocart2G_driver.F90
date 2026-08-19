@@ -29,7 +29,6 @@
                                         SOA2G,SOA2G_params,      &
                                         GOCART2G,GOCART2G_params
 
-
  implicit none
  private
  public:: gocart2G_driver
@@ -154,7 +153,6 @@
     nerod  = mpas_gocart2G%nerod
     nbndlw = mpas_gocart2G%nbndlw
     nbndsw = mpas_gocart2G%nbndsw
-
 
     !--- fills local chemistry arrays with global chemistry arrays:
     call mpas_gocart2G%gocart2G_fromMPAS(gocart2G_backgrounds,gocart2G_met,block%configs, &

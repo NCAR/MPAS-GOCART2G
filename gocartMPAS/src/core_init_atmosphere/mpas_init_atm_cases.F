@@ -24,6 +24,7 @@ module init_atm_cases
    use mpas_atmphys_functions
    use mpas_atmphys_initialize_real
    use mpas_log, only : mpas_log_write
+
 #ifdef DO_GOCART2G
    use mpas_chemistry_init_gocart2G_climatology,only: init_gocart2G_climatology
    use mpas_chemistry_init_gocart2G_emissions,only: init_anth_emissions_bc,         &
@@ -84,6 +85,7 @@ module init_atm_cases
       logical, pointer :: config_native_gwd_gsl_static
       logical, pointer :: config_met_interp
       logical, pointer :: config_blend_bdy_terrain
+
 #ifdef DO_GOCART2G
       logical, pointer :: config_gocart2G_ANTHemis
       logical, pointer :: config_gocart2G_BIOBemis
@@ -299,6 +301,7 @@ module init_atm_cases
 
             block_ptr => block_ptr % next
          end do
+
 
 #ifdef DO_GOCART2G
          block_ptr => domain % blocklist
