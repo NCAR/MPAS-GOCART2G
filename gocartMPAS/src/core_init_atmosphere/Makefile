@@ -3,7 +3,6 @@
 ifeq "$(GOCART2G)" "true"
     CHEMISTRY = -DDO_GOCART2G
     CHEMCORE = core_gocart2G
-    #CHEM_OBJS = libchem/*.o #jpereira20260331
 endif
 
 OBJS_INIT = \
@@ -44,9 +43,6 @@ all: core_hyd_init $(CHEMCORE) core_hyd
 core_hyd_init: $(OBJS_INIT)
 	ar -ru libdycore.a $(OBJS_INIT)
 
-#jpereira20260331
-#core_hyd: $(OBJS)
-#	ar -ru libdycore.a $(OBJS)
 core_hyd: $(OBJS)
 	ar -ru libdycore.a $(OBJS) $(CHEM_OBJS)
 

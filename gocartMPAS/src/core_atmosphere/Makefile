@@ -93,9 +93,6 @@ clean:
 	$(RM) *.i
 	$(RM) -r default_inputs
 
-
-#Clean up rules more general for both GOCART2G and PRM module clean up (jpereira20260527)
-
 #.F.o:
 #	$(RM) $@ $*.mod
 #ifeq "$(GEN_F90)" "true"
