@@ -707,7 +707,7 @@
 !--- convert qnh3 from mole per mole to kg per kg. initialize qnh4a as a function of qso4 (we assume
 !    that the number of moles of NH4a is equal to the number of moles of SO4, and then convert mole
 !    per mole to kg per kg:
- fMassNH3  = 62._RKIND   ! as defined in NI2G_GridCompMod.F90
+ fMassNH3  = 17.031_RKIND ! molecular mass of NH3 [g mol-1]
  fMassNH4a = 18._RKIND   ! as defined in NI2G_GridCompMod.F90
  fMassAir  = 28.97_RKIND ! as defined in NI2G_GridCompMod.F90
  fMassSO4  = 96._RKIND   ! as defined in SU2G_GridCompMod.F90
