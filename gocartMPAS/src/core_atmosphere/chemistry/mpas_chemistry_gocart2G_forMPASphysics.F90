@@ -909,12 +909,13 @@
  end subroutine gocart2G_forMPASthom
 
 !==================================================================================================================
- subroutine gocart2G_fromMPASthom(self,state,time_lev)
+ subroutine gocart2G_fromMPASthom(self,state,time_lev,from_THOM)
 !==================================================================================================================
 
 !--- input arguments:
  class(chem_gocart2G),intent(in):: self
  integer,intent(in):: time_lev
+ logical,intent(in):: from_THOM
 
 !--- inout arguments:
  type(mpas_pool_type),intent(inout):: state
@@ -937,15 +938,17 @@
  kts = self%kts
  kte = self%kte
 
- do ic = 1,self%nchem
-    if(self%fthom_w(ic)) then
-       self%chem_nc(:,:,ic) = self%chem_nwfa(:,:)*self%chem_nr(:,:,ic)
-       self%chem_mr(:,:,ic) = self%chem_nc(:,:,ic)/self%fnum(ic)
-    elseif(self%fthom_i(ic)) then
-       self%chem_nc(:,:,ic) = self%chem_nifa(:,:)*self%chem_nr(:,:,ic)
-       self%chem_mr(:,:,ic) = self%chem_nc(:,:,ic)/self%fnum(ic)
-    endif
- enddo
+ if(from_THOM) then
+    do ic = 1,self%nchem
+       if(self%fthom_w(ic)) then
+          self%chem_nc(:,:,ic) = self%chem_nwfa(:,:)*self%chem_nr(:,:,ic)
+          self%chem_mr(:,:,ic) = self%chem_nc(:,:,ic)/self%fnum(ic)
+       elseif(self%fthom_i(ic)) then
+          self%chem_nc(:,:,ic) = self%chem_nifa(:,:)*self%chem_nr(:,:,ic)
+          self%chem_mr(:,:,ic) = self%chem_nc(:,:,ic)/self%fnum(ic)
+       endif
+    enddo
+ endif
 !do i = its,ite
 !   do k = kts,kte
 !      call mpas_log_write('$i $i $r $r $r $r $r $r $r $r $r $r $r $r',intArgs=(/i,k/),realArgs=(/ &

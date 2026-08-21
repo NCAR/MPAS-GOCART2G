@@ -183,6 +183,11 @@
            description="set to true to activate gocart2G aerosols as nwfa and nifa in THOMPSON cloud microphysics"
            possible_values="True,False"/>
 
+      <nml_option name="config_gocart2G_fromTHOM" type="logical" default_value="true"
+           units="-"
+           description="set to true to feed Thompson-updated nwfa and nifa back to gocart2G aerosol mass; set to false for one-way gocart2G-to-Thompson coupling"
+           possible_values="True,False"/>
+
       <nml_option name="config_gocart2G_agingBC" type="real" default_value="0.8"
            units="-"
            description="hydrophobic to hydrophilic aging fraction for black carbon"

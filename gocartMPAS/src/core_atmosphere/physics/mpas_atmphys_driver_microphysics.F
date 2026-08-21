@@ -373,6 +373,9 @@
                                             ssWT_bin2, ssWT_bin3, ssWT_bin4, ssWT_bin5
  integer :: ic, idx, offset
  real(kind=RKIND) :: col_mass_before, col_mass_after
+#ifdef DO_GOCART2G
+ logical,pointer:: from_THOM
+#endif
 
 !local pointers:
  character(len=StrKIND),pointer:: microp_scheme
@@ -480,6 +483,7 @@
     case ("mp_thompson_gocart2G")
        call mpas_timer_start('mp_thompson_gocart2G')
 #ifdef DO_GOCART2G
+       call mpas_pool_get_config(configs,'config_gocart2G_fromTHOM',from_THOM)
 ! --- 1. Retrieve all the pointers from MPAS pools
        call mpas_pool_get_subpool(block_structs, 'NI2G_diags', NI2G_diags)
        call mpas_pool_get_subpool(block_structs, 'SU2G_diags', SU2G_diags)
@@ -648,7 +652,7 @@
              enddo
           enddo
        enddo
-       call mpas_chem_gocart2G%gocart2G_fromMPASthom(state,time_lev)
+       call mpas_chem_gocart2G%gocart2G_fromMPASthom(state,time_lev,from_THOM)
 
 ! --- 5. CALCULATE COLUMN MASS AFTER (Subtract from Pointer) ---
           do ic = 1, mpas_chem_gocart2G%nchem
