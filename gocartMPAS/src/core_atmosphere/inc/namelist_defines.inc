@@ -1250,62 +1250,6 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
    end subroutine atm_setup_nmlrec_physics_lsm_noahmp
 
 
-   subroutine atm_setup_nmlrec_plumerisemodel(configPool, unitNumber, dminfo)
-      use mpas_log, only : mpas_log_write, mpas_log_escape_dollars
-      implicit none
-      type (mpas_pool_type), intent(inout) :: configPool
-      integer, intent(in) :: unitNumber
-      type (dm_info), intent(in) :: dminfo
-      type (mpas_pool_type), pointer :: recordPool
-      integer :: ierr
-
-      logical :: config_do_bburnPRM = .false.
-      character (len=StrKIND) :: config_prm_lbc_interval = '01_00:00:00'
-      character (len=StrKIND) :: config_prm_interval = '00_01:00:00'
-      logical :: config_do_FRP = .false.
-
-      namelist /plumerisemodel/ &
-         config_do_bburnPRM, &
-         config_prm_lbc_interval, &
-         config_prm_interval, &
-         config_do_FRP
-      if (dminfo % my_proc_id == IO_NODE) then
-! Rewinding before each read leads to errors when the code is built with
-! the NAG Fortran compiler. If building with NAG, be kind and don't rewind.
-#ifndef NAG_COMPILER
-         rewind(unitNumber)
-#endif
-         read(unitNumber, plumerisemodel, iostat=ierr)
-      end if
-      call mpas_dmpar_bcast_int(dminfo, ierr)
-
-      if (ierr <= 0) then
-         call mpas_dmpar_bcast_logical(dminfo, config_do_bburnPRM)
-         call mpas_dmpar_bcast_char(dminfo, config_prm_lbc_interval)
-         call mpas_dmpar_bcast_char(dminfo, config_prm_interval)
-         call mpas_dmpar_bcast_logical(dminfo, config_do_FRP)
-         if (ierr < 0) then
-            call mpas_log_write('*** Encountered an issue while attempting to read namelist record plumerisemodel')
-            call mpas_log_write('    The following values will be used for variables in this record:')
-            call mpas_log_write(' ')
-            call mpas_log_write('        config_do_bburnPRM = $l', logicArgs=(/config_do_bburnPRM/))
-            call mpas_log_write('        config_prm_lbc_interval = '//mpas_log_escape_dollars(config_prm_lbc_interval))
-            call mpas_log_write('        config_prm_interval = '//mpas_log_escape_dollars(config_prm_interval))
-            call mpas_log_write('        config_do_FRP = $l', logicArgs=(/config_do_FRP/))
-            call mpas_log_write(' ')
-         end if
-      else if (ierr > 0) then
-         call mpas_log_write('Error while reading namelist record plumerisemodel.', MPAS_LOG_CRIT)
-      end if
-
-      call mpas_pool_add_config(configPool, 'config_do_bburnPRM', config_do_bburnPRM)
-      call mpas_pool_add_config(configPool, 'config_prm_lbc_interval', config_prm_lbc_interval)
-      call mpas_pool_add_config(configPool, 'config_prm_interval', config_prm_interval)
-      call mpas_pool_add_config(configPool, 'config_do_FRP', config_do_FRP)
-
-   end subroutine atm_setup_nmlrec_plumerisemodel
-
-
    subroutine atm_setup_nmlrec_chemistry(configPool, unitNumber, dminfo)
       use mpas_log, only : mpas_log_write, mpas_log_escape_dollars
       implicit none

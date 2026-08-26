@@ -378,6 +378,7 @@ module atm_core
       use mpas_atmphys_init
       use mpas_atmphys_manager
 #endif
+
 #ifdef DO_GOCART2G
       use mpas_chemistry_gocart2G_init
       use mpas_chemistry_gocart2G_emissions_init
@@ -401,6 +402,7 @@ module atm_core
       type (mpas_pool_type), pointer :: ngw_input
       type (mpas_pool_type), pointer :: atm_input
       type (mpas_pool_type), pointer :: output_noahmp
+
 #ifdef DO_GOCART2G
       type (mpas_pool_type), pointer :: anth_emissions
       type (mpas_pool_type), pointer :: biob_emissions
@@ -590,6 +592,7 @@ module atm_core
                            diag_physics, diag_physics_noahmp, ngw_input, atm_input, sfc_input, output_noahmp)
       endif
 #endif
+
 #ifdef DO_GOCART2G
       call mpas_pool_get_subpool(block % structs, 'anth_emissions', anth_emissions)
       call mpas_pool_get_subpool(block % structs, 'biob_emissions', biob_emissions)
@@ -1005,6 +1008,7 @@ module atm_core
       use mpas_atmphys_manager
       use mpas_atmphys_update
 #endif
+
 #ifdef DO_GOCART2G
       use mpas_chemistry_gocart2G_forMPASrestart,only: gocart2G_forMPASrestart
       use mpas_chemistry_gocart2G_manager,only: gocart2G_timetracker
@@ -1013,7 +1017,7 @@ module atm_core
       use mpas_atm_halos, only: exchange_halo_group
    
       implicit none
-   
+
       type (domain_type), intent(inout) :: domain 
       real (kind=RKIND), intent(in) :: dt
       integer, intent(in) :: itimestep
