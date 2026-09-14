@@ -402,7 +402,10 @@
  end subroutine init_convection
 
 !=================================================================================================================
+! 20260429_rkumar_start 
+!subroutine driver_convection(itimestep,configs,mesh,sfc_input,diag_physics,tend_physics,its,ite)
  subroutine driver_convection(itimestep,configs,mesh,sfc_input,diag_physics,tend_physics,block_structs,its,ite)
+! 20260429_rkumar_end
 !=================================================================================================================
 
 !input arguments:
@@ -416,7 +419,9 @@
 !inout arguments:
  type(mpas_pool_type),intent(inout):: diag_physics
  type(mpas_pool_type),intent(inout):: tend_physics
+! 20260429_rkumar_start 
  type(mpas_pool_type), intent(inout) :: block_structs
+! 20260429_rkumar_end
 
 !local variables and arrays:
  logical:: log_convection
@@ -609,7 +614,9 @@
              cp       = cp         ,                                                 &
              do_ctrchems  = cu_ntiedtke_ctrchems ,                                   &
              do_scavchems = cu_ntiedtke_scavchems,                                   &
+             ! 20260429_rkumar_start
              block_structs = block_structs,                                          &
+             ! 20260429_rkumar_end
              errmsg   = errmsg     , errflg      = errflg      ,                     &
              ids = ids , ide = ide , jds = jds , jde = jde , kds = kds , kde = kde , &
              ims = ims , ime = ime , jms = jms , jme = jme , kms = kds , kme = kme , &

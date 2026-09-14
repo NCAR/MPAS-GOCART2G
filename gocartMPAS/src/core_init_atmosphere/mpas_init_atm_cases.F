@@ -16,6 +16,7 @@ module init_atm_cases
    use atm_advection
    use mpas_RBF_interpolation
    use mpas_vector_reconstruction
+   use init_atm_vinterp, only: vertical_interp
    use mpas_timer
    use mpas_init_atm_static
    use mpas_init_atm_surface
@@ -24,6 +25,7 @@ module init_atm_cases
    use mpas_atmphys_functions
    use mpas_atmphys_initialize_real
    use mpas_log, only : mpas_log_write
+
 #ifdef DO_GOCART2G
    use mpas_chemistry_init_gocart2G_climatology,only: init_gocart2G_climatology
    use mpas_chemistry_init_gocart2G_emissions,only: init_anth_emissions_bc,         &
@@ -77,6 +79,7 @@ module init_atm_cases
       type (mpas_pool_type), pointer :: diag
       type (mpas_pool_type), pointer :: diag_physics
       type (mpas_pool_type), pointer :: lbc_state
+      type (mpas_pool_type), pointer :: fdda_state
 
       integer, pointer :: config_init_case
       logical, pointer :: config_static_interp
@@ -84,6 +87,7 @@ module init_atm_cases
       logical, pointer :: config_native_gwd_gsl_static
       logical, pointer :: config_met_interp
       logical, pointer :: config_blend_bdy_terrain
+
 #ifdef DO_GOCART2G
       logical, pointer :: config_gocart2G_ANTHemis
       logical, pointer :: config_gocart2G_BIOBemis
@@ -111,7 +115,7 @@ module init_atm_cases
       real (kind=RKIND), pointer :: Time
 
       type (MPAS_Time_type)  :: curr_time, stop_time, start_time
-      type (MPAS_TimeInterval_type)  :: clock_interval, lbc_stream_interval, surface_stream_interval
+      type (MPAS_TimeInterval_type)  :: clock_interval, lbc_stream_interval, surface_stream_interval, fdda_stream_interval
       type (MPAS_TimeInterval_type)  :: time_since_start
       character(len=StrKIND) :: timeStart,timeString
 
@@ -300,6 +304,7 @@ module init_atm_cases
             block_ptr => block_ptr % next
          end do
 
+
 #ifdef DO_GOCART2G
          block_ptr => domain % blocklist
          do while (associated(block_ptr))
@@ -470,6 +475,90 @@ module init_atm_cases
          !
          call mpas_stream_mgr_reset_alarms(stream_manager, streamID='lbc', direction=MPAS_STREAM_OUTPUT, ierr=ierr)
 
+      else if (config_init_case == 10) then
+
+         call mpas_log_write(' les test case ')
+         block_ptr => domain % blocklist
+         do while (associated(block_ptr))
+
+            call mpas_pool_get_dimension(block_ptr % dimensions, 'nCells', nCells)
+            call mpas_pool_get_dimension(block_ptr % dimensions, 'nVertLevels', nVertLevels)
+
+            call mpas_pool_get_subpool(block_ptr % structs, 'mesh', mesh)
+            call mpas_pool_get_subpool(block_ptr % structs, 'fg', fg)
+            call mpas_pool_get_subpool(block_ptr % structs, 'state', state)
+            call mpas_pool_get_subpool(block_ptr % structs, 'diag', diag)
+
+            call mpas_log_write(' calling test case setup ')
+            call init_atm_case_les(domain % dminfo, mesh, fg, nCells, nVertLevels, state, diag, config_init_case, block_ptr % configs)
+            call decouple_variables(mesh, nCells, nVertLevels, state, diag)
+            call mpas_log_write(' returned from test case setup ')
+            block_ptr => block_ptr % next
+         end do
+
+      else if (config_init_case == 11 ) then
+
+         call mpas_log_write('FDDA analysis nudging case')
+
+         !
+         ! Check that the first-guess interval (which is the same as the clock timestep)
+         ! matches the output interval of the 'fdda' stream
+         !
+         clock_interval = mpas_get_clock_timestep(domain % clock, ierr=ierr)
+         fdda_stream_interval = MPAS_stream_mgr_get_stream_interval(stream_manager, 'fdda', MPAS_STREAM_OUTPUT, ierr)
+         if (clock_interval /= fdda_stream_interval) then
+            call mpas_log_write('****************************************************************',   messageType=MPAS_LOG_ERR)
+            call mpas_log_write('The intermediate file interval specified by ''config_fg_interval''', messageType=MPAS_LOG_ERR)
+            call mpas_log_write('does not match the output_interval for the ''fdda'' stream.',         messageType=MPAS_LOG_ERR)
+            call mpas_log_write('Please correct the namelist.init_atmosphere and/or',                 messageType=MPAS_LOG_ERR)
+            call mpas_log_write('streams.init_atmosphere files.',                                     messageType=MPAS_LOG_ERR)
+            call mpas_log_write('****************************************************************',   messageType=MPAS_LOG_CRIT)
+         end if
+
+         curr_time = mpas_get_clock_time(domain % clock, MPAS_NOW)
+         stop_time = mpas_get_clock_time(domain % clock, MPAS_STOP_TIME)
+
+         do while (curr_time <= stop_time)
+
+            block_ptr => domain % blocklist
+            do while (associated(block_ptr))
+               call mpas_pool_get_subpool(block_ptr % structs, 'mesh', mesh)
+               call mpas_pool_get_subpool(block_ptr % structs, 'fg', fg)
+               call mpas_pool_get_subpool(block_ptr % structs, 'state', state)
+               call mpas_pool_get_subpool(block_ptr % structs, 'diag', diag)
+               call mpas_pool_get_subpool(block_ptr % structs, 'fdda_state', fdda_state)
+
+               call mpas_pool_get_array(state, 'xtime', xtime)
+
+               call mpas_pool_get_dimension(block_ptr % dimensions, 'nCells', nCells)
+               call mpas_pool_get_dimension(block_ptr % dimensions, 'nEdges', nEdges)
+               call mpas_pool_get_dimension(block_ptr % dimensions, 'nVertLevels', nVertLevels)
+              
+               call mpas_get_time(curr_time, dateTimeString=timeString)
+               xtime = timeString   ! Set field valid time, xtime, to the current time in the time loop
+
+               call init_atm_case_fdda(timeString, block_ptr, mesh, nCells, nEdges, nVertLevels, fg, state, &
+                                      diag, fdda_state, block_ptr % dimensions, block_ptr % configs)
+
+
+               block_ptr => block_ptr % next
+            end do
+
+            call mpas_stream_mgr_write(stream_manager, streamID='fdda', ierr=ierr)
+            call mpas_stream_mgr_reset_alarms(stream_manager, streamID='fdda', direction=MPAS_STREAM_OUTPUT, ierr=ierr)
+
+            call mpas_advance_clock(domain % clock)
+            curr_time = mpas_get_clock_time(domain % clock, MPAS_NOW)
+
+         end do
+
+         !
+         ! Ensure that no output alarms are still ringing for the 'fdda' stream after
+         ! we exit the time loop above; the main run routine may write out all other
+         ! output streams with ringing alarms.
+         !
+         call mpas_stream_mgr_reset_alarms(stream_manager, streamID='fdda', direction=MPAS_STREAM_OUTPUT, ierr=ierr)
+
       else if (config_init_case == 13 ) then
 
          call mpas_log_write(' CAM-MPAS grid ')
@@ -502,7 +591,7 @@ module init_atm_cases
       else
 
          call mpas_log_write(' ***********************************************************', messageType=MPAS_LOG_ERR)
-         call mpas_log_write(' Only test cases 1 through 9 and 13 are currently supported.', messageType=MPAS_LOG_ERR)
+         call mpas_log_write(' Only test cases 1 through 10 and 13 are currently supported.', messageType=MPAS_LOG_ERR)
          call mpas_log_write(' ***********************************************************', messageType=MPAS_LOG_CRIT)
 
       end if
@@ -2864,6 +2953,8 @@ module init_atm_cases
       integer, pointer :: config_nsm
       real (kind=RKIND), pointer :: config_dzmin
       real (kind=RKIND), pointer :: config_ztop
+      logical, pointer :: config_hybrid_coordinate
+      real (kind=RKIND), pointer :: config_hybrid_top_z
       logical, pointer :: config_tc_vertical_grid
       character (len=StrKIND), pointer :: config_specified_zeta_levels
       logical, pointer :: config_use_spechumd
@@ -2940,6 +3031,8 @@ module init_atm_cases
       call mpas_pool_get_config(configs, 'config_nsm', config_nsm)
       call mpas_pool_get_config(configs, 'config_dzmin', config_dzmin)
       call mpas_pool_get_config(configs, 'config_ztop', config_ztop)
+      call mpas_pool_get_config(configs, 'config_hybrid_coordinate', config_hybrid_coordinate)
+      call mpas_pool_get_config(configs, 'config_hybrid_top_z', config_hybrid_top_z)
       call mpas_pool_get_config(configs, 'config_tc_vertical_grid', config_tc_vertical_grid)
       call mpas_pool_get_config(configs, 'config_specified_zeta_levels', config_specified_zeta_levels)
       call mpas_pool_get_config(configs, 'config_use_spechumd', config_use_spechumd)
@@ -3258,38 +3351,36 @@ module init_atm_cases
 !           ah(k) = 1.-zw(k)/zt is the basic terrain-following coordinate
 !           ah(k) = 0           is a height coordinate
  
-      hybrid = .true.
-!      hybrid = .false.
-
       kz = nz
-      if (hybrid) then
+      if (config_hybrid_coordinate) then
       
-         zh = 30000.0
-!         zh = 0.5*zt
-
+         zh = config_hybrid_top_z
          do k=1,nz
             if (zw(k) < zh) then
                ah(k) = cos(.5*pii*zw(k)/zh)**6
-
-!!!               ah(k) = ah(k)*(1.-zw(k)/zt)
-
             else
                ah(k) = 0.
                kz = min(kz,k)
             end if
          end do
+         call mpas_log_write('Hybrid vertical coordinate is used.  Transition height, ztop are $r $r ',realArgs=(/config_hybrid_top_z,zt/))
 
       else
 
+         zh = zt
          do k=1,nz
             ah(k) = 1.-zw(k)/zt
          end do
+         call mpas_log_write('Hybrid vertical coordinate is not selected.  ztop is ',realArgs=(/zt/))
 
       end if
 
+      call mpas_log_write(' ')
+      call mpas_log_write(' interface k, height, ah value ')
       do k=1,nz
          call mpas_log_write('$i $r $r', intArgs=(/k/), realArgs=(/zw(k), ah(k)/))
       end do
+      call mpas_log_write(' ')
 
       do k=1,nz1
          dzw (k) = zw(k+1)-zw(k)
@@ -3340,6 +3431,12 @@ module init_atm_cases
 
       if (smooth) then
 
+         call mpas_log_write(' ')
+         call mpas_log_write(' surfaces will be smoothed, dzmin = $r ',realArgs=(/config_dzmin/))
+         call mpas_log_write(' base number of smoothing passes = $i ',intArgs=(/config_nsm/))
+         call mpas_log_write(' ')
+         call mpas_log_write(' level, smoothing steps, smoothing factor, smallest fractional dz ')
+
          dzmin = config_dzmin
 
          allocate(sm0(nCells+1))
@@ -3360,7 +3457,7 @@ module init_atm_cases
             do i=1,config_nsm + k
                do iCell=1,nCells
 
-                  sm = sm0(iCell) * min((3.0*zw(k)/zt)**2.0, 1.0_RKIND)
+                  sm = sm0(iCell) * min((3.0*zw(k)/zh)**2.0, 1.0_RKIND)
 
                   hs1(iCell) = 0.
                   do j = 1,nEdgesOnCell(iCell)
@@ -3405,7 +3502,8 @@ module init_atm_cases
             call mpas_dmpar_min_real(dminfo, dzminf, dzminf_global)
             call mpas_log_write('$i $i $r $r', intArgs=(/k,i/), realArgs=(/sm,dzminf_global/(zw(k)-zw(k-1))/))
          end do
-
+         call mpas_log_write(' ')
+         
          deallocate(sm0)
 
          do k=kz,nz
@@ -3414,10 +3512,15 @@ module init_atm_cases
 
       else
 
+         call mpas_log_write(' ')
+         call mpas_log_write(' surfaces are not smoothed ')
+         call mpas_log_write(' level, smallest fractional dz ')
+
          do k=2,nz1
             dzmina = minval(zw(k)+ah(k)*hx(k,:)-zw(k-1)-ah(k-1)*hx(k-1,:))
             call mpas_log_write('$i $r', intArgs=(/k/), realArgs=(/dzmina/(zw(k)-zw(k-1))/))
          end do
+         call mpas_log_write(' ')
 
       end if
 
@@ -4605,9 +4708,6 @@ module init_atm_cases
                interp_list(1) = FOUR_POINT
                interp_list(2) = W_AVERAGE4
                interp_list(3) = 0
-
-               masked = 0
-               fillval = 0.0
 
                nInterpPoints = nCells
                latPoints => latCell
@@ -6287,6 +6387,1523 @@ call mpas_log_write('Done with soil consistency check')
 
    end subroutine init_atm_case_lbc
 
+!---------------------
+
+   subroutine init_atm_case_les(dminfo, mesh, fg, nCells, nVertLevels, state, diag, test_case, configs)
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ! Large Eddy Simulation (les) test case setup
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      implicit none
+
+      type (dm_info), intent(in) :: dminfo
+      type (mpas_pool_type), intent(inout) :: mesh
+      type (mpas_pool_type), intent(inout) :: fg
+      integer, intent(in) :: nCells
+      integer, intent(in) :: nVertLevels
+      type (mpas_pool_type), intent(inout) :: state
+      type (mpas_pool_type), intent(inout) :: diag
+      type (mpas_pool_type), intent(inout):: configs
+
+      integer, intent(in) :: test_case
+
+      real (kind=RKIND), dimension(:), pointer :: rdzw, dzu, rdzu, fzm, fzp
+      real (kind=RKIND), dimension(:,:), pointer :: zgrid, zxu, zz, hx, cqw
+      real (kind=RKIND), dimension(:,:), pointer :: ppb, pb, rho_zz, rb, rr, tb, rtb, p, pp, dss, t, rt, u, ru
+      real (kind=RKIND), dimension(:,:,:), pointer :: scalars
+      real (kind=RKIND), dimension(:,:,:), pointer :: zb, zb3
+
+      real (kind=RKIND), dimension(:), pointer :: xland
+      integer, dimension(:), pointer :: landmask, lu_index
+
+      !This is temporary variable here. It just need when calculate tangential velocity v.
+      integer :: eoe
+      integer, dimension(:), pointer :: nEdgesOnEdge 
+      integer, dimension(:,:), pointer :: edgesOnEdge, cellsOnEdge
+      real (kind=RKIND), dimension(:,:), pointer :: weightsOnEdge
+      real (kind=RKIND), pointer :: x_period, y_period
+
+      integer :: iCell, iCell1, iCell2 , iEdge, ivtx, i, k, nz, nz1, itr, cell1, cell2
+      integer, pointer :: nEdges, nVertices, maxEdges, nCellsSolve
+      integer, pointer :: index_qv
+      integer, pointer :: index_tke
+
+      real (kind=RKIND), dimension(nVertLevels + 1 ) :: zc, zw, ah
+      real (kind=RKIND), dimension(nVertLevels ) :: zu, dzw, rdzwp, rdzwm
+
+      real (kind=RKIND), dimension(nVertLevels, nCells) :: thi, tbi, cqwb
+
+      real (kind=RKIND) ::  xnutr
+      real (kind=RKIND) ::  ztemp, zd, zt, dz, str
+
+      real (kind=RKIND), dimension(nVertLevels ) :: qvb, qvp, zg
+      real (kind=RKIND), dimension(nVertLevels ) :: t_init_1d
+
+      real (kind=RKIND) :: cof1, cof2
+      real (kind=RKIND), pointer :: cf1, cf2, cf3
+      real (kind=RKIND) :: pitop, pibtop, ptopb, ptop, rcp, rcv, p0
+      real (kind=RKIND) :: a_scale
+
+      real (kind=RKIND), dimension(:), pointer :: xCell, yCell, zCell
+      real (kind=RKIND), dimension(:), pointer :: xEdge, yEdge, zEdge
+      real (kind=RKIND), dimension(:), pointer :: xVertex, yVertex, zVertex
+      real (kind=RKIND), dimension(:), pointer :: dcEdge, dvEdge, areaCell, areaTriangle
+      real (kind=RKIND), dimension(:,:), pointer :: kiteAreasOnVertex
+      logical, pointer :: on_a_sphere
+      real (kind=RKIND), pointer :: sphere_radius
+      real (kind=RKIND), pointer :: config_ztop
+
+      real (kind=RKIND), dimension(:,:), pointer :: t_init, w, rw, v, rho, theta
+      real (kind=RKIND), dimension(:), pointer :: u_init, v_init, qv_init, angleEdge, fEdge, fVertex
+      real (kind=RKIND) :: u_vel, v_vel, randx
+
+      call mpas_pool_get_array(mesh, 'xCell', xCell)
+      call mpas_pool_get_array(mesh, 'yCell', yCell)
+      call mpas_pool_get_array(mesh, 'zCell', zCell)
+      call mpas_pool_get_array(mesh, 'xEdge', xEdge)
+      call mpas_pool_get_array(mesh, 'yEdge', yEdge)
+      call mpas_pool_get_array(mesh, 'zEdge', zEdge)
+      call mpas_pool_get_array(mesh, 'xVertex', xVertex)
+      call mpas_pool_get_array(mesh, 'yVertex', yVertex)
+      call mpas_pool_get_array(mesh, 'zVertex', zVertex)
+      call mpas_pool_get_array(mesh, 'dvEdge', dvEdge)
+      call mpas_pool_get_array(mesh, 'dcEdge', dcEdge)
+      call mpas_pool_get_array(mesh, 'areaCell', areaCell)
+      call mpas_pool_get_array(mesh, 'areaTriangle', areaTriangle)
+      call mpas_pool_get_array(mesh, 'kiteAreasOnVertex', kiteAreasOnVertex)
+
+      call mpas_pool_get_config(mesh, 'x_period', x_period)
+      call mpas_pool_get_config(mesh, 'y_period', y_period)
+      call mpas_pool_get_config(mesh, 'on_a_sphere', on_a_sphere)
+      call mpas_pool_get_config(mesh, 'sphere_radius', sphere_radius)
+      call mpas_pool_get_config(configs, 'config_ztop', config_ztop)
+
+      !
+      ! Scale all distances
+      !
+
+      a_scale = 1.0
+
+      xCell(:) = xCell(:) * a_scale
+      yCell(:) = yCell(:) * a_scale
+      zCell(:) = zCell(:) * a_scale
+      xVertex(:) = xVertex(:) * a_scale
+      yVertex(:) = yVertex(:) * a_scale
+      zVertex(:) = zVertex(:) * a_scale
+      xEdge(:) = xEdge(:) * a_scale
+      yEdge(:) = yEdge(:) * a_scale
+      zEdge(:) = zEdge(:) * a_scale
+      dvEdge(:) = dvEdge(:) * a_scale
+      dcEdge(:) = dcEdge(:) * a_scale
+      areaCell(:) = areaCell(:) * a_scale**2.0
+      areaTriangle(:) = areaTriangle(:) * a_scale**2.0
+      kiteAreasOnVertex(:,:) = kiteAreasOnVertex(:,:) * a_scale**2.0
+      x_period = x_period * a_scale
+      y_period = y_period * a_scale
+
+      call mpas_pool_get_array(mesh, 'weightsOnEdge', weightsOnEdge)
+      call mpas_pool_get_array(mesh, 'nEdgesOnEdge', nEdgesOnEdge)
+      call mpas_pool_get_array(mesh, 'edgesOnEdge', edgesOnEdge)
+      call mpas_pool_get_array(mesh, 'cellsOnEdge', cellsOnEdge)
+
+      call mpas_pool_get_dimension(mesh, 'nEdges', nEdges)
+      call mpas_pool_get_dimension(mesh, 'nVertices', nVertices)
+      call mpas_pool_get_dimension(mesh, 'nCellsSolve', nCellsSolve)
+      call mpas_pool_get_dimension(mesh, 'maxEdges', maxEdges)
+      nz1 = nVertLevels
+      nz = nz1 + 1
+
+      call mpas_pool_get_array(mesh, 'zgrid', zgrid)
+      call mpas_pool_get_array(mesh, 'zb', zb)
+      call mpas_pool_get_array(mesh, 'zb3', zb3)
+      call mpas_pool_get_array(mesh, 'rdzw', rdzw)
+      call mpas_pool_get_array(mesh, 'dzu', dzu)
+      call mpas_pool_get_array(mesh, 'rdzu', rdzu)
+      call mpas_pool_get_array(mesh, 'fzm', fzm)
+      call mpas_pool_get_array(mesh, 'fzp', fzp)
+      call mpas_pool_get_array(mesh, 'zxu', zxu)
+      call mpas_pool_get_array(mesh, 'zz', zz)
+      call mpas_pool_get_array(mesh, 'hx', hx)
+      call mpas_pool_get_array(mesh, 'dss', dss)
+      call mpas_pool_get_array(mesh, 't_init', t_init)
+      call mpas_pool_get_array(mesh, 'u_init', u_init)
+      call mpas_pool_get_array(mesh, 'v_init', v_init)
+      call mpas_pool_get_array(mesh, 'qv_init', qv_init)
+      call mpas_pool_get_array(mesh, 'angleEdge', angleEdge)
+      call mpas_pool_get_array(mesh, 'fEdge', fEdge)
+      call mpas_pool_get_array(mesh, 'fVertex', fVertex)
+
+      call mpas_pool_get_array(mesh, 'cf1', cf1)
+      call mpas_pool_get_array(mesh, 'cf2', cf2)
+      call mpas_pool_get_array(mesh, 'cf3', cf3)
+
+      call mpas_pool_get_array(diag, 'pressure_base', ppb)
+      call mpas_pool_get_array(diag, 'exner_base', pb)
+      call mpas_pool_get_array(diag, 'rho_base', rb)
+      call mpas_pool_get_array(diag, 'theta_base', tb)
+      call mpas_pool_get_array(diag, 'rtheta_base', rtb)
+      call mpas_pool_get_array(diag, 'exner', p)
+      call mpas_pool_get_array(diag, 'cqw', cqw)
+
+      call mpas_pool_get_array(diag, 'pressure_p', pp)
+      call mpas_pool_get_array(diag, 'rho_p', rr)
+      call mpas_pool_get_array(diag, 'rtheta_p', rt)
+      call mpas_pool_get_array(diag, 'ru', ru)
+      call mpas_pool_get_array(diag, 'rw', rw)
+      call mpas_pool_get_array(diag, 'v', v)
+      call mpas_pool_get_array(diag, 'rho', rho)
+      call mpas_pool_get_array(diag, 'theta', theta)
+
+      call mpas_pool_get_array(state, 'rho_zz', rho_zz)
+      call mpas_pool_get_array(state, 'theta_m', t)
+      call mpas_pool_get_array(state, 'u', u)
+      call mpas_pool_get_array(state, 'w', w)
+      call mpas_pool_get_array(state, 'scalars', scalars)
+
+      call mpas_pool_get_dimension(state, 'index_qv', index_qv)
+      call mpas_pool_get_dimension(state, 'index_tke', index_tke)
+
+      call mpas_pool_get_array(fg, 'xland', xland)
+      call mpas_pool_get_array(mesh, 'landmask', landmask)
+      call mpas_pool_get_array(mesh, 'lu_index', lu_index)
+ 
+      scalars(:,:,:) = 0.
+
+      call atm_initialize_advection_rk(mesh, nCells, nEdges, maxEdges, on_a_sphere, sphere_radius )
+      call atm_initialize_deformation_weights(mesh, nCells, on_a_sphere, sphere_radius)
+      
+      xnutr = 0.
+      zd = 12000.
+
+      p0 = 1.e+05
+      rcp = rgas/cp
+      rcv = rgas/(cp-rgas)
+
+     call mpas_log_write(' point 1 in test case setup ')
+
+! We may pass in an hx(:,:) that has been precomputed elsewhere.
+! For now it is independent of k
+
+      do iCell=1,nCells
+        do k=1,nz
+          hx(k,iCell) = 0.  ! les on a flat Cartesian plane
+        end do
+      end do
+
+!      write(0,*) ' dz = ',dz
+      call mpas_log_write(' hx computation complete ')
+
+      !     metrics for hybrid coordinate and vertical stretching
+
+      str = 1.0  ! no stretching in les case: constant dz
+      ! zt = 20000.
+      zt = config_ztop
+      dz = zt/float(nz1)
+
+
+      do k=1,nz
+
+            ! zw(k) = zt*(real(k-1)*dz/zt)**str 
+            zw(k) = float(k-1)*dz
+            zc(k) = zw(k)
+!
+!           ah(k) governs the transition between terrain-following 
+!           and pureheight coordinates
+!                ah(k) = 0 is a terrain-following coordinate
+!                ah(k) = 1 is a height coordinate
+ 
+!            ah(k) = 1.-cos(.5*pii*(k-1)*dz/zt)**6
+            ah(k) = 1.
+!            call mpas_log_write(' k, zc, zw, ah = $i $r $r $r', intArgs=(/k/), realArgs=(/zc(k),zw(k),ah(k)/))
+      end do
+      do k=1,nz1
+         dzw (k) = zw(k+1)-zw(k)
+         rdzw(k) = 1./dzw(k)
+         zu(k  ) = .5*(zw(k)+zw(k+1))
+      end do
+      do k=2,nz1
+         dzu (k)  = .5*(dzw(k)+dzw(k-1))
+         rdzu(k)  =  1./dzu(k)
+         fzp (k)  = .5* dzw(k  )/dzu(k)
+         fzm (k)  = .5* dzw(k-1)/dzu(k)
+         rdzwp(k) = dzw(k-1)/(dzw(k  )*(dzw(k)+dzw(k-1)))
+         rdzwm(k) = dzw(k  )/(dzw(k-1)*(dzw(k)+dzw(k-1)))
+      end do
+
+!**********  how are we storing cf1, cf2 and cf3?
+
+      COF1 = (2.*DZU(2)+DZU(3))/(DZU(2)+DZU(3))*DZW(1)/DZU(2) 
+      COF2 =     DZU(2)        /(DZU(2)+DZU(3))*DZW(1)/DZU(3) 
+      CF1  = FZP(2) + COF1
+      CF2  = FZM(2) - COF1 - COF2
+      CF3  = COF2       
+
+      do iCell=1,nCells
+        do k=1,nz
+            zgrid(k,iCell) = ah(k)*(zc(k)*(1.-hx(k,iCell)/zt)+hx(k,iCell)) &
+                           + (1.-ah(k)) * zc(k)
+        end do
+        do k=1,nz1
+          zz (k,iCell) = (zw(k+1)-zw(k))/(zgrid(k+1,iCell)-zgrid(k,iCell))
+        end do
+      end do
+
+      do i=1, nEdges
+        iCell1 = cellsOnEdge(1,i)
+        iCell2 = cellsOnEdge(2,i)
+        do k=1,nz1
+          zxu (k,i) = 0.5 * (zgrid(k,iCell2)-zgrid(k,iCell1) + zgrid(k+1,iCell2)-zgrid(k+1,iCell1)) / dcEdge(i)
+        end do
+      end do
+      do i=1, nCells
+        do k=1,nz1
+          ztemp = .5*(zgrid(k+1,i)+zgrid(k,i))
+          dss(k,i) = 0.
+          ztemp = zgrid(k,i)
+          if(ztemp.gt.zd+.1)  then
+             dss(k,i) = dss(k,i)+xnutr*sin(.5*pii*(ztemp-zd)/(zt-zd))**2
+          end if
+        end do
+      end do
+
+!
+! initialization
+!
+         do i=1,nCells
+            do k=1,nz1
+
+               ztemp = .5*(zgrid(k,i)+zgrid(k+1,i))
+
+               ! if(ztemp .gt. ztr) then
+               !   t (k,i) = thetar*exp(9.8*(ztemp-ztr)/(1003.*ttr))
+               !   relhum(k,i) = 0.25
+               !  else
+               !   t (k,i) = 300.+43.*(ztemp/ztr)**1.25
+               !   relhum(k,i) = (1.-0.75*(ztemp/ztr)**1.25)
+               !   if(t(k,i).lt.thetas) t(k,i) = thetas
+               ! end if
+
+               t(k,i) = atm_get_sounding('theta',ztemp)
+               scalars(index_qv,k,i) = atm_get_sounding('qv',ztemp)
+
+               tb(k,i) = t(k,i)
+               thi(k,i) = t(k,i)
+               tbi(k,i) = t(k,i)
+               cqw(k,i) = 1.
+               cqwb(k,i) = 1.
+            end do
+         end do
+
+!  set the velocity field - we are on a plane here.
+
+         do i=1, nEdges
+            cell1 = cellsOnEdge(1,i)
+            cell2 = cellsOnEdge(2,i)
+            if(cell1 <= nCellsSolve .or. cell2 <= nCellsSolve) then
+               do k=1,nz1
+                  ztemp = .25*( zgrid(k,cell1 )+zgrid(k+1,cell1 )  &
+                               +zgrid(k,cell2)+zgrid(k+1,cell2))
+                  u_vel = atm_get_sounding('u',ztemp)
+                  v_vel = atm_get_sounding('v',ztemp)
+                  u(k,i) = cos(angleEdge(i))*u_vel - sin(angleEdge(i))*v_vel
+                  if(i == 1 ) then
+                    u_init(k) = u_vel
+                    v_init(k) = v_vel
+                  end if
+               end do
+            end if
+         end do
+
+         call mpas_dmpar_bcast_reals(dminfo, nz1, u_init)
+
+!
+!    for reference sounding 
+!
+     do itr=1,30
+
+      pitop = 1.-.5*dzw(1)*gravity*(1.+scalars(index_qv,1,1))/(cp*t(1,1)*zz(1,1))
+      pibtop = 1.-.5*dzw(1)*gravity*(1.+qvb(1))/(cp*tb(1,1)*zz(1,1))
+      do k=2,nz1
+         pitop = pitop-dzu(k)*gravity/(cp*cqw(k,1)*.5*(t(k,1)+t(k-1,1))   &
+                                   *.5*(zz(k,1)+zz(k-1,1)))
+         pibtop = pibtop-dzu(k)*gravity/(cp*cqwb(k,1)*.5*(tb(k,1)+tb(k-1,1))   &
+                                   *.5*(zz(k,1)+zz(k-1,1)))
+
+         !call mpas_log_write('$i $r $r $r $r', intArgs=(/k/), realArgs=(/pitop,tb(k,1),dzu(k),tb(k,1)/))
+      end do
+      pitop = pitop-.5*dzw(nz1)*gravity*(1.+scalars(index_qv,nz1,1))/(cp*t(nz1,1)*zz(nz1,1))
+      pibtop = pibtop-.5*dzw(nz1)*gravity*(1.+qvb(nz1))/(cp*tb(nz1,1)*zz(nz1,1))
+
+      call mpas_dmpar_bcast_real(dminfo, pitop)
+      call mpas_dmpar_bcast_real(dminfo, pibtop)
+
+      ptopb = p0*pibtop**(1./rcp)
+!     call mpas_log_write('ptopb = $r', realArgs=(/0.01_RKIND*ptopb/))
+
+      do i=1, nCells
+         pb(nz1,i) = pibtop+.5*dzw(nz1)*gravity*(1.+qvb(nz1))/(cp*tb(nz1,i)*zz(nz1,i))
+         p (nz1,i) = pitop+.5*dzw(nz1)*gravity*(1.+scalars(index_qv,nz1,i))/(cp*t (nz1,i)*zz(nz1,i))
+         do k=nz1-1,1,-1
+            pb(k,i)  = pb(k+1,i) + dzu(k+1)*gravity/(cp*cqwb(k+1,i)*.5*(tb(k,i)+tb(k+1,i))   &
+                                           *.5*(zz(k,i)+zz(k+1,i)))
+            p (k,i)  = p (k+1,i) + dzu(k+1)*gravity/(cp*cqw(k+1,i)*.5*(t (k,i)+t (k+1,i))   &
+                                           *.5*(zz(k,i)+zz(k+1,i)))
+         end do
+         do k=1,nz1
+            rb (k,i) = pb(k,i)**(1./rcv)/((rgas/p0)*tb(k,i)*zz(k,i))
+            rtb(k,i) = rb(k,i)*tb(k,i)
+            rr (k,i) = p (k,i)**(1./rcv)/((rgas/p0)*t (k,i)*zz(k,i))-rb(k,i)
+            ppb(k,i) = p0*(zz(k,i)*rgas*rtb(k,i)/p0)**(cp/cv)
+         end do
+      end do
+
+     !
+     ! update water vapor mixing ratio from humidity profile
+     !
+     ! do i= 1,nCells
+     !    do k=1,nz1
+     !       temp     = p(k,i)*thi(k,i)
+     !       pres     = p0*p(k,i)**(1./rcp)
+     !       qvs      = 380.*exp(17.27*(temp-273.)/(temp-36.))/pres
+     !       scalars(index_qv,k,i) = min(0.014_RKIND,relhum(k,i)*qvs)
+     !    end do
+     ! end do
+
+      do k=1,nz1
+!*********************************************************************
+!           QVB = QV INCLUDES MOISTURE IN REFERENCE STATE
+!            qvb(k) = scalars(index_qv,k,1)
+!           QVB = 0 PRODUCES DRY REFERENCE STATE
+            qvb(k) = 0.
+            qvp(k) = scalars(index_qv,k,1)*1000.
+            zg(k) = .5*(zgrid(k,1)+zgrid(k+1,1))
+!*********************************************************************
+      end do
+
+      do i= 1,nCells
+         do k=1,nz1
+            t (k,i) = thi(k,i)*(1.+1.61*scalars(index_qv,k,i))
+            tb(k,i) = tbi(k,i)*(1.+1.61*qvb(k))
+         end do
+         do k=2,nz1
+            cqw (k,i) = 1./(1.+.5*(scalars(index_qv,k,i)+scalars(index_qv,k-1,i)))
+            cqwb(k,i) = 1./(1.+.5*(qvb(k)+qvb(k-1)))
+         end do
+      end do
+
+      end do !end of iteration loop
+
+      call mpas_log_write(' sounding ')
+      call mpas_log_write(' k,     zg,     rb,     tb,     rtb,     t,     rr,      p,    qvp')
+      do k=1,nVertLevels
+         call mpas_log_write('$i $r $r $r $r $r $r $r $r', intArgs=(/k/), realArgs=(/zg(k),rb(k,1),tb(k,1),rtb(k,1),t(k,1),rr(k,1),p(k,1),qvp(k)/))
+      end do
+
+!
+!     potential temperature perturbation
+!
+
+!      do i=1,nCells
+!        do k = 1,nz1  ! same as in WRF
+!          call random_number(randx)
+!          thi(k,i) = thi(k,i) + 0.1*(randx-0.5)
+!           t (k,i) = thi(k,i)*(1.+1.61*scalars(index_qv,k,i))
+!        end do
+!      end do
+
+      do k = 1,nz1  ! same as in WRF
+        if(zg(k) .le. 397.0) then  ! the SAS initial PBL height
+          do i=1,nCells
+            call random_number(randx)
+            thi(k,i) = thi(k,i) + 1.0*(randx-0.5)
+             t (k,i) = thi(k,i)*(1.+1.61*scalars(index_qv,k,i))
+          end do
+        end if
+      end do
+!
+!  initial seed for tke
+!
+      scalars(index_tke,:,:) = 0.
+
+      do k = 1,nz1  
+        if( zg(k) .le. 255.) then
+          do i=1,nCells
+            !! scalars(index_tke,k,i) = 0.1
+               scalars(index_tke,k,i) = 0.4*((1.-(zg(k)/255.))**3)
+          end do
+        end if
+      end do
+
+      do itr=1,30
+
+        pitop = 1.-.5*dzw(1)*gravity*(1.+scalars(index_qv,1,1))/(cp*t(1,1)*zz(1,1))
+        do k=2,nz1
+          pitop = pitop-dzu(k)*gravity/(cp*cqw(k,1)*.5*(t (k,1)+t (k-1,1)) &
+                                                  *.5*(zz(k,1)+zz(k-1,1)))
+        end do
+        pitop = pitop - .5*dzw(nz1)*gravity*(1.+scalars(index_qv,nz1,1))/(cp*t(nz1,1)*zz(nz1,1))
+        ptop = p0*pitop**(1./rcp)
+!       call mpas_log_write('ptop  = $r $r', realArgs=(/0.01_RKIND*ptop, 0.01_RKIND*ptopb/))
+
+        call mpas_dmpar_bcast_real(dminfo, ptop)
+
+        do i = 1, nCells
+
+          pp(nz1,i) = ptop-ptopb+.5*dzw(nz1)*gravity*   &
+                       (rr(nz1,i)+(rr(nz1,i)+rb(nz1,i))*scalars(index_qv,nz1,i))
+          do k=nz1-1,1,-1
+!             pp(k,i) = pp(k+1,i)+.5*dzu(k+1)*gravity*                   &
+!                            (rr(k  ,i)+(rr(k  ,i)+rb(k  ,i))*scalars(index_qv,k  ,i)  &
+!                            +rr(k+1,i)+(rr(k+1,i)+rb(k+1,i))*scalars(index_qv,k+1,i))
+               pp(k,i) = pp(k+1,i)+dzu(k+1)*gravity*(    &
+                            fzm(k+1)*(rb(k+1,i)*(scalars(index_qv,k+1,i)-qvb(k+1))    &
+                                     +rr(k+1,i)*(1.+scalars(index_qv,k+1,i)))         &
+                           +fzp(k+1)*(rb(k  ,i)*(scalars(index_qv,k  ,i)-qvb(k))      &
+                                     +rr(k  ,i)*(1.+scalars(index_qv,k  ,i))))
+          end do
+!         if (itr==1.and.i==1) then
+!            do k=1,nz1
+!               call mpas_log_write('pp-check $r', realArgs=(/pp(k,i)/))
+!            end do
+!         end if
+          do k=1,nz1
+             rt(k,i) = (pp(k,i)/(rgas*zz(k,i))                   &
+                     -rtb(k,i)*(p(k,i)-pb(k,i)))/p(k,i)       
+             p (k,i) = (zz(k,i)*(rgas/p0)*(rtb(k,i)+rt(k,i)))**rcv
+             rr(k,i) = (rt(k,i)-rb(k,i)*(t(k,i)-tb(k,i)))/t(k,i)
+          end do
+
+        end do ! loop over cells
+
+      end do !  iteration loop
+!----------------------------------------------------------------------
+!
+      do k=1,nz1
+         qv_init(k) = scalars(index_qv,k,1)
+      end do
+
+      t_init_1d(:) = t(:,1)
+      call mpas_dmpar_bcast_reals(dminfo, nz1, t_init_1d)
+      call mpas_dmpar_bcast_reals(dminfo, nz1, qv_init)
+
+      do i=1,nCells
+         do k=1,nz1
+            t_init(k,i) = t_init_1d(k)
+            rho_zz(k,i) = rb(k,i)+rr(k,i)
+         end do
+      end do
+
+      do i=1,nEdges
+        cell1 = cellsOnEdge(1,i)
+        cell2 = cellsOnEdge(2,i)
+        if(cell1 <= nCellsSolve .or. cell2 <= nCellsSolve) then
+          do k=1,nz1
+            ru (k,i)  = 0.5*(rho_zz(k,cell1)+rho_zz(k,cell2))*u(k,i)    
+          end do
+        end if
+      end do
+
+
+      !
+      !  we are assuming w and rw are zero for this initialization
+      !  i.e., no terrain
+      !
+       rw = 0.0
+       w = 0.0
+
+       zb = 0.0
+       zb3 = 0.0
+
+      !
+      ! Generate rotated Coriolis field - same settings as in WRF
+      !
+      do iEdge=1,nEdges
+         ! fEdge(iEdge) = 1.e-04
+         fEdge(iEdge) = 7.2921e-05
+      end do
+
+      do iVtx=1,nVertices
+         ! fVertex(iVtx) = 1.e-04
+         fVertex(iVtx) = 7.2921e-05
+      end do
+
+      !
+      ! Compute mass fluxes tangential to each edge (i.e., through the faces of dual grid cells)
+      !
+      v(:,:) = 0.0
+      do iEdge = 1, nEdges
+         do i=1,nEdgesOnEdge(iEdge)
+            eoe = edgesOnEdge(i,iEdge)
+            if (eoe > 0) then
+               do k = 1, nVertLevels
+                 v(k,iEdge) = v(k,iEdge) + weightsOnEdge(i,iEdge) * u(k, eoe)
+              end do
+            end if
+         end do
+      end do
+
+     ! call mpas_log_write(' k,u_init, t_init, qv_init ')
+     ! do k=1,nVertLevels
+     !   call mpas_log_write('$i $r $r $r', intArgs=(/k/), realArgs=(/u_init(k),t_init(k,1),qv_init(k)/))
+     ! end do
+
+      ! Compute rho and theta from rho_zz and theta_m
+      do iCell=1,nCells
+         do k=1,nVertLevels
+            rho(k,iCell) = rho_zz(k,iCell) * zz(k,iCell)
+            theta(k,iCell) = t(k,iCell) / (1.0 + 1.61 * scalars(index_qv,k,iCell))
+         end do
+      end do
+
+      do iCell = 1, nCells
+         !land category
+         landmask(iCell) = 1
+         lu_index(iCell) = 1
+         xland(iCell) = 1.0
+         if (iCell == 1) call mpas_log_write(' landmask, lu_index, xland $i $i $r', intArgs=(/landmask(iCell),lu_index(iCell)/), realArgs=(/xland(iCell)/))
+      end do
+
+   end subroutine init_atm_case_les
+
+
+   real (kind=RKIND) function atm_get_sounding( variable, height )
+
+     implicit none
+     real (kind=RKIND), intent(in) :: height
+     character(len=*), intent(in) :: variable
+
+     atm_get_sounding = -999.
+! SAS case sounding
+
+     if(variable == 'u') then 
+        atm_get_sounding = 2.0  ! SAS value
+
+     else if (variable == 'v') then
+        atm_get_sounding = 0.
+
+     else if (variable == 'theta') then
+
+        if(height .le. 352.5) then
+          atm_get_sounding = 296.6
+        else if(height .le. 442.5) then
+          atm_get_sounding = 296.6 + (height-352.5)*1.5/90.
+        else
+          atm_get_sounding = 298.1 + (height-442.5)*0.003
+        end if
+
+     else if (variable == 'qv') then
+
+        if(height .le. 352.5) then
+          atm_get_sounding = 11.8/1000.
+        else if(height .le. 442.5) then
+          atm_get_sounding = 11.8/1000. - (height-352.5)*4.0/90./1000.
+        else
+          atm_get_sounding = max(7.8/1000. - (height-442.5)*0.004/1000.,0.0)
+        end if
+
+      end if 
+
+   end function atm_get_sounding
+
+
+   real (kind=RKIND) function atm_get_sounding_1( variable, height )
+
+     implicit none
+     real (kind=RKIND), intent(in) :: height
+     character(len=*), intent(in) :: variable
+
+     atm_get_sounding_1 = -999.
+
+     if(variable == 'u') then 
+        atm_get_sounding_1 = 15.0
+     else if (variable == 'v') then
+        atm_get_sounding_1 = 0.
+     else if (variable == 'qv') then
+
+        atm_get_sounding_1 = 0. ! dry sounding
+        ! atm_get_sounding_1 = 0.010
+        ! if(height .gt. 500.) atm_get_sounding_1 = 0.004
+
+     else if (variable == 'theta') then
+
+        if(height .le. 500.) then
+          atm_get_sounding_1 = 300.
+        else if(height .le. 600.) then
+          atm_get_sounding_1 = 300. + (height-500.)*3./100.
+        else
+          atm_get_sounding_1 = 303. + (height-600.)*3./1000.
+        end if
+        ! atm_get_sounding_1 = atm_get_sounding_1 - 10.0  ! for water case
+
+      end if 
+
+   end function atm_get_sounding_1
+
+   real (kind=RKIND) function atm_get_sounding_2( variable, height )
+
+     implicit none
+     real (kind=RKIND), intent(in) :: height
+     character(len=*), intent(in) :: variable
+
+     atm_get_sounding_2 = -999.
+
+     if(variable == 'u') then 
+        atm_get_sounding_2 = 10.0
+     else if (variable == 'v') then
+        atm_get_sounding_2 = 0.
+     else if (variable == 'qv') then
+
+        ! atm_get_sounding_2 = 0. ! dry sounding_2
+        atm_get_sounding_2 = 0.010
+        if(height .gt. 1000.) atm_get_sounding_2 = 0.004
+
+     else if (variable == 'theta') then
+
+        if(height .le. 1000.) then
+          atm_get_sounding_2 = 300.
+        else if(height .le. 1150.) then
+          atm_get_sounding_2 = 300. + (height-1000.)*8./150.
+        else
+          atm_get_sounding_2 = 308. + (height-1150.)*3./1000.
+        end if
+        atm_get_sounding_2 = atm_get_sounding_2 - 10.0  ! for water case
+
+      end if 
+
+   end function atm_get_sounding_2
+
+!-----------
+
+   !-----------------------------------------------------------------------
+   !  routine init_atm_case_fdda
+   !
+   !> \brief Computes theta_fdda, qv_fdda, u_fdda, v_fdda fields for FDDA nudging 
+   !> \author Michael Duda, May Wong
+   !> \date   2025-07-30 
+   !> \details
+   !>  This routine is similar to the init_atm_case_lbc routine in that it reads
+   !>  atmospheric fields from "intermediate" files and horizontally and vertically
+   !>  interpolates them to an MPAS mesh.However, it also includes the reconstructed
+   !>  wind fields as originally in the FDDA nudging code. This routine is responsible for
+   !>  producing only those fields that are needed for FDDA nudging. 
+   !
+   !-----------------------------------------------------------------------
+   subroutine init_atm_case_fdda(timestamp, block, mesh, nCells, nEdges, nVertLevels, fg, state, diag, fdda_state, dims, configs)
+
+      use mpas_dmpar, only : mpas_dmpar_min_real, mpas_dmpar_max_real
+      use init_atm_read_met, only : met_data, read_met_init, read_met_close, read_next_met_field
+      use init_atm_llxy, only : proj_info, map_init, map_set, latlon_to_ij, PROJ_LATLON, PROJ_GAUSS, DEG_PER_RAD
+      use init_atm_hinterp, only : interp_sequence, FOUR_POINT, SIXTEEN_POINT, W_AVERAGE4, SEARCH
+      use mpas_hash, only : hashtable, mpas_hash_init, mpas_hash_destroy, mpas_hash_search, mpas_hash_size, mpas_hash_insert
+
+      implicit none
+
+      character(len=*), intent(in) :: timestamp
+      type (block_type), intent(inout), target :: block
+      type (mpas_pool_type), intent(inout) :: mesh
+      integer, intent(in) :: nCells
+      integer, intent(in) :: nEdges
+      integer, intent(in) :: nVertLevels
+      type (mpas_pool_type), intent(inout) :: fg
+      type (mpas_pool_type), intent(inout) :: state
+      type (mpas_pool_type), intent(inout) :: diag
+      type (mpas_pool_type), intent(inout):: fdda_state
+      type (mpas_pool_type), intent(inout):: dims
+      type (mpas_pool_type), intent(inout):: configs
+
+      type (parallel_info), pointer :: parinfo
+      type (dm_info), pointer :: dminfo
+
+      real (kind=RKIND), parameter :: t0b = 250.0
+
+      type (met_data) :: field
+      type (proj_info) :: proj
+
+      real (kind=RKIND), dimension(:), pointer :: dzu, fzm, fzp
+      real (kind=RKIND), dimension(:), pointer :: vert_level, latPoints, lonPoints
+      real (kind=RKIND), dimension(:,:), pointer :: zgrid, zz
+      real (kind=RKIND), dimension(:,:), pointer :: pressure, ppb, pb, rho_zz, rb, rr, tb, rtb, p, pp, t, rt
+      real (kind=RKIND), dimension(:), pointer :: destField1d
+      real (kind=RKIND), dimension(:,:), pointer :: destField2d
+      real (kind=RKIND), dimension(:,:,:), pointer :: zb, zb3
+      real (kind=RKIND), dimension(:,:,:), pointer :: scalars
+
+      real (kind=RKIND) :: target_z
+      integer :: iCell, iEdge, i, k, nVertLevelsP1
+      integer, pointer :: nCellsSolve
+      integer :: nInterpPoints, ndims
+
+      integer :: nfglevels_actual
+      integer, pointer :: index_qv
+
+      integer, dimension(5) :: interp_list
+      real (kind=RKIND) :: msgval
+
+      integer, dimension(:), pointer :: nEdgesOnCell
+      integer, dimension(:,:), pointer :: cellsOnEdge, edgesOnCell
+      real (kind=RKIND), dimension(:,:), pointer :: sorted_arr
+
+      integer :: sfc_k
+
+      integer :: it
+      real (kind=RKIND) :: p_check
+
+      integer :: istatus
+
+      real (kind=RKIND), allocatable, dimension(:,:) :: rslab
+
+      real (kind=RKIND) :: flux
+      real (kind=RKIND) :: lat, lon, x, y
+
+      real (kind=RKIND) :: p0
+
+      real (kind=RKIND) :: etavs, ztemp
+
+      real (kind=RKIND) :: rs, rcv
+
+      !  calculation of the water vapor mixing ratio:
+      real (kind=RKIND) :: sh_max,sh_min,global_sh_max,global_sh_min
+
+      character (len=StrKIND), pointer :: config_met_prefix
+      logical, pointer :: config_use_spechumd
+      integer, pointer :: config_nfglevels
+      integer, pointer :: config_theta_adv_order
+      real (kind=RKIND), pointer :: config_coef_3rd_order
+
+      character (len=StrKIND), pointer :: config_extrap_airtemp
+      integer :: extrap_airtemp
+
+      real (kind=RKIND), dimension(:), pointer :: latCell, lonCell
+      real (kind=RKIND), dimension(:), pointer :: latEdge, lonEdge
+      real (kind=RKIND), dimension(:), pointer :: angleEdge
+
+      real (kind=RKIND), dimension(:,:), pointer :: u
+      real (kind=RKIND), dimension(:,:), pointer :: w
+      real (kind=RKIND), dimension(:,:), pointer :: theta
+      real (kind=RKIND), dimension(:,:), pointer :: rho
+      real (kind=RKIND), dimension(:,:), pointer :: relhum
+      real (kind=RKIND), dimension(:,:), pointer :: spechum
+      real (kind=RKIND), dimension(:,:), pointer :: ru
+      real (kind=RKIND), dimension(:,:), pointer :: rw
+
+      real (kind=RKIND), dimension(:,:), pointer :: uReconstructX
+      real (kind=RKIND), dimension(:,:), pointer :: uReconstructY
+      real (kind=RKIND), dimension(:,:), pointer :: uReconstructZ
+      real (kind=RKIND), dimension(:,:), pointer :: uReconstructZonal
+      real (kind=RKIND), dimension(:,:), pointer :: uReconstructMeridional
+      real (kind=RKIND), dimension(:,:), pointer :: u_fg
+      real (kind=RKIND), dimension(:,:), pointer :: v_fg
+      real (kind=RKIND), dimension(:,:), pointer :: z_fg
+      real (kind=RKIND), dimension(:,:), pointer :: t_fg
+      real (kind=RKIND), dimension(:,:), pointer :: rh_fg
+      real (kind=RKIND), dimension(:,:), pointer :: sh_fg
+      real (kind=RKIND), dimension(:,:), pointer :: p_fg
+      real (kind=RKIND), dimension(:), pointer :: soilz
+
+      type (hashtable), allocatable :: level_hash
+      logical :: too_many_fg_levs
+      integer :: level_value
+
+      character (len=StrKIND) :: errstring
+
+      real (kind=RKIND) :: max_zgrid_local, max_zgrid_global
+
+
+      call mpas_log_write('Interpolating FDDA input fields at time '//trim(timestamp))
+
+      call mpas_pool_get_config(configs, 'config_met_prefix', config_met_prefix)
+      call mpas_pool_get_config(configs, 'config_use_spechumd', config_use_spechumd)
+      call mpas_pool_get_config(configs, 'config_nfglevels', config_nfglevels)
+      call mpas_pool_get_config(configs, 'config_theta_adv_order', config_theta_adv_order)
+      call mpas_pool_get_config(configs, 'config_coef_3rd_order', config_coef_3rd_order)
+
+      call mpas_pool_get_config(configs, 'config_extrap_airtemp', config_extrap_airtemp)
+      if (trim(config_extrap_airtemp) == 'constant') then
+         extrap_airtemp = 0
+      else if (trim(config_extrap_airtemp) == 'linear') then
+         extrap_airtemp = 1
+      else if (trim(config_extrap_airtemp) == 'lapse-rate') then
+         extrap_airtemp = 2
+      else
+          call mpas_log_write('*************************************************************', messageType=MPAS_LOG_ERR)
+          call mpas_log_write('* Invalid value for namelist variable config_extrap_airtemp *', messageType=MPAS_LOG_ERR)
+          call mpas_log_write('*************************************************************', messageType=MPAS_LOG_CRIT)
+      end if
+      call mpas_log_write("Using option '" // trim(config_extrap_airtemp) // "' for vertical extrapolation of temperature")
+
+      dminfo => block % domain % dminfo
+
+      call mpas_pool_get_array(mesh, 'nEdgesOnCell', nEdgesOnCell)
+      call mpas_pool_get_array(mesh, 'edgesOnCell', edgesOnCell)
+      call mpas_pool_get_array(mesh, 'cellsOnEdge', cellsOnEdge)
+      call mpas_pool_get_array(mesh, 'angleEdge', angleEdge)
+
+      call mpas_pool_get_array(mesh, 'zb', zb)
+      call mpas_pool_get_array(mesh, 'zb3', zb3)
+
+      call mpas_pool_get_array(mesh, 'zgrid', zgrid)
+      call mpas_pool_get_array(mesh, 'dzu', dzu)
+      call mpas_pool_get_array(mesh, 'fzm', fzm)
+      call mpas_pool_get_array(mesh, 'fzp', fzp)
+      call mpas_pool_get_array(mesh, 'zz', zz)
+
+      call mpas_pool_get_array(diag, 'exner_base', pb)
+      call mpas_pool_get_array(diag, 'rho_base', rb)
+      call mpas_pool_get_array(diag, 'theta_base', tb)
+      call mpas_pool_get_array(diag, 'rtheta_base', rtb)
+      call mpas_pool_get_array(diag, 'exner', p)
+      call mpas_pool_get_array(diag, 'pressure_base', ppb)
+      call mpas_pool_get_array(diag, 'pressure_p', pp)
+      call mpas_pool_get_array(diag, 'pressure', pressure)
+      call mpas_pool_get_array(diag, 'relhum', relhum)
+      call mpas_pool_get_array(diag, 'spechum', spechum)
+      call mpas_pool_get_array(diag, 'ru', ru)
+      call mpas_pool_get_array(diag, 'rw', rw)
+
+      call mpas_pool_get_array(state, 'rho_zz', rho_zz)
+      call mpas_pool_get_array(diag, 'rho_p', rr)
+      call mpas_pool_get_array(state, 'theta_m', t)
+      call mpas_pool_get_array(diag, 'rtheta_p', rt)
+      call mpas_pool_get_array(fdda_state, 'scalars_fdda', scalars)
+      call mpas_pool_get_array(fdda_state, 'uEdge_fdda', u)
+      call mpas_pool_get_array(fdda_state, 'theta_fdda', theta)
+      call mpas_pool_get_array(fdda_state, 'rho_fdda', rho)
+      call mpas_pool_get_array(fdda_state, 'uReconstructX_fdda', uReconstructX)
+      call mpas_pool_get_array(fdda_state, 'uReconstructY_fdda', uReconstructY)
+      call mpas_pool_get_array(fdda_state, 'uReconstructZ_fdda', uReconstructZ)
+      call mpas_pool_get_array(fdda_state, 'u_fdda', uReconstructZonal)
+      call mpas_pool_get_array(fdda_state, 'v_fdda', uReconstructMeridional)
+
+      call mpas_pool_get_array(mesh, 'latCell', latCell)
+      call mpas_pool_get_array(mesh, 'lonCell', lonCell)
+      call mpas_pool_get_array(mesh, 'latEdge', latEdge)
+      call mpas_pool_get_array(mesh, 'lonEdge', lonEdge)
+
+      call mpas_pool_get_array(fg, 'u', u_fg)
+      call mpas_pool_get_array(fg, 'v', v_fg)
+      call mpas_pool_get_array(fg, 'z', z_fg)
+      call mpas_pool_get_array(fg, 't', t_fg)
+      call mpas_pool_get_array(fg, 'rh', rh_fg)
+      call mpas_pool_get_array(fg, 'sh', sh_fg)
+      call mpas_pool_get_array(fg, 'p', p_fg)
+
+      call mpas_pool_get_dimension(dims, 'nCellsSolve', nCellsSolve)
+      nVertLevelsP1 = nVertLevels + 1
+
+      call mpas_pool_get_dimension(state, 'index_qv', index_qv)
+
+      etavs = (1.0_RKIND - 0.252_RKIND) * pii / 2.0_RKIND
+      rcv = rgas / (cp - rgas)
+      p0 = 1.0e+05_RKIND
+
+      scalars(:,:,:) = 0.0_RKIND
+
+      !
+      ! Check that we have what looks like a valid zgrid field. If the max value for zgrid is zero,
+      ! the input file likely does not contain vertical grid information.
+      !
+      max_zgrid_local = maxval(zgrid(:,1:nCellsSolve))
+      call mpas_dmpar_max_real(dminfo, max_zgrid_local, max_zgrid_global)
+      if (max_zgrid_global == 0.0_RKIND) then
+         call mpas_log_write('********************************************************************************', &
+                             messageType=MPAS_LOG_ERR)
+         call mpas_log_write('The maximum value of the zgrid field is 0. Please ensure that the ''input'' stream ', &
+                             messageType=MPAS_LOG_ERR)
+         call mpas_log_write('contains valid vertical grid information.', &
+                             messageType=MPAS_LOG_ERR)
+         call mpas_log_write('********************************************************************************', &
+                             messageType=MPAS_LOG_CRIT)
+      end if
+
+
+      !
+      ! Horizontally interpolate meteorological data
+      !
+      allocate(vert_level(config_nfglevels))
+      vert_level(:) = -1.0
+
+      ! adding a check that the timestamp is actually of length >= 13
+      if ( len(trim(timestamp)) < 13 ) then
+         call mpas_log_write('********************************************************************************', &
+                             messageType=MPAS_LOG_ERR)
+         call mpas_log_write('init_atm_case_fdda: Error in reading timestamp for processing meteorological data files', &
+                             messageType=MPAS_LOG_ERR)
+         call mpas_log_write('********************************************************************************', &
+                             messageType=MPAS_LOG_CRIT)
+      end if
+
+      call read_met_init(trim(config_met_prefix), .false., timestamp(1:13), istatus)
+
+      if (istatus /= 0) then
+         call mpas_log_write('********************************************************************************', &
+                             messageType=MPAS_LOG_ERR)
+         call mpas_log_write('Error opening initial meteorological data file '//trim(config_met_prefix)//':'//timestamp(1:13), &
+                             messageType=MPAS_LOG_ERR)
+         call mpas_log_write('********************************************************************************', &
+                             messageType=MPAS_LOG_CRIT)
+      end if
+
+      allocate(level_hash)
+      call mpas_hash_init(level_hash)
+      too_many_fg_levs = .false.
+
+      call read_next_met_field(field, istatus)
+
+      do while (istatus == 0)
+
+         interp_list(1) = FOUR_POINT
+         interp_list(2) = SEARCH
+         interp_list(3) = 0
+
+         msgval = -1.e30
+
+         if (trim(field % field) == 'UU' .or. &
+             trim(field % field) == 'VV' .or. &
+             trim(field % field) == 'TT' .or. &
+             trim(field % field) == 'RH' .or. &
+             trim(field % field) == 'SPECHUMD' .or. &
+             trim(field % field) == 'GHT' .or. &
+             trim(field % field) == 'SOILHGT' .or. &
+             trim(field % field) == 'PRES' .or. &
+             trim(field % field) == 'PRESSURE') then
+
+            if (trim(field % field) /= 'SOILHGT') then
+
+               ! Since the hash table can only store integers, transfer the bit pattern from
+               ! the real-valued xlvl into an integer; that the result is not an integer version
+               ! of the level is not important, since we only want to test uniqueness of levels
+               level_value = transfer(field % xlvl, level_value)
+               if (.not. mpas_hash_search(level_hash, level_value)) then
+                  call mpas_hash_insert(level_hash, level_value)
+                  if (mpas_hash_size(level_hash) > config_nfglevels) then
+                     too_many_fg_levs = .true.
+                  end if
+               end if
+
+               !
+               ! In case we have more than config_nfglevels levels, just keep cycling through
+               ! the remaining fields in the intermediate file for the purpose of counting how
+               ! many unique levels are found using the code above
+               !
+               if (too_many_fg_levs) then
+                  call read_next_met_field(field, istatus)
+                  cycle
+               end if
+
+               do k=1,config_nfglevels
+                  if (vert_level(k) == field % xlvl .or. vert_level(k) == -1.0) exit
+               end do
+               if (vert_level(k) == -1.0) vert_level(k) = field % xlvl
+            else
+               k = 1
+            end if
+
+            !
+            ! Set up projection
+            !
+            call map_init(proj)
+
+            if (field % iproj == PROJ_LATLON) then
+               call map_set(PROJ_LATLON, proj, &
+                            latinc = real(field % deltalat,RKIND), &
+                            loninc = real(field % deltalon,RKIND), &
+                            knowni = 1.0_RKIND, &
+                            knownj = 1.0_RKIND, &
+                            lat1 = real(field % startlat,RKIND), &
+                            lon1 = real(field % startlon,RKIND))
+            else if (field % iproj == PROJ_GAUSS) then
+               call map_set(PROJ_GAUSS, proj, &
+                            nlat = nint(field % deltalat), &
+                            loninc = 360.0_RKIND / real(field % nx,RKIND), &
+                            lat1 = real(field % startlat,RKIND), &
+                            lon1 = real(field % startlon,RKIND))
+            end if
+
+
+            !
+            ! Horizontally interpolate the field at level k
+            !
+            if (trim(field % field) == 'UU') then
+               call mpas_log_write('Interpolating U at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nEdges
+               latPoints => latEdge
+               lonPoints => lonEdge
+               call mpas_pool_get_array(fg, 'u', destField2d)
+               ndims = 2
+            else if (trim(field % field) == 'VV') then
+               call mpas_log_write('Interpolating V at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nEdges
+               latPoints => latEdge
+               lonPoints => lonEdge
+               call mpas_pool_get_array(fg, 'v', destField2d)
+               ndims = 2
+           else if (trim(field % field) == 'TT') then
+               call mpas_log_write('Interpolating TT at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nCells
+               latPoints => latCell
+               lonPoints => lonCell
+               call mpas_pool_get_array(fg, 't', destField2d)
+               ndims = 2
+            else if (trim(field % field) == 'RH') then
+               call mpas_log_write('Interpolating RH at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nCells
+               latPoints => latCell
+               lonPoints => lonCell
+               call mpas_pool_get_array(fg, 'rh', destField2d)
+               ndims = 2
+            else if (trim(field % field) == 'SPECHUMD') then
+               call mpas_log_write('Interpolating SPECHUMD at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nCells
+               latPoints => latCell
+               lonPoints => lonCell
+               call mpas_pool_get_array(fg, 'sh', destField2d)
+               ndims = 2
+            else if (trim(field % field) == 'GHT') then
+               call mpas_log_write('Interpolating GHT at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nCells
+               latPoints => latCell
+               lonPoints => lonCell
+               call mpas_pool_get_array(fg, 'z', destField2d)
+               ndims = 2
+            else if (trim(field % field) == 'PRES') then
+               call mpas_log_write('Interpolating PRES at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nCells
+               latPoints => latCell
+               lonPoints => lonCell
+               call mpas_pool_get_array(fg, 'p', destField2d)
+               ndims = 2
+            else if (trim(field % field) == 'PRESSURE') then
+               call mpas_log_write('Interpolating PRESSURE at $i $r', intArgs=(/k/), realArgs=(/vert_level(k)/))
+               nInterpPoints = nCells
+               latPoints => latCell
+               lonPoints => lonCell
+               call mpas_pool_get_array(fg, 'p', destField2d)
+               ndims = 2
+            else if (trim(field % field) == 'SOILHGT') then
+               call mpas_log_write('Interpolating SOILHGT')
+               nInterpPoints = nCells
+               latPoints => latCell
+               lonPoints => lonCell
+               call mpas_pool_get_array(fg, 'soilz', destField1d)
+               ndims = 1
+            end if
+
+            allocate(rslab(-2:field % nx+3, field % ny))
+            rslab(1:field % nx, 1:field % ny) = field % slab(1:field % nx, 1:field % ny)
+            rslab(0, 1:field % ny)  = field % slab(field % nx, 1:field % ny)
+            rslab(-1, 1:field % ny) = field % slab(field % nx-1, 1:field % ny)
+            rslab(-2, 1:field % ny) = field % slab(field % nx-2, 1:field % ny)
+            rslab(field % nx+1, 1:field % ny) = field % slab(1, 1:field % ny)
+            rslab(field % nx+2, 1:field % ny) = field % slab(2, 1:field % ny)
+            rslab(field % nx+3, 1:field % ny) = field % slab(3, 1:field % ny)
+
+            do i=1,nInterpPoints
+               lat = latPoints(i)*DEG_PER_RAD
+               lon = lonPoints(i)*DEG_PER_RAD
+               call latlon_to_ij(proj, lat, lon, x, y)
+               if (x < 0.5) then
+                  lon = lon + 360.0
+                  call latlon_to_ij(proj, lat, lon, x, y)
+               else if (x >= real(field%nx)+0.5) then
+                  lon = lon - 360.0
+                  call latlon_to_ij(proj, lat, lon, x, y)
+               end if
+               if (y < 0.5) then
+                  y = 1.0
+               else if (y >= real(field%ny)+0.5) then
+                  y = real(field%ny)
+               end if
+               if (ndims == 1) then
+                  destField1d(i) = interp_sequence(x, y, 1, rslab, -2, field%nx + 3, 1, field%ny, 1, 1, msgval, interp_list, 1)
+               else if (ndims == 2) then
+                  destField2d(k,i) = interp_sequence(x, y, 1, rslab, -2, field%nx + 3, 1, field%ny, 1, 1, msgval, interp_list, 1)
+               end if
+            end do
+
+            deallocate(rslab)
+
+         end if
+
+         deallocate(field % slab)
+         call read_next_met_field(field, istatus)
+      end do
+
+      call read_met_close()
+      level_value = mpas_hash_size(level_hash)
+      call mpas_hash_destroy(level_hash)
+      deallocate(level_hash)
+
+      if (too_many_fg_levs) then
+         write(errstring,'(a,i4)') '       Please increase config_nfglevels to at least ', level_value
+         call mpas_log_write('*******************************************************************', messageType=MPAS_LOG_ERR)
+         call mpas_log_write('Error: The meteorological data file has more than config_nfglevels.', messageType=MPAS_LOG_ERR)
+         call mpas_log_write(trim(errstring),                                                       messageType=MPAS_LOG_ERR)
+         call mpas_log_write('       in the namelist and re-run.',                                  messageType=MPAS_LOG_ERR)
+         call mpas_log_write('*******************************************************************', messageType=MPAS_LOG_CRIT)
+      end if
+
+      !
+      ! Check how many distinct levels we actually found in the meteorological data
+      !
+      do k=1,config_nfglevels
+         if (vert_level(k) == -1.0) exit
+      end do
+      nfglevels_actual = k-1
+      call mpas_log_write('*************************************************')
+      call mpas_log_write('Found $i levels in the first-guess data', intArgs=(/nfglevels_actual/))
+      call mpas_log_write('*************************************************')
+
+
+      !
+      ! For isobaric data, fill in the 3-d pressure field; otherwise, ensure
+      ! that the surface pressure and height fields are filled in
+      !
+      if (minval(p_fg(1:nfglevels_actual,1:nCellsSolve)) == 0.0 .and. &
+          maxval(p_fg(1:nfglevels_actual,1:nCellsSolve)) == 0.0) then
+         call mpas_log_write('Setting pressure field for isobaric data')
+         do k=1,config_nfglevels
+            if (vert_level(k) /= 200100.0) then
+               p_fg(k,:) = vert_level(k)
+            end if
+         end do
+      else
+         call mpas_pool_get_array(fg, 'z', z_fg)
+         call mpas_pool_get_array(fg, 'soilz', soilz)
+         call mpas_log_write('Assuming model-level input data')
+         do k=1,config_nfglevels
+            if (vert_level(k) == 200100.0) then
+               z_fg(k,:) = soilz(:)
+            end if
+         end do
+      end if
+
+
+      !
+      ! Compute normal wind component and store in fg % u
+      !
+      do iEdge=1,nEdges
+         do k=1,nfglevels_actual
+            u_fg(k,iEdge) = cos(angleEdge(iEdge)) * u_fg(k,iEdge) &
+                          + sin(angleEdge(iEdge)) * v_fg(k,iEdge)
+         end do
+      end do
+
+
+      !
+      ! Vertically interpolate meteorological data
+      !
+      allocate(sorted_arr(2,nfglevels_actual))
+
+      do iCell=1,nCells
+
+         ! T
+         sorted_arr(:,:) = -999.0
+         do k = 1, nfglevels_actual
+            sorted_arr(1,k) = z_fg(k,iCell)
+            if (vert_level(k) == 200100.0) sorted_arr(1,k) = 99999.0
+            sorted_arr(2,k) = t_fg(k,iCell)
+         end do
+         call mpas_quicksort(nfglevels_actual, sorted_arr)
+         do k = 1, nVertLevels
+            target_z = 0.5 * (zgrid(k,iCell) + zgrid(k+1,iCell))
+            t(k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+                                         sorted_arr(:,1:nfglevels_actual-1), order=1, &
+                                         extrap=extrap_airtemp, ierr=istatus)
+            if (istatus /= 0) then
+               write(errstring,'(a,i4,a,i10)') 'Error in interpolation of t(k,iCell) for k=', k, ', iCell=', iCell
+               call mpas_log_write('*****************************************************************', messageType=MPAS_LOG_ERR)
+               call mpas_log_write(trim(errstring),                                                     messageType=MPAS_LOG_ERR)
+               call mpas_log_write('*****************************************************************', messageType=MPAS_LOG_CRIT)
+            end if
+         end do
+
+
+         ! RH
+         sorted_arr(:,:) = -999.0
+         relhum(:,iCell) = 0._RKIND
+         do k = 1, nfglevels_actual
+            sorted_arr(1,k) = z_fg(k,iCell)
+            if (vert_level(k) == 200100.0) sorted_arr(1,k) = 99999.0
+            sorted_arr(2,k) = rh_fg(k,iCell)
+         end do
+         call mpas_quicksort(nfglevels_actual, sorted_arr)
+         do k = nVertLevels, 1, -1
+            target_z = 0.5 * (zgrid(k,iCell) + zgrid(k+1,iCell))
+            relhum(k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+                                       sorted_arr(:,1:nfglevels_actual-1), order=1, extrap=0)
+            !bugfix-from-v8.3.1 if (target_z < z_fg(1,iCell) .and. k < nVertLevels) relhum(k,iCell) = relhum(k+1,iCell)
+         end do
+
+
+         ! SPECHUM: if first-guess values are negative, set those values to zero before
+         ! vertical interpolation.
+         sorted_arr(:,:) = -999.0
+         spechum(:,iCell) = 0._RKIND
+         do k = 1, nfglevels_actual
+            sorted_arr(1,k) = z_fg(k,iCell)
+            if (vert_level(k) == 200100.0) sorted_arr(1,k) = 99999.0
+            sorted_arr(2,k) = max(0._RKIND,sh_fg(k,iCell))
+         end do
+         call mpas_quicksort(nfglevels_actual, sorted_arr)
+         do k = nVertLevels, 1, -1
+            target_z = 0.5 * (zgrid(k,iCell) + zgrid(k+1,iCell))
+            spechum(k,iCell) = vertical_interp(target_z, nfglevels_actual-1, &
+                                        sorted_arr(:,1:nfglevels_actual-1), order=1, extrap=0)
+            !bugfix-from-v8.3.1 if (target_z < z_fg(1,iCell) .and. k < nVertLevels) spechum(k,iCell) = spechum(k+1,iCell)
+         end do
+                                                                                
+
+         ! PRESSURE
+         sorted_arr(:,:) = -999.0
+         do k = 1, nfglevels_actual
+            sorted_arr(1,k) = z_fg(k,iCell)
+            if (vert_level(k) == 200100.0) then
+               sorted_arr(1,k) = 99999.0
+               sfc_k = k
+               p_fg(k,iCell) = 1.0   ! Any value that has valid log is fine...
+            end if
+            sorted_arr(2,k) = log(p_fg(k,iCell))
+         end do
+         call mpas_quicksort(nfglevels_actual, sorted_arr)
+         do k = 1, nVertLevels
+            target_z = 0.5 * (zgrid(k,iCell) + zgrid(k+1,iCell))
+            pressure(k,iCell) = exp(vertical_interp(target_z, nfglevels_actual-1, &
+                                    sorted_arr(:,1:nfglevels_actual-1), order=1, extrap=1))
+         end do
+
+      end do
+
+
+      do iEdge=1,nEdges
+
+         ! U
+         sorted_arr(:,:) = -999.0
+         do k=1,nfglevels_actual
+            sorted_arr(1,k) = 0.5 * (z_fg(k,cellsOnEdge(1,iEdge)) + z_fg(k,cellsOnEdge(2,iEdge)))
+            if (vert_level(k) == 200100.0) sorted_arr(1,k) = 99999.0
+            sorted_arr(2,k) = u_fg(k,iEdge)
+         end do
+         call mpas_quicksort(nfglevels_actual, sorted_arr)
+         do k=1,nVertLevels
+            target_z = 0.25 * (zgrid(k,cellsOnEdge(1,iEdge)) + zgrid(k+1,cellsOnEdge(1,iEdge)) &
+                             + zgrid(k,cellsOnEdge(2,iEdge)) + zgrid(k+1,cellsOnEdge(2,iEdge)))
+            u(k,iEdge) = vertical_interp(target_z, nfglevels_actual-1, sorted_arr(:,1:nfglevels_actual-1), order=1, extrap=1)
+         end do
+
+      end do
+
+
+      !
+      ! Reconstruct zonal and meridional winds for diagnostic puposes:
+      !
+      call mpas_rbf_interp_initialize(mesh)
+      call mpas_init_reconstruct(mesh)
+      call mpas_reconstruct(mesh, u,                 &
+                            uReconstructX,           &
+                            uReconstructY,           &
+                            uReconstructZ,           &
+                            uReconstructZonal,       &
+                            uReconstructMeridional   &
+                           )
+
+
+      deallocate(sorted_arr)
+
+      ! Diagnose the water vapor mixing ratios:
+      global_sh_min = 0._RKIND
+      global_sh_max = 0._RKIND
+      if(config_use_spechumd) then
+         sh_min = minval(spechum(:,1:nCellsSolve))
+         sh_max = maxval(spechum(:,1:nCellsSolve))
+         call mpas_dmpar_min_real(dminfo,sh_min,global_sh_min)
+         call mpas_dmpar_max_real(dminfo,sh_max,global_sh_max)
+      endif
+      call mpas_log_write('')
+      call mpas_log_write('--- global_sh_min = $r', realArgs=(/global_sh_min/))
+      call mpas_log_write('--- global_sh_max = $r', realArgs=(/global_sh_max/))
+      call mpas_log_write('')
+
+      call mpas_log_write('--- config_use_spechumd = $l', logicArgs=(/config_use_spechumd/))
+      if(.not. config_use_spechumd .or. (global_sh_min==0._RKIND .and. global_sh_max==0._RKIND)) then
+         !--- calculate the saturation mixing ratio and interpolated first-guess relative humidity:
+         if (config_use_spechumd) then
+            call mpas_log_write('config_use_spechumd=T, but specific humidity was not found in ' &
+                                //trim(config_met_prefix)//':'//timestamp(1:13), messageType=MPAS_LOG_WARN)
+         end if
+         call mpas_log_write(' *** initializing water vapor mixing ratio using first-guess relative humidity')
+         call mpas_log_write('')
+
+         do k = 1, nVertLevels
+            do iCell = 1, nCells
+               !
+               ! Note: the RH field provided by ungrib should always be with respect to liquid water,
+               !       hence, we can always call rslf; see the routine fix_gfs_rh in WPS/ungrib/src/rrpr.F .
+               !
+               rs = rslf(pressure(k,iCell),t(k,iCell))
+               scalars(index_qv,k,iCell) = 0.01_RKIND*rs*relhum(k,iCell)
+             enddo
+         enddo
+      else
+         !--- use the interpolated first-guess specific humidity:
+         call mpas_log_write(' *** initializing water vapor mixing ratio using first-guess specific humidity')
+         call mpas_log_write('')
+         do k = 1, nVertLevels
+            do iCell = 1, nCells
+               scalars(index_qv,k,iCell) = spechum(k,iCell)/(1._RKIND-spechum(k,iCell))
+            enddo
+         enddo
+      endif
+
+
+      !
+      ! Diagnose fields needed in initial conditions file (u, w, rho, theta)
+      ! NB: At this point, "rho_zz" is simple dry density, and "theta_m" is regular potential temperature
+      !
+      do iCell=1,nCells
+
+         do k=1,nVertLevels
+            ! PI
+            p(k,iCell) = (pressure(k,iCell) / p0) ** (rgas / cp)
+
+            ! THETA - can compute this using PI instead
+            t(k,iCell) = t(k,iCell) * (p0 / pressure(k,iCell)) ** (rgas / cp)
+
+            ! RHO_ZZ
+            ! MW note. this is from _gfs case and is different from _lbc case.
+            rho_zz(k,iCell) = pressure(k,iCell) / rgas / (p(k,iCell) * t(k,iCell) &
+                              * (1.0 + (rvord - 1.0) * scalars(index_qv,k,iCell)))
+            rho_zz(k,iCell) = rho_zz(k,iCell) / (1.0 + scalars(index_qv,k,iCell))
+         end do
+      end do
+
+
+
+
+      !
+      ! Reference state based on a dry isothermal atmosphere
+      !
+      do iCell=1,nCells
+         do k=1,nVertLevels
+            ztemp    = 0.5*(zgrid(k+1,iCell)+zgrid(k,iCell))
+            ppb(k,iCell) = p0*exp(-gravity*ztemp/(rgas*t0b))      ! pressure_base
+            pb (k,iCell) = (ppb(k,iCell)/p0)**(rgas/cp)           ! exner_base
+            rb (k,iCell) = ppb(k,iCell)/(rgas*t0b)                ! rho_base
+            tb (k,iCell) = t0b/pb(k,iCell)                        ! theta_base
+            rtb(k,iCell) = rb(k,iCell)*tb(k,iCell)                ! rtheta_base
+            p  (k,iCell) = pb(k,iCell)                            ! exner
+            pp (k,iCell) = 0.                                     ! pressure_p
+            rr (k,iCell) = 0.                                     ! rho_p
+         end do
+      end do
+
+
+
+      do iCell=1,nCells
+         k = 1
+
+!  WCS 20130821 - couple with vertical metric, note: rr is coupled here
+         rho_zz(k,iCell) = ((pressure(k,iCell) / p0)**(cv / cp)) * (p0 / rgas) &
+                            / (t(k,iCell)*(1.0 + 1.61*scalars(index_qv,k,iCell))) / zz(k,iCell)
+         rr(k,iCell) = rho_zz(k,iCell) - rb(k,iCell)
+
+         do k=2,nVertLevels
+            it = 0
+            p_check = 2.0 * 0.0001
+            do while ( (it < 30) .and. (p_check > 0.0001) )
+
+               p_check = pp(k,iCell)
+
+!  WCS 20130821 - MPAS hydrostatic relation
+               pp(k,iCell) = pp(k-1,iCell) - (fzm(k)*rr(k,iCell) + fzp(k)*rr(k-1,iCell))*gravity*dzu(k) &
+                                           - (fzm(k)*rho_zz(k,iCell)*scalars(index_qv,k,iCell) &
+                                                  + fzp(k)*rho_zz(k-1,iCell)*scalars(index_qv,k-1,iCell))*gravity*dzu(k)
+               pressure(k,iCell) = pp(k,iCell) + ppb(k,iCell)
+               p(k,iCell) = (pressure(k,iCell) / p0) ** (rgas / cp)
+
+!  WCS 20130821 - couple with vertical metric
+               rho_zz(k,iCell) = pressure(k,iCell) / rgas &
+                     / (p(k,iCell)*t(k,iCell)*(1.0 + 1.61*scalars(index_qv,k,iCell)))/zz(k,iCell)
+               rr(k,iCell) = rho_zz(k,iCell) - rb(k,iCell)
+
+               p_check = abs(p_check - pp(k,iCell))
+
+               it = it + 1
+            end do
+         end do
+      end do
+
+
+
+      ! Compute theta_m and rho-tilde
+      do iCell=1,nCells
+         do k=1,nVertLevels
+            t(k,iCell) = t(k,iCell) * (1.0 + 1.61*scalars(index_qv,k,iCell))
+!  WCS 20130821 - decouple rr from vertical metric
+            rr(k,iCell) = rr(k,iCell)*zz(k,iCell)
+         end do
+      end do
+
+
+
+      do iEdge=1,nEdges
+         do k=1,nVertLevels
+            ru(k,iEdge) = u(k,iEdge) * 0.5*(rho_zz(k,cellsOnEdge(1,iEdge)) + rho_zz(k,cellsOnEdge(2,iEdge)))
+         end do
+      end do
+
+
+
+
+      rw(:,:) = 0.0
+      do iCell=1,nCellsSolve
+
+         do i=1,nEdgesOnCell(iCell)
+            iEdge=edgesOnCell(i,iCell)
+
+            do k = 2, nVertLevels
+               flux =  (fzm(k)*ru(k,iEdge)+fzp(k)*ru(k-1,iEdge))
+               if (iCell == cellsOnEdge(1,iEdge)) then
+                  rw(k,iCell) = rw(k,iCell) - (fzm(k)*zz(k,iCell)+fzp(k)*zz(k-1,iCell))*zb(k,1,iEdge)*flux
+               else
+                  rw(k,iCell) = rw(k,iCell) + (fzm(k)*zz(k,iCell)+fzp(k)*zz(k-1,iCell))*zb(k,2,iEdge)*flux
+               end if
+
+               if (config_theta_adv_order ==3) then
+                  if (iCell == cellsOnEdge(1,iEdge)) then
+                     rw(k,iCell) = rw(k,iCell)    &
+                                  + sign(1.0_RKIND,ru(k,iEdge))*config_coef_3rd_order* &
+                                    (fzm(k)*zz(k,iCell)+fzp(k)*zz(k-1,iCell))*zb3(k,1,iEdge)*flux
+                  else
+                     rw(k,iCell) = rw(k,iCell)    &
+                                  - sign(1.0_RKIND,ru(k,iEdge))*config_coef_3rd_order* &
+                                    (fzm(k)*zz(k,iCell)+fzp(k)*zz(k-1,iCell))*zb3(k,2,iEdge)*flux
+                  end if
+               end if
+
+            end do
+
+         end do
+
+      end do
+
+
+
+      deallocate(vert_level)
+
+
+
+
+      ! Compute rho and theta from rho_zz and theta_m
+      do iCell=1,nCells
+         do k=1,nVertLevels
+            rho(k,iCell) = rho_zz(k,iCell) * zz(k,iCell)
+            theta(k,iCell) = t(k,iCell) / (1.0_RKIND + 1.61_RKIND * scalars(index_qv,k,iCell))
+         end do
+      end do
+
+
+   end subroutine init_atm_case_fdda
+
 
    !-----------------------------------------------------------------------
    !  routine init_atm_case_cam_mpas
@@ -6975,101 +8592,6 @@ call mpas_log_write('Done with soil consistency check')
       end do
 
    end function nearest_edge
-
-
-   real (kind=RKIND) function vertical_interp(target_z, nz, zf, order, extrap, surface_val, sealev_val, ierr)
-
-      implicit none
-
-      real (kind=RKIND), intent(in) :: target_z
-      integer, intent(in) :: nz 
-      real (kind=RKIND), dimension(2,nz), intent(in) :: zf      ! zf(1,:) is column of vertical coordinate values, zf(2,:) is column of field values
-      integer, intent(in), optional :: order
-      integer, intent(in), optional :: extrap                   ! can take values 0 = constant, 1 = linear (default), 2 = lapse-rate
-      real (kind=RKIND), intent(in), optional :: surface_val
-      real (kind=RKIND), intent(in), optional :: sealev_val
-      integer, intent(out), optional :: ierr
-      
-      integer :: k, lm, lp
-      real (kind=RKIND) :: wm, wp
-      real (kind=RKIND) :: slope
-
-      integer :: interp_order, extrap_type
-      real (kind=RKIND) :: surface, sealevel
-
-      if (present(ierr)) ierr = 0
-      
-      if (present(order)) then
-         interp_order = order
-      else
-         interp_order = 2
-      end if
-
-      if (present(extrap)) then
-         extrap_type = extrap
-      else
-         extrap_type = 1
-      end if
-
-      if (present(surface_val)) then
-         surface = surface_val
-      else
-         surface = 200100.0
-      end if
-
-      if (present(sealev_val)) then
-         sealevel = sealev_val
-      else
-         sealevel = 201300.0
-      end if
-
-      !
-      ! Extrapolation required
-      !
-      if (target_z < zf(1,1)) then
-         if (extrap_type == 0) then
-            vertical_interp = zf(2,1)
-         else if (extrap_type == 1) then
-            slope = (zf(2,2) - zf(2,1)) / (zf(1,2) - zf(1,1))
-            vertical_interp = zf(2,1) + slope * (target_z - zf(1,1))
-         else if (extrap_type == 2) then
-            vertical_interp = zf(2,1) - (target_z - zf(1,1))*0.0065
-         end if
-         return
-      end if
-      if (target_z >= zf(1,nz)) then
-         if (extrap_type == 0) then
-            vertical_interp = zf(2,nz)
-         else if (extrap_type == 1) then
-            slope = (zf(2,nz) - zf(2,nz-1)) / (zf(1,nz) - zf(1,nz-1))
-            vertical_interp = zf(2,nz) + slope * (target_z - zf(1,nz))
-         else if (extrap_type == 2) then
-             call mpas_log_write('extrap_type == 2 not implemented for target_z >= zf(1,nz)', messageType=MPAS_LOG_ERR)
-             if (present(ierr)) ierr = 1
-             return
-         end if
-         return
-      end if
-
-
-      !
-      ! No extrapolation required
-      !
-      do k=1,nz-1
-         if (target_z >= zf(1,k) .and. target_z < zf(1,k+1)) then
-            lm = k
-            lp = k+1
-            wm = (zf(1,k+1) - target_z) / (zf(1,k+1) - zf(1,k))
-            wp = (target_z - zf(1,k)) / (zf(1,k+1) - zf(1,k))
-            exit
-         end if
-      end do
-
-      vertical_interp = wm*zf(2,lm) + wp*zf(2,lp)
-
-      return
-
-   end function vertical_interp
 
 
 !----------------------------------------------------------------------------------------------------------

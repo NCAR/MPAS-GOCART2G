@@ -3,9 +3,7 @@
 ifeq "$(GOCART2G)" "true"
     CHEMISTRY = -DDO_GOCART2G
     CHEMCORE = core_gocart2G
-    CHEM_OBJS = libchem/*.o
 endif
-
 
 OBJS_INIT = \
 	mpas_atmphys_date_time.o \
@@ -46,7 +44,8 @@ core_hyd_init: $(OBJS_INIT)
 	ar -ru libdycore.a $(OBJS_INIT)
 
 core_hyd: $(OBJS)
-	ar -ru libdycore.a $(OBJS)
+	ar -ru libdycore.a $(OBJS) $(CHEM_OBJS)
+
 
 core_reg:
 	$(CPP) $(CPPFLAGS) $(CPPINCLUDES) $(CHEMISTRY) Registry.xml > Registry_processed.xml
@@ -152,9 +151,9 @@ clean:
 	$(RM) $@ $*.mod
 ifeq "$(GEN_F90)" "true"
 	$(CPP) $(CPPFLAGS) $(CPPINCLUDES) -I./inc $< > $*.f90
-	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../core_atmosphere/chemistry -I../framework -I../operators  -I../external/esmf_time_f90
+	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../core_atmosphere/chemistry -I../framework -I../operators $(MPAS_ESMF_INC) -I../external/esmf_time_f90
 else
-	$(FC) $(CPPFLAGS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../core_atmosphere/chemistry -I../framework -I../operators  -I../external/esmf_time_f90
+	$(FC) $(CPPFLAGS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../core_atmosphere/chemistry -I../framework -I../operators $(MPAS_ESMF_INC) -I../external/esmf_time_f90
 endif
 
 .c.o:

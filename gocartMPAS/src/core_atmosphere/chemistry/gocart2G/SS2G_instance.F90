@@ -40,7 +40,10 @@ logical,parameter:: weibullFlag =  .false.    ! apply Weibull distribution (see 
 integer,parameter:: emission_scheme = 3       ! 1 for Gong 2003, 2 for ...
 integer,parameter:: sstEmisFlag     = 2       ! apply a correction to emissions based on SST (see code)
 
-real(kind=RKIND),dimension(6),parameter:: emission_scale_res = (/0.613,0.613,0.613,0.429,0.429,0.429/)
+! 20260731_rkumar_start
+!real(kind=RKIND),dimension(6),parameter:: emission_scale_res = (/0.613,0.613,0.613,0.429,0.429,0.429/)
+real(kind=RKIND),dimension(6),parameter:: emission_scale_res = (/0.600,0.525,0.450,0.400,0.375,0.350/)
+! 20260731_rkumar_end
 
 !method of apply relative humidity to particle radius:
 integer,parameter:: rhFlag = 2                ! RH swelling of Seasalt (1 for Fitzgerald 1975,

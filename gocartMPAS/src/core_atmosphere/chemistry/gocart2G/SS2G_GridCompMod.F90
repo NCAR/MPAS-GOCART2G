@@ -62,6 +62,10 @@
     real(kind=RKIND):: emission_scale                             ! global scaling tuning coefficient
     real(kind=RKIND),dimension(NHRES):: emission_scale_res        ! global scaling tuning resolution
 
+! 20260731_rkumar_start: Pre-calculated 2D scale-aware factors
+    real(kind=RKIND),dimension(:,:),allocatable:: emission_scale_ss
+! 20260731_rkumar_end
+
     real(kind=RKIND),dimension(:),allocatable:: rlow              ! particle effective radius lower bound [um]
     real(kind=RKIND),dimension(:),allocatable:: rup               ! particle effective radius upper bound [um]
     real(kind=RKIND),dimension(:),allocatable:: rmed              ! number median radius [um]
@@ -141,7 +145,8 @@
     self%emission_scale_res(n) = emission_scale_res(n)
  enddo
 !self%emission_scale = Chem_UtilResVal(dims(1),dims(2),self%emission_scale_res(:),stat)
- self%emission_scale = 1._RKIND
+! 20260731_rkumar : commented below line
+! self%emission_scale = 1._RKIND
 
 
 !call mpas_log_write('--- end subroutine load_SS2G_GridCOMP.')
@@ -179,7 +184,6 @@
  if(.not.allocated(memissions)     ) allocate(memissions(its:ite,jts:jte)     )
  if(.not.allocated(nemissions)     ) allocate(nemissions(its:ite,jts:jte)     )
  if(.not.allocated(dqa)            ) allocate(dqa(its:ite,jts:jte)            )
-
 
 !--- grid box efficiency to emission (fraction of sea water)
  fgridefficiency = min(max(0.,(self%frocean-self%fraci)*self%deep_lakes_mask),1.)
@@ -260,8 +264,10 @@
           rc      = istat                             &
                             )
     endif
-
-    memissions = self_params%emission_scale*fgridefficiency*fsstemis*fhoppel*gweibull*memissions
+! 20260731_rkumar_start
+!    memissions = self_params%emission_scale*fgridefficiency*fsstemis*fhoppel*gweibull*memissions
+    memissions = self_params%emission_scale_ss*fgridefficiency*fsstemis*fhoppel*gweibull*memissions
+! 20260731_rkumar_end
     dqa = memissions*self_params%cdt*grav/self%delp(:,:,self_params%km)
 
     self%SS(:,:,self_params%km,ibin) = self%SS(:,:,self_params%km,ibin) + dqa
@@ -378,19 +384,34 @@
  end where
 
 !--- if gocart2G does not interact with the MYNN PBL parameterization, then we update the mixing ratios
-!    due to dry deposition in the model layer adjacent to the surface, otherwise we simply skip this step:
+!    due to dry deposition in the model layer adjacent to the surface.
+!    HOWEVER, we ALWAYS compute the diagnostic flux (*dp) for the history files!
  if(associated(self%ssvdep)) self%ssvdep(:,:) = drydepf(:,:)*self%delz(:,:,self_params%km)
- if(.not. to_MYNN) then
+
+! 20260610_rkumar_start
     do ibin = 1, self_params%nbins
-       if(associated(self%ssdp)) self%ssdp(:,:,ibin) = 0._RKIND
-       dqa = 0._RKIND
-       dqa = max(0._RKIND,self%ss(:,:,self_params%km,ibin)*(1.-exp(-drydepf*self_params%cdt)))
-       self%ss(:,:,self_params%km,ibin) = self%ss(:,:,self_params%km,ibin) - dqa
-       if(associated(self%ssdp)) then
-          self%ssdp(:,:,ibin) = dqa*self%delp(:,:,self_params%km)/grav/self_params%cdt
-       end if
+       do j = jts, jte
+          do i = its, ite
+             
+             ! Calculate removed mass for this specific grid cell
+             dqa(i,j) = max(0._RKIND, self%ss(i,j,self_params%km,ibin) * &
+                                      (1._RKIND - exp(-drydepf(i,j)*self_params%cdt)))
+             
+             ! 1. ALWAYS calculate the diagnostic DP flux (kg m-2 s-1)
+             if(associated(self%ssdp)) then
+                self%ssdp(i,j,ibin) = dqa(i,j) * self%delp(i,j,self_params%km) / grav / self_params%cdt
+             end if
+             
+             ! 2. ONLY remove the mass internally if MYNN is bypassed
+             if(.not. to_MYNN) then
+                self%ss(i,j,self_params%km,ibin) = self%ss(i,j,self_params%km,ibin) - dqa(i,j)
+             endif
+             
+          enddo
+       enddo
     enddo
- endif
+! 20260610_rkumar_end
+
  if(istat /=0) then
     call mpas_log_write('--- SS2G_bc_GridComp: error in subroutine DryDeposition.', &
                         messageType=MPAS_LOG_CRIT)

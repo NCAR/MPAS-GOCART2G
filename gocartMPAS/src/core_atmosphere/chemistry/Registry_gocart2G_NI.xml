@@ -64,22 +64,22 @@
      <var name="niDP_bin3" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Dry deposition of nitrate in size bin 3 []"/>
 
-     <var name="niWT_bin1" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="niWT_bin1" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Wet deposition of nitrate in size bin 1 []"/>
 
-     <var name="niWT_bin2" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="niWT_bin2" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Wet deposition of nitrate in size bin 2 []"/>
 
-     <var name="niWT_bin3" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="niWT_bin3" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Wet deposition of nitrate in size bin 3 []"/>
 
-     <var name="niSV_bin1" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="niSV_bin1" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Convective scavenging of nitrate in size bin 1 []"/>
 
-     <var name="niSV_bin2" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="niSV_bin2" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Convective scavenging of nitrate in size bin 2 []"/>
 
-     <var name="niSV_bin3" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="niSV_bin3" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Convective scavenging of nitrate in size bin 3 []"/>
 
      <var name="nh3EM" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
@@ -88,10 +88,10 @@
      <var name="nh3DP" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Dry deposition of ammonia"/>
 
-     <var name="nh3WT" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="nh3WT" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Wet deposition of ammonia"/>
 
-     <var name="nh3SV" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="nh3SV" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Convective scavenging of ammonia"/>
 
      <var name="nh4SD" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
@@ -100,10 +100,10 @@
      <var name="nh4DP" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Dry deposition of ammonium"/>
 
-     <var name="nh4WT" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="nh4WT" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Wet deposition of ammonium"/>
 
-     <var name="nh4SV" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="nh4SV" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Convective scavenging of ammonium"/>
 
      <var name="niPNO3AQ" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"

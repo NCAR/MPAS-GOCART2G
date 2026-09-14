@@ -120,8 +120,15 @@
     bc_anth_biofuel(:)  = (after_dt/total_dt)*anth_biofuel(:) + (before_dt/total_dt)*bc_anth_res(:)
     bc_anth_less100m(:) = (after_dt/total_dt)*anth_less100m(:) &
                         + (before_dt/total_dt)*(bc_anth_sum(:)-bc_anth_res(:))
- endif
 
+! 20260615_rkumar_start
+ else
+    ! If total_dt is zero, we are exactly on the timestamp (or at the end of the file bounds).
+    ! Bypass interpolation and apply the raw emissions directly.
+    bc_anth_biofuel(:)  = bc_anth_res(:)
+    bc_anth_less100m(:) = bc_anth_sum(:) - bc_anth_res(:)
+! 20260615_rkumar_end
+ endif
 
  deallocate(anth_less100m)
  deallocate(anth_biofuel )
@@ -214,6 +221,11 @@
     oc_anth_biofuel(:)  = (after_dt/total_dt)*anth_biofuel(:) + (before_dt/total_dt)*oc_anth_res(:)
     oc_anth_less100m(:) = (after_dt/total_dt)*anth_less100m(:) &
                         + (before_dt/total_dt)*(oc_anth_sum(:)-oc_anth_res(:))
+! 20260615_rkumar_start
+ else
+    oc_anth_biofuel(:)  = oc_anth_res(:)
+    oc_anth_less100m(:) = oc_anth_sum(:) - oc_anth_res(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -301,6 +313,10 @@
 !interpolation of surface emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     su_anth_less100m(:) = (after_dt/total_dt)*anth_less100m(:) + (before_dt/total_dt)*so2_anth_sum(:)
+! 20260615_rkumar_start
+ else
+    su_anth_less100m(:) = so2_anth_sum(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -315,7 +331,6 @@
 !==================================================================================================================
 
 !input arguments:
-! 20251010_rkumar_bugfix: Prevents zero emissions for hourly data by checking total_dt, after_dt, and before_dt > 0 before interpolation. If not, sets *_biob_em(:) = biob_modis(:) for each species.
  type(mpas_Clock_type),intent(in):: clock
  type(mpas_pool_type),intent(in),pointer:: mesh
  type(mpas_pool_type),intent(in),pointer:: CAMS_anth_emissions
@@ -448,6 +463,15 @@
     nh3_anth_oc(:) = (after_dt/total_dt)*anth_oc(:) + (before_dt/total_dt)*nh3_anth_oc(:)
     nh3_anth_re(:) = (after_dt/total_dt)*anth_re(:) + (before_dt/total_dt)*nh3_anth_re(:)
     nh3_anth_tr(:) = (after_dt/total_dt)*anth_tr(:) + (before_dt/total_dt)*nh3_anth_tr(:)
+! 20260615_rkumar_start
+ else
+    nh3_anth_ag(:) = anth_ag(:)
+    nh3_anth_en(:) = anth_en(:)
+    nh3_anth_in(:) = anth_in(:)
+    nh3_anth_oc(:) = anth_oc(:)
+    nh3_anth_re(:) = anth_re(:)
+    nh3_anth_tr(:) = anth_tr(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -539,6 +563,10 @@
 !interpolation of surface emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     co_anth_em(:) = (after_dt/total_dt)*anth_em(:) + (before_dt/total_dt)*co_anth_sum(:)
+! 20260615_rkumar_start
+ else
+    co_anth_em(:) = co_anth_sum(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -625,6 +653,10 @@
 !interpolation of surface emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     iso_anth_em(:) = (after_dt/total_dt)*anth_em(:) + (before_dt/total_dt)*iso_anth_sum(:)
+! 20260615_rkumar_start
+ else
+    iso_anth_em(:) = iso_anth_sum(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -712,6 +744,10 @@
 !interpolation of surface emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     mnt_anth_em(:) = (after_dt/total_dt)*anth_em(:) + (before_dt/total_dt)*mnt_anth_sum(:)
+! 20260615_rkumar_start
+ else
+    mnt_anth_em(:) = mnt_anth_sum(:)
+! 20260615_rkumar_end
  endif
 
  deallocate(anth_em)
@@ -820,6 +856,10 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     co_biog_em(:) = (after_dt/total_dt)*biog_megan(:) + (before_dt/total_dt)*co_biog_megan(:)
+! 20260615_rkumar_start
+ else
+    co_biog_em(:) = co_biog_megan(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -839,6 +879,10 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     iso_biog_em(:) = (after_dt/total_dt)*biog_megan(:) + (before_dt/total_dt)*iso_biog_megan(:)
+! 20260615_rkumar_start
+ else
+    iso_biog_em(:) = iso_biog_megan(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -858,6 +902,10 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     mnt_biog_em(:) = (after_dt/total_dt)*biog_megan(:) + (before_dt/total_dt)*mnt_biog_megan(:)
+! 20260615_rkumar_start
+ else
+    mnt_biog_em(:) = mnt_biog_megan(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -877,6 +925,10 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     mnta_biog_em(:) = (after_dt/total_dt)*biog_megan(:) + (before_dt/total_dt)*mnta_biog_megan(:)
+! 20260615_rkumar_start
+ else
+    mnta_biog_em(:) = mnta_biog_megan(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -896,6 +948,10 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     mntb_biog_em(:) = (after_dt/total_dt)*biog_megan(:) + (before_dt/total_dt)*mnta_biog_megan(:)
+! 20260615_rkumar_start
+ else
+    mntb_biog_em(:) = mnta_biog_megan(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -915,6 +971,10 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     mntb_biog_em(:) = (after_dt/total_dt)*biog_megan(:) + (before_dt/total_dt)*mnta_biog_megan(:)
+! 20260615_rkumar_start
+ else
+    mntb_biog_em(:) = mnta_biog_megan(:)
+! 20260615_rkumar_end
  endif
 
 
@@ -1034,9 +1094,9 @@
 !interpolation of black carbon biomass burning emissions to the current time:
  if(total_dt > 0.0_RKIND) then
     bc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*bc_biob_modis(:)
-else
-   bc_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
-endif
+ else
+    bc_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+ endif
 ! 20251010_rkumar_bugfix_end
 
 !biomass burning of organic carbon:
@@ -1050,11 +1110,11 @@ endif
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-if(total_dt > 0.0_RKIND) then
-   oc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*oc_biob_modis(:)
-else
-   oc_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
-endif
+ if(total_dt > 0.0_RKIND) then
+    oc_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*oc_biob_modis(:)
+ else
+    oc_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+ endif
 ! 20251010_rkumar_bugfix_end
 
 
@@ -1069,11 +1129,11 @@ endif
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-if(total_dt > 0.0_RKIND) then
-   ni_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*nh3_biob_modis(:)
-else
-   ni_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
-endif
+ if(total_dt > 0.0_RKIND) then
+    ni_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*nh3_biob_modis(:)
+ else
+    ni_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+ endif
 ! 20251010_rkumar_bugfix_end
 
 
@@ -1088,11 +1148,11 @@ endif
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-if(total_dt > 0.0_RKIND) then
-   su_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*so2_biob_modis(:)
-else
-   su_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
-endif
+ if(total_dt > 0.0_RKIND) then
+    su_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*so2_biob_modis(:)
+ else
+    su_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+ endif
 ! 20251010_rkumar_bugfix_end
 
 
@@ -1107,11 +1167,11 @@ endif
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-if(total_dt > 0.0_RKIND) then
-   co_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*co_biob_modis(:)
-else
-   co_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
-endif
+ if(total_dt > 0.0_RKIND) then
+    co_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*co_biob_modis(:)
+ else
+    co_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+ endif
 ! 20251010_rkumar_bugfix_end
 
 
@@ -1126,11 +1186,11 @@ endif
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-if(total_dt > 0.0_RKIND) then
-   iso_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*iso_biob_modis(:)
-else
-   iso_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
-endif
+ if(total_dt > 0.0_RKIND) then
+    iso_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*iso_biob_modis(:)
+ else
+    iso_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+ endif
 ! 20251010_rkumar_bugfix_end
 
 
@@ -1145,11 +1205,11 @@ endif
                   whence=MPAS_STREAM_EARLIEST_AFTER,actualWhen=actualTimestamp)
  call mpas_set_time(afterTime,dateTimeString=trim(actualTimestamp))
 
-if(total_dt > 0.0_RKIND) then
-   mnt_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*mnt_biob_modis(:)
-else
-   mnt_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
-endif
+ if(total_dt > 0.0_RKIND) then
+    mnt_biob_em(:) = (after_dt/total_dt)*biob_modis(:) + (before_dt/total_dt)*mnt_biob_modis(:)
+ else
+    mnt_biob_em(:) = biob_modis(:) ! 20251010_rkumar_bugfix_start
+ endif
 ! 20251010_rkumar_bugfix_end
 
  deallocate(biob_modis)

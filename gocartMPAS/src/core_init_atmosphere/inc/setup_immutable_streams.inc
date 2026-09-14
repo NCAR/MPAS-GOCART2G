@@ -125,10 +125,6 @@ function init_atm_setup_immutable_streams(manager) result(iErr)
    write(packages,'(a)') 'gwd_stage_in;vertical_stage_in;met_stage_in'
    call MPAS_stream_mgr_add_field(manager, 'input', 'deriv_two', packages=packages, ierr=ierr)
    write(packages,'(a)') 'gwd_stage_in;vertical_stage_in;met_stage_in'
-   call MPAS_stream_mgr_add_field(manager, 'input', 'defc_a', packages=packages, ierr=ierr)
-   write(packages,'(a)') 'gwd_stage_in;vertical_stage_in;met_stage_in'
-   call MPAS_stream_mgr_add_field(manager, 'input', 'defc_b', packages=packages, ierr=ierr)
-   write(packages,'(a)') 'gwd_stage_in;vertical_stage_in;met_stage_in'
    call MPAS_stream_mgr_add_field(manager, 'input', 'cell_gradient_coef_x', packages=packages, ierr=ierr)
    write(packages,'(a)') 'gwd_stage_in;vertical_stage_in;met_stage_in'
    call MPAS_stream_mgr_add_field(manager, 'input', 'cell_gradient_coef_y', packages=packages, ierr=ierr)
@@ -269,8 +265,6 @@ function init_atm_setup_immutable_streams(manager) result(iErr)
    write(packages,'(a)') 'gwd_stage_out;vertical_stage_out;met_stage_out'
    call MPAS_stream_mgr_add_field(manager, 'output', 'ol4', packages=packages, ierr=ierr)
    call MPAS_stream_mgr_add_field(manager, 'output', 'deriv_two', ierr=ierr)
-   call MPAS_stream_mgr_add_field(manager, 'output', 'defc_a', ierr=ierr)
-   call MPAS_stream_mgr_add_field(manager, 'output', 'defc_b', ierr=ierr)
    call MPAS_stream_mgr_add_field(manager, 'output', 'cell_gradient_coef_x', ierr=ierr)
    call MPAS_stream_mgr_add_field(manager, 'output', 'cell_gradient_coef_y', ierr=ierr)
    call MPAS_stream_mgr_add_field(manager, 'output', 'coeffs_reconstruct', ierr=ierr)
@@ -354,6 +348,12 @@ function init_atm_setup_immutable_streams(manager) result(iErr)
    call MPAS_stream_mgr_add_field(manager, 'output', 'theta', packages=packages, ierr=ierr)
    write(packages,'(a)') 'met_stage_out'
    call MPAS_stream_mgr_add_field(manager, 'output', 'relhum', packages=packages, ierr=ierr)
+   write(packages,'(a)') 'met_stage_out'
+   call MPAS_stream_mgr_add_field(manager, 'output', 'spechum', packages=packages, ierr=ierr)
+   write(packages,'(a)') 'met_stage_out'
+   call MPAS_stream_mgr_add_field(manager, 'output', 'uReconstructZonal', packages=packages, ierr=ierr)
+   write(packages,'(a)') 'met_stage_out'
+   call MPAS_stream_mgr_add_field(manager, 'output', 'uReconstructMeridional', packages=packages, ierr=ierr)
    write(packages,'(a)') 'met_stage_out'
    call MPAS_stream_mgr_add_field(manager, 'output', 'rho_base', packages=packages, ierr=ierr)
    write(packages,'(a)') 'met_stage_out'
@@ -449,6 +449,14 @@ function init_atm_setup_immutable_streams(manager) result(iErr)
    call MPAS_stream_mgr_add_field(manager, 'lbc', 'xtime', ierr=ierr)
    call MPAS_stream_mgr_add_field(manager, 'lbc', 'Time', ierr=ierr)
    call MPAS_stream_mgr_set_property(manager, 'lbc', MPAS_STREAM_PROPERTY_IMMUTABLE, .true., ierr=ierr)
+
+   call MPAS_stream_mgr_create_stream(manager, 'fdda', MPAS_STREAM_OUTPUT, 'fdda.$Y-$M-$D_$h.$m.$s.nc', ierr=ierr)
+   call MPAS_stream_mgr_add_field(manager, 'fdda', 'scalars_fdda', ierr=ierr)
+   call MPAS_stream_mgr_add_field(manager, 'fdda', 'xtime', ierr=ierr)
+   call MPAS_stream_mgr_add_field(manager, 'fdda', 'u_fdda', ierr=ierr)
+   call MPAS_stream_mgr_add_field(manager, 'fdda', 'v_fdda', ierr=ierr)
+   call MPAS_stream_mgr_add_field(manager, 'fdda', 'theta_fdda', ierr=ierr)
+   call MPAS_stream_mgr_set_property(manager, 'fdda', MPAS_STREAM_PROPERTY_IMMUTABLE, .true., ierr=ierr)
 
 end function init_atm_setup_immutable_streams
 

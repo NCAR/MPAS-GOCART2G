@@ -121,6 +121,7 @@ function(mpas_fortran_target target)
         list(APPEND MPAS_FORTRAN_TARGET_COMPILE_OPTIONS_PUBLIC
                 $<$<COMPILE_LANGUAGE:Fortran>:-align array64byte>
                 $<$<COMPILE_LANGUAGE:Fortran>:-convert big_endian>
+                $<$<COMPILE_LANGUAGE:Fortran>:-Qoption,fpp,-macro_expand=vc>
         )
         if(MPAS_DOUBLE_PRECISION)
             list(APPEND MPAS_FORTRAN_TARGET_COMPILE_OPTIONS_PRIVATE
@@ -215,9 +216,6 @@ function(mpas_core_target)
     endif()
     if (${DO_GOCART2G})
         set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_GOCART2G)
-    endif()
-    if (${DO_PRM})
-        set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_PRM)
     endif()
     message("CPP_EXTRA_FLAGS: ${CPP_EXTRA_FLAGS}")
 

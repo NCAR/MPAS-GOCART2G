@@ -68,7 +68,9 @@
     call mpas_pool_get_array(state,'scalars',scalars,time_lev)
 
     call mpas_chem_gocart2G%gocart2G_dims(mesh,state)
-    call mpas_chem_gocart2G%gocart2G_allocate()
+   call mpas_chem_gocart2G%gocart2G_allocate()
+   call mpas_chem_gocart2G%gocart2G_forMPASphys_init(CA2G_bc_params,CA2G_br_params,CA2G_oc_params, &
+                                         DU2G_params,NI2G_params,SS2G_params,SU2G_params)
 
     its = mpas_chem_gocart2G%its
     ite = mpas_chem_gocart2G%ite

@@ -39,7 +39,10 @@
 !Ch_DU: 0.2 0.2 0.07 0.07 0.07 0.056 #original values for (a,b,c,d,e,f)
 !real(kind=RKIND),dimension(nbins),parameter:: source_fraction = (/.0435465,0.106903,0.220117,0.484606,0.144828/)
 
- real(kind=RKIND),dimension(6),parameter:: Ch_DU = (/0.3,0.3,0.11,0.11,0.11,0.088/)
+! 20260731_rkumar_start
+! real(kind=RKIND),dimension(6),parameter:: Ch_DU = (/0.3,0.3,0.11,0.11,0.11,0.088/)
+ real(kind=RKIND),dimension(6),parameter:: Ch_DU = (/0.20,0.15,0.10,0.09,0.080,0.070/)
+! 20260731_rkumar_start
  real(kind=RKIND),dimension(nbins),parameter:: source_fraction = (/0.1,0.25,0.25,0.25,0.25/)
 
 !LDF: added parameters from WRF model (see ./phys/module_data_gocart_dust):

@@ -76,7 +76,11 @@
  call mpas_log_write('')
  call mpas_log_write('--- enter subroutine init_gocart2G_static:')
 
- call mpas_pool_get_config(configs,'config_30s_supersample_factor',supersample_fac_30s)
+! 20260805_rkumar_start (adding Michael's suggestion)
+! call mpas_pool_get_config(configs,'config_30s_supersample_factor',supersample_fac_30s)
+ call mpas_pool_get_config(configs,'config_supersample_factor',supersample_fac_30s)
+! 20260805_rkumar_end
+
  call mpas_pool_get_config(mesh,'sphere_radius',sphere_radius)
 
  call mpas_pool_get_dimension(mesh,'nCells',nCells)
@@ -133,7 +137,10 @@
  geog_sub_path = 'erod/'
 
  call mpas_log_write('--- start interpolate EROD')
- call interp_erod(mesh,tree,trim(geog_data_path)//trim(geog_sub_path),supersample_fac=supersample_fac_30s)
+! 20260805_rkumar_start (adding Michael's suggestion)
+! call interp_erod(mesh,tree,trim(geog_data_path)//trim(geog_sub_path),supersample_fac=supersample_fac_30s)
+ call interp_erod(mesh,tree,trim(geog_data_path)//trim(geog_sub_path),supersample_fac=(3*supersample_fac_30s))
+! 20260805_rkumar_end
  call mpas_log_write('--- end interpolate EROD')
 
 

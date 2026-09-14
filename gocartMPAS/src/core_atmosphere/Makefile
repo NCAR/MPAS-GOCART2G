@@ -2,12 +2,13 @@
 
 #
 # To build a dycore-only MPAS-Atmosphere model, comment-out or delete
-# the definition of PHYSICS, below
+# the definition of PHYSICS and CHEMISTRY, below
 #
-# If MPAS_CAM_DYCORE is found in CPPFLAGS, PHYSICS will become undefined automatically
+# If MPAS_CAM_DYCORE is found in CPPFLAGS, PHYSICS and CHEMISTRY will become undefined automatically
 #
 ifeq ($(findstring MPAS_CAM_DYCORE,$(CPPFLAGS)),)
     PHYSICS = -DDO_PHYSICS
+    CHEMISTRY = -DDO_CHEMISTRY
 endif
 
 ifdef PHYSICS
@@ -18,10 +19,12 @@ endif
 
 ifeq "$(GOCART2G)" "true"
     CHEMISTRY = -DDO_GOCART2G
+endif
+
+ifdef CHEMISTRY
     CHEMCORE = chemcore
     CHEM_OBJS = libchem/*.o
 endif
-
 
 OBJS = mpas_atm_core.o \
        mpas_atm_core_interface.o \
@@ -29,10 +32,10 @@ OBJS = mpas_atm_core.o \
        mpas_atm_threading.o \
        mpas_atm_halos.o
 
-all: $(CHEMCORE) $(PHYSCORE) dycore diagcore atmcore utilities
+all: $(PHYSCORE) $(CHEMCORE) dycore diagcore atmcore utilities
 
 core_reg:
-	$(CPP) $(CPPFLAGS) $(CPPINCLUDES) $(CHEMISTRY) $(PHYSICS) Registry.xml > Registry_processed.xml
+	$(CPP) $(CPPFLAGS) $(CPPINCLUDES) $(PHYSICS) $(CHEMISTRY) Registry.xml > Registry_processed.xml
 
 core_input_gen:
 	if [ ! -e default_inputs ]; then  mkdir default_inputs; fi
@@ -48,7 +51,7 @@ post_build:
 	cp default_inputs/* $(ROOT_DIR)/default_inputs/.
 	( cd $(ROOT_DIR)/default_inputs; for FILE in `ls -1`; do if [ ! -e ../$$FILE ]; then cp $$FILE ../.; fi; done )
 
-physcore: mpas_atm_dimensions.o
+physcore: mpas_atm_dimensions.o $(CHEMCORE)
 	( cd physics; $(MAKE) all )
 	( mkdir libphys; cd libphys; ar -x ../physics/libphys.a )
 	( cd ../..; ln -sf ./src/core_atmosphere/physics/physics_wrf/files/*TBL .)
@@ -56,10 +59,10 @@ physcore: mpas_atm_dimensions.o
 	( cd ../..; ln -sf ./src/core_atmosphere/physics/physics_noahmp/parameters/*TBL .)
 
 chemcore:
-	( cd chemistry; $(MAKE) all )
+	( cd chemistry; $(MAKE) all CHEMISTRY="$(CHEMISTRY)" )
 	( mkdir libchem; cd libchem; ar -x ../chemistry/libchem.a )
 
-dycore: mpas_atm_dimensions.o $(PHYSCORE)
+dycore: mpas_atm_dimensions.o $(PHYSCORE) $(CHEMCORE)
 	( cd dynamics; $(MAKE) all PHYSICS="$(PHYSICS)" )
 
 diagcore: $(PHYSCORE) dycore
@@ -69,7 +72,7 @@ utilities: $(PHYSCORE)
 	( cd utils; $(MAKE) all PHYSICS="$(PHYSICS)" )
 
 atmcore: $(CHEMCORE) $(PHYSCORE) dycore diagcore $(OBJS)
-	ar -ru libdycore.a $(OBJS) dynamics/*.o $(CHEM_OBJS) $(PHYS_OBJS) diagnostics/*.o
+	ar -ru libdycore.a $(OBJS) dynamics/*.o $(PHYS_OBJS) $(CHEM_OBJS) diagnostics/*.o
 
 mpas_atm_core_interface.o: mpas_atm_core.o
 
@@ -94,19 +97,29 @@ clean:
 	$(RM) *.i
 	$(RM) -r default_inputs
 
+
+#.F.o:
+#	$(RM) $@ $*.mod
+#ifeq "$(GEN_F90)" "true"
+#	$(CPP) $(CPPFLAGS) $(PHYSICS) $(CPPINCLUDES) -I./inc $< > $*.f90
+#ifeq "$(GOCART2G)" "true"
+#	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../framework -I../operators -I./chemistry -I./physics -I./dynamics -I./diagnostics -I./chemistry/gocart2G -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
+#else
+#	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../framework -I../operators -I./physics -I./dynamics -I./diagnostics -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
+#endif
+#else
+#ifeq "$(GOCART2G)" "true"
+#	$(FC) $(CPPFLAGS) $(PHYSICS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../framework -I../operators -I./chemistry -I./physics -I./dynamics -I./diagnostics -I./chemistry/gocart2G -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
+#else
+#	$(FC) $(CPPFLAGS) $(PHYSICS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../framework -I../operators -I./physics -I./dynamics -I./diagnostics -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
+#endif
+#endif
+
 .F.o:
 	$(RM) $@ $*.mod
 ifeq "$(GEN_F90)" "true"
-	$(CPP) $(CPPFLAGS) $(PHYSICS) $(CPPINCLUDES) -I./inc $< > $*.f90
-ifeq "$(GOCART2G)" "true"
-	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../framework -I../operators -I./chemistry -I./physics -I./dynamics -I./diagnostics -I./chemistry/gocart2G -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
+	$(CPP) $(CPPFLAGS) $(PHYSICS) $(CHEMISTRY) $(CPPINCLUDES) -I./inc -I../framework $< > $*.f90
+	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../framework -I../operators -I./chemistry -I./physics -I./dynamics -I./diagnostics -I./chemistry/gocart2G -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP $(MPAS_ESMF_INC) -I../external/esmf_time_f90 -I../external/SMIOL
 else
-	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../framework -I../operators -I./physics -I./dynamics -I./diagnostics -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
-endif
-else
-ifeq "$(GOCART2G)" "true"
-	$(FC) $(CPPFLAGS) $(PHYSICS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../framework -I../operators -I./chemistry -I./physics -I./dynamics -I./diagnostics -I./chemistry/gocart2G -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
-else
-	$(FC) $(CPPFLAGS) $(PHYSICS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../framework -I../operators -I./physics -I./dynamics -I./diagnostics -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP -I../external/esmf_time_f90 -I../external/SMIOL
-endif
+	$(FC) $(CPPFLAGS) $(PHYSICS) $(CHEMISTRY) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../framework -I../operators -I./chemistry -I./physics -I./dynamics -I./diagnostics -I./chemistry/gocart2G -I./physics/physics_wrf -I./physics/physics_mmm -I./physics/physics_noaa/UGWP $(MPAS_ESMF_INC) -I../external/esmf_time_f90 -I../external/SMIOL
 endif

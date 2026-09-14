@@ -403,11 +403,11 @@ call mpas_log_write('       nSnowLevels = $i', intArgs=(/3/))
       call mpas_pool_get_dimension(dimensionPool, 'nzSnowLevels', nzSnowLevels)
       if ( .not. associated(nzSnowLevels) ) then
          allocate(nzSnowLevels)
-         nzSnowLevels = 7
-call mpas_log_write('       nzSnowLevels = $i', intArgs=(/7/))
+         nzSnowLevels = nSoilLevels+nSnowLevels
+call mpas_log_write('       nzSnowLevels = $i', intArgs=(/nSoilLevels+nSnowLevels/))
          call mpas_pool_add_dimension(dimensionPool, 'nzSnowLevels', nzSnowLevels)
           else if ( nzSnowLevels == MPAS_MISSING_DIM ) then
-         nzSnowLevels = 7
+         nzSnowLevels = nSoilLevels+nSnowLevels
           end if
 
       call mpas_pool_get_dimension(dimensionPool, 'nDustErosionDim', nDustErosionDim)

@@ -341,8 +341,11 @@
  end subroutine init_microphysics
 
 !=================================================================================================================
+! 20260430_rkumar_start
+! subroutine driver_microphysics(configs,mesh,state,time_lev,diag,diag_physics,tend_physics,tend,itimestep,its,ite)
  subroutine driver_microphysics(configs,mesh,state,time_lev,diag,diag_physics,tend_physics, &
                                 tend,itimestep,block_structs,its,ite)
+! 20260430_rkumar_end
 !=================================================================================================================
 
  use mpas_constants, only : rvord
@@ -362,6 +365,7 @@
  type(mpas_pool_type),intent(inout):: tend_physics
  type(mpas_pool_type),intent(inout):: tend
 
+! 20260430_rkumar_start
  type(mpas_pool_type), intent(inout) :: block_structs
  type (mpas_pool_type), pointer :: NI2G_diags, SU2G_diags, CA2G_bc_diags, &
                                    CA2G_br_diags, CA2G_oc_diags, DU2G_diags, SS2G_diags
@@ -373,6 +377,7 @@
                                             ssWT_bin2, ssWT_bin3, ssWT_bin4, ssWT_bin5
  integer :: ic, idx, offset
  real(kind=RKIND) :: col_mass_before, col_mass_after
+! 20260430_rkumar_end
 
 !local pointers:
  character(len=StrKIND),pointer:: microp_scheme
@@ -480,6 +485,7 @@
     case ("mp_thompson_gocart2G")
        call mpas_timer_start('mp_thompson_gocart2G')
 #ifdef DO_GOCART2G
+! 20260430_rkumar_start             
 ! --- 1. Retrieve all the pointers from MPAS pools
        call mpas_pool_get_subpool(block_structs, 'NI2G_diags', NI2G_diags)
        call mpas_pool_get_subpool(block_structs, 'SU2G_diags', SU2G_diags)
@@ -517,49 +523,7 @@
 
        offset = lbound(niWT_bin1, 1) - its
 
-! --- 2. INITIALIZATION (Zero out garbage memory) ---
-       if (itimestep == 1) then
-          do i = its, ite
-             idx = i + offset
-
-             ! Nitrate and Ammonia
-             niWT_bin1(idx) = 0.0_RKIND
-             niWT_bin2(idx) = 0.0_RKIND
-             niWT_bin3(idx) = 0.0_RKIND
-             nh3WT(idx)     = 0.0_RKIND
-             nh4WT(idx)     = 0.0_RKIND
-
-             ! Sulfur Species
-             suWT_so2(idx)  = 0.0_RKIND
-             suWT_so4(idx)  = 0.0_RKIND
-             suWT_dms(idx)  = 0.0_RKIND
-             suWT_msa(idx)  = 0.0_RKIND
-
-             ! Carbonaceous Aerosols
-             bcWT_phobic(idx) = 0.0_RKIND
-             bcWT_philic(idx) = 0.0_RKIND
-             brWT_phobic(idx) = 0.0_RKIND
-             brWT_philic(idx) = 0.0_RKIND
-             ocWT_phobic(idx) = 0.0_RKIND
-             ocWT_philic(idx) = 0.0_RKIND
-
-             ! Mineral Dust
-             duWT_bin1(idx) = 0.0_RKIND
-             duWT_bin2(idx) = 0.0_RKIND
-             duWT_bin3(idx) = 0.0_RKIND
-             duWT_bin4(idx) = 0.0_RKIND
-             duWT_bin5(idx) = 0.0_RKIND
-
-             ! Sea Salt
-             ssWT_bin1(idx) = 0.0_RKIND
-             ssWT_bin2(idx) = 0.0_RKIND
-             ssWT_bin3(idx) = 0.0_RKIND
-             ssWT_bin4(idx) = 0.0_RKIND
-             ssWT_bin5(idx) = 0.0_RKIND
-          end do
-       end if
-
-! --- 3. LOAD THE STATE AND CALCULATE COLUMN MASS BEFORE (Add to Pointer) ---
+! --- 2. LOAD THE STATE AND CALCULATE COLUMN MASS BEFORE (Add to Pointer) ---
        call mpas_chem_gocart2G%gocart2G_forMPASthom(state,time_lev)
           do ic = 1, mpas_chem_gocart2G%nchem
              do i = its, ite
@@ -599,7 +563,8 @@
              end do
           end do
  
-! --- 4. EXECUTE THOMPSON MICROPHYSICS SEQUENCE ---
+! 20260430_rkumar_end
+! --- 3. EXECUTE THOMPSON MICROPHYSICS SEQUENCE ---
        do j = jts,jte
           do i = its,ite
              do k = kts,kte
@@ -631,7 +596,7 @@
        istep = istep + 1
        enddo
        do j = jts,jte
-          ! Large-scale Gas Scavenging 
+! 20260429_rkumar_start: Large-scale Gas Scavenging
           call gs_scavenging_thermo(its, ite, kts, kte, &
                                     mpas_chem_gocart2G%nchem, dt_microp, itimestep, &
                                     th_p(:,:,j), pi_p(:,:,j), rho_p(:,:,j), & 
@@ -641,6 +606,7 @@
                                     mpas_chem_gocart2G%chem_mr, &
                                     mpas_chem_gocart2G%is_aerosol, &
                                     mpas_chem_gocart2G%scav_data_gas)
+! 20260429_rkumar_end
           do i = its,ite
              do k = kts,kte
                 mpas_chem_gocart2G%chem_nwfa(i,k) = nwfa_p(i,k,j)
@@ -650,7 +616,8 @@
        enddo
        call mpas_chem_gocart2G%gocart2G_fromMPASthom(state,time_lev)
 
-! --- 5. CALCULATE COLUMN MASS AFTER (Subtract from Pointer) ---
+! 20260430_rkumar_start
+! --- 4. CALCULATE COLUMN MASS AFTER (Subtract from Pointer) ---
           do ic = 1, mpas_chem_gocart2G%nchem
              do i = its, ite
                 idx = i + offset
@@ -658,36 +625,44 @@
                 do k = kts, kte
                    col_mass_after = col_mass_after + mpas_chem_gocart2G%chem_mr(i,k,ic) * rho_p(i,k,1) * dz_p(i,k,1)
                 end do
-                
+    
                 select case(ic)
-                   case(1);     bcWT_phobic(idx) = bcWT_phobic(idx) - col_mass_after
-                   case(2);     bcWT_philic(idx) = bcWT_philic(idx) - col_mass_after
-                   case(3);     brWT_phobic(idx) = brWT_phobic(idx) - col_mass_after
-                   case(4);     brWT_philic(idx) = brWT_philic(idx) - col_mass_after
-                   case(5);     ocWT_phobic(idx) = ocWT_phobic(idx) - col_mass_after
-                   case(6);     ocWT_philic(idx) = ocWT_philic(idx) - col_mass_after
-                   case(7);     duWT_bin1(idx)   = duWT_bin1(idx)   - col_mass_after
-                   case(8);     duWT_bin2(idx)   = duWT_bin2(idx)   - col_mass_after
-                   case(9);     duWT_bin3(idx)   = duWT_bin3(idx)   - col_mass_after
-                   case(10);    duWT_bin4(idx)   = duWT_bin4(idx)   - col_mass_after
-                   case(11);    duWT_bin5(idx)   = duWT_bin5(idx)   - col_mass_after
-                   case(12);    niWT_bin1(idx)   = niWT_bin1(idx)   - col_mass_after
-                   case(13);    niWT_bin2(idx)   = niWT_bin2(idx)   - col_mass_after
-                   case(14);    niWT_bin3(idx)   = niWT_bin3(idx)   - col_mass_after
-                   case(15,16); suWT_so2(idx)    = suWT_so2(idx)    - col_mass_after
-                   case(17,18); suWT_so4(idx)    = suWT_so4(idx)    - col_mass_after
-                   case(19);    ssWT_bin1(idx)   = ssWT_bin1(idx)   - col_mass_after
-                   case(20);    ssWT_bin2(idx)   = ssWT_bin2(idx)   - col_mass_after
-                   case(21);    ssWT_bin3(idx)   = ssWT_bin3(idx)   - col_mass_after
-                   case(22);    ssWT_bin4(idx)   = ssWT_bin4(idx)   - col_mass_after
-                   case(23);    ssWT_bin5(idx)   = ssWT_bin5(idx)   - col_mass_after
-                   case(24);    suWT_dms(idx)    = suWT_dms(idx)    - col_mass_after
-                   case(25);    suWT_msa(idx)    = suWT_msa(idx)    - col_mass_after
-                   case(26);    nh3WT(idx)       = nh3WT(idx)       - col_mass_after
-                   case(27);    nh4WT(idx)       = nh4WT(idx)       - col_mass_after
+                   case(1);     bcWT_phobic(idx) = (bcWT_phobic(idx) - col_mass_after) / dt_microp
+                   case(2);     bcWT_philic(idx) = (bcWT_philic(idx) - col_mass_after) / dt_microp
+                   case(3);     brWT_phobic(idx) = (brWT_phobic(idx) - col_mass_after) / dt_microp
+                   case(4);     brWT_philic(idx) = (brWT_philic(idx) - col_mass_after) / dt_microp
+                   case(5);     ocWT_phobic(idx) = (ocWT_phobic(idx) - col_mass_after) / dt_microp
+                   case(6);     ocWT_philic(idx) = (ocWT_philic(idx) - col_mass_after) / dt_microp
+                   case(7);     duWT_bin1(idx)   = (duWT_bin1(idx)   - col_mass_after) / dt_microp
+                   case(8);     duWT_bin2(idx)   = (duWT_bin2(idx)   - col_mass_after) / dt_microp
+                   case(9);     duWT_bin3(idx)   = (duWT_bin3(idx)   - col_mass_after) / dt_microp
+                   case(10);    duWT_bin4(idx)   = (duWT_bin4(idx)   - col_mass_after) / dt_microp
+                   case(11);    duWT_bin5(idx)   = (duWT_bin5(idx)   - col_mass_after) / dt_microp
+                   case(12);    niWT_bin1(idx)   = (niWT_bin1(idx)   - col_mass_after) / dt_microp
+                   case(13);    niWT_bin2(idx)   = (niWT_bin2(idx)   - col_mass_after) / dt_microp
+                   case(14);    niWT_bin3(idx)   = (niWT_bin3(idx)   - col_mass_after) / dt_microp
+                   case(15,16); suWT_so2(idx)    = (suWT_so2(idx)    - col_mass_after)
+                   case(17,18); suWT_so4(idx)    = (suWT_so4(idx)    - col_mass_after)
+                   case(19);    ssWT_bin1(idx)   = (ssWT_bin1(idx)   - col_mass_after) / dt_microp
+                   case(20);    ssWT_bin2(idx)   = (ssWT_bin2(idx)   - col_mass_after) / dt_microp
+                   case(21);    ssWT_bin3(idx)   = (ssWT_bin3(idx)   - col_mass_after) / dt_microp
+                   case(22);    ssWT_bin4(idx)   = (ssWT_bin4(idx)   - col_mass_after) / dt_microp
+                   case(23);    ssWT_bin5(idx)   = (ssWT_bin5(idx)   - col_mass_after) / dt_microp
+                   case(24);    suWT_dms(idx)    = (suWT_dms(idx)    - col_mass_after) / dt_microp
+                   case(25);    suWT_msa(idx)    = (suWT_msa(idx)    - col_mass_after) / dt_microp
+                   case(26);    nh3WT(idx)       = (nh3WT(idx)       - col_mass_after) / dt_microp
+                   case(27);    nh4WT(idx)       = (nh4WT(idx)       - col_mass_after) / dt_microp
                 end select
              end do
-          end do
+          end do   ! ic loop
+
+          ! --- 5. DIVIDE BY TIMESTEP TO GET FLUX (kg m-2 s-1) for SO2 and SO4 ---
+          do i = its, ite
+             idx = i + offset
+             suWT_so2(idx)    = suWT_so2(idx)    / dt_microp
+             suWT_so4(idx)    = suWT_so4(idx)    / dt_microp
+          end do 
+! 20260430_rkumar_end
 #endif
        call mpas_timer_stop('mp_thompson_aerosols')
 
@@ -1107,8 +1082,10 @@
 
  end subroutine compute_relhum
 
+! 20260428_rkumar_start
+
 !=================================================================================================================
-     subroutine gs_scavenging_thermo(its, ite, kts, kte, nchem, dt, itimestep, &
+subroutine gs_scavenging_thermo(its, ite, kts, kte, nchem, dt, itimestep, &
                                      th_p, pi_p, rho, dz, qc, qi, rainprod, rainncv, &
                                      chem, is_aerosol, scav_data_gas)
 !=================================================================================================================
@@ -1149,7 +1126,6 @@
                 t_local = th_p(i,k) * pi_p(i,k)
                 
                 ! Convert mixing ratio (kg/kg) to volumetric mass (kg/m3)
-                ! total_water_vol units: kg/m3
                 total_water_vol = max(1.0e-7_RKIND, (qc(i,k) + qi(i,k)) * rho(i,k))
 
                 do jn = 1, nchem
@@ -1166,7 +1142,7 @@
                                     lambda = laakso_a * (rain_mm_hr**laakso_b)
                                 else
                                     ! Ice/Snow regime: Harmonized UFS phase-scaling ratio for fine particles
-                                    ! (3.4 * 1.0e-4 = 3.4e-4) to match convective impaction scavenging code.
+                                    ! (3.4 * 1.0e-4 = 3.4e-4) to match convective impaction scavening code. 
                                     lambda = 3.4e-4_RKIND * (rain_mm_hr**0.96_RKIND)
                                 end if
                             else
@@ -1216,7 +1192,6 @@
                         lambda_in = (rainprod(i,k) / total_water_vol) * scav_eff
                         
                         ! lambda_out: Dynamic washout based on RT/dz equilibrium
-                        ! conversion factor = (R_gas * T) / (3600 * 1000)
                         conv_factor = (r_gas_const * t_local) / 3600000.0_RKIND
                         lambda_out = rain_mm_hr * h_star * (conv_factor / dz(i,k))
 
@@ -1231,21 +1206,14 @@
                     ! ---------------------------------------------------------
                     if (lambda > 0.0_RKIND) then
                         chem(i,k,jn) = chem(i,k,jn) * exp(-min(lambda * dt, 10.0_RKIND))
-
-                        ! Diagnostic Output for first signs of activity
-                         !if (itimestep <= 50 .and. (.not. found_activity) .and. lambda > 1.e-7_RKIND) then
-                         !   call mpas_log_write('GS_SCAV_ACTUAL [Step $i, Col $i, Lev $i, Spec $i]', &
-                         !       intArgs=(/itimestep, i, k, jn/))
-                         !   call mpas_log_write('   -> RainRate=$r, H*=$r, DZ=$r, Lambda=$r', &
-                         !       realArgs=(/rain_mm_hr, h_star, dz(i,k), lambda/))
-                         !   found_activity = .true. 
-                         !end if 
                     end if
 
                 end do ! jn loop
             end do ! k loop
         end do ! i loop
-      end subroutine gs_scavenging_thermo
+     end subroutine gs_scavenging_thermo
+
+! 20260428_rkumar_end
 
 !=================================================================================================================
  end module mpas_atmphys_driver_microphysics

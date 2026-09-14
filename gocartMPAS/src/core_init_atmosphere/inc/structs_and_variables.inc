@@ -44,6 +44,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -68,6 +69,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -3009,58 +3011,6 @@
       call mpas_pool_add_field(newSubPool, 'advCells', i2Ptr)
       call mpas_pool_add_field(block % allFields, 'advCells', i2Ptr)
 
-! Define variable defc_a
-      allocate(r2Ptr)
-
-! Setting up time level 1
-      r2Ptr % fieldName = 'defc_a'
-      r2Ptr % isVarArray = .false.
-      r2Ptr % isDecomposed = .true.
-      r2Ptr % hasTimeDimension = .false.
-      r2Ptr % isPersistent = .true.
-      r2Ptr % isActive = .false.
-! Setting up dimensions
-      r2Ptr % dimNames(1) = 'maxEdges'
-      r2Ptr % dimNames(2) = 'nCells'
-      r2Ptr % defaultValue = 0.0
-      allocate(r2Ptr % attLists(1))
-      allocate(r2Ptr % attLists(1) % attList)
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the off-diagonal components of the &
-&horizontal deformation')
-      r2Ptr % missingValue = MPAS_REAL_FILLVAL
-      r2Ptr % block => block
-
-      r2Ptr % isActive = .true.
-      call mpas_pool_add_field(newSubPool, 'defc_a', r2Ptr)
-      call mpas_pool_add_field(block % allFields, 'defc_a', r2Ptr)
-
-! Define variable defc_b
-      allocate(r2Ptr)
-
-! Setting up time level 1
-      r2Ptr % fieldName = 'defc_b'
-      r2Ptr % isVarArray = .false.
-      r2Ptr % isDecomposed = .true.
-      r2Ptr % hasTimeDimension = .false.
-      r2Ptr % isPersistent = .true.
-      r2Ptr % isActive = .false.
-! Setting up dimensions
-      r2Ptr % dimNames(1) = 'maxEdges'
-      r2Ptr % dimNames(2) = 'nCells'
-      r2Ptr % defaultValue = 0.0
-      allocate(r2Ptr % attLists(1))
-      allocate(r2Ptr % attLists(1) % attList)
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the diagonal components of the &
-&horizontal deformation')
-      r2Ptr % missingValue = MPAS_REAL_FILLVAL
-      r2Ptr % block => block
-
-      r2Ptr % isActive = .true.
-      call mpas_pool_add_field(newSubPool, 'defc_b', r2Ptr)
-      call mpas_pool_add_field(block % allFields, 'defc_b', r2Ptr)
-
 ! Define variable cell_gradient_coef_x
       allocate(r2Ptr)
 
@@ -3348,6 +3298,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -3372,6 +3323,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -3520,6 +3472,39 @@
             group_started = .false.
             if (associated(newSubPool)) then
                call mpas_pool_add_dimension(newSubPool, 'number_end', index_counter)
+            end if
+         end if
+! End of group       
+! Starting group turbulence
+! Define constituent var tke
+! My Packages are met_stage_out
+      if (met_stage_outActive) then
+         index_counter = index_counter + 1
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_tke', index_counter)
+         end if
+         group_counter = group_counter + 1
+         if (.not. group_started) then
+            group_start = index_counter
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', group_start)
+            end if
+            group_started = .true.
+         end if
+      else
+           if (associated(newSubPool)) then
+              call mpas_pool_add_dimension(newSubPool, 'index_tke', -1)
+           end if
+      end if
+         if (.not. group_started) then
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', -1)
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', -1)
+            end if
+         else
+            group_started = .false.
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', index_counter)
             end if
          end if
 ! End of group       
@@ -4181,6 +4166,12 @@
          r3Ptr % constituentNames(const_index) = 'nwfa'
       end if
       if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+         r3Ptr % constituentNames(const_index) = 'tke'
+      end if
+      if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
       end if
       if (const_index > 0) then
@@ -4415,6 +4406,16 @@
       call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'long_name', 'Gocart water-friendly aerosol number concentration')
          r3Ptr % missingValue = MPAS_REAL_FILLVAL
          r3Ptr % constituentNames(const_index) = 'nwfa'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'units', 'm^2 s^{-2}')
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'long_name', 'Turbulent kinetic energy for the prognostic tke LES &
+&scheme')
+         r3Ptr % missingValue = MPAS_REAL_FILLVAL
+         r3Ptr % constituentNames(const_index) = 'tke'
       end if
       if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
@@ -4958,6 +4959,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -4982,6 +4984,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -6458,6 +6461,488 @@
    end subroutine init_atm_generate_pool_lbc_state
 
 
+   subroutine init_atm_generate_pool_fdda_state(block, structPool, dimensionPool, packagePool)
+      use mpas_derived_types
+      use mpas_pool_routines
+      use mpas_io_units
+      use mpas_io, only : MPAS_REAL_FILLVAL, MPAS_INT_FILLVAL, MPAS_CHAR_FILLVAL
+      implicit none
+      type (block_type), intent(inout), pointer :: block
+      type (mpas_pool_type), intent(inout) :: structPool
+      type (mpas_pool_type), intent(inout) :: dimensionPool
+      type (mpas_pool_type), intent(in) :: packagePool
+
+      type (field0DReal), pointer :: r0Ptr
+      type (field1DReal), pointer :: r1Ptr
+      type (field2DReal), pointer :: r2Ptr
+      type (field3DReal), pointer :: r3Ptr
+      type (field4DReal), pointer :: r4Ptr
+      type (field5DReal), pointer :: r5Ptr
+      type (field0DInteger), pointer :: i0Ptr
+      type (field1DInteger), pointer :: i1Ptr
+      type (field2DInteger), pointer :: i2Ptr
+      type (field3DInteger), pointer :: i3Ptr
+      type (field0DChar), pointer :: c0Ptr
+      type (field1DChar), pointer :: c1Ptr
+      type (field0DReal), dimension(:), pointer :: r0aPtr
+      type (field1DReal), dimension(:), pointer :: r1aPtr
+      type (field2DReal), dimension(:), pointer :: r2aPtr
+      type (field3DReal), dimension(:), pointer :: r3aPtr
+      type (field4DReal), dimension(:), pointer :: r4aPtr
+      type (field5DReal), dimension(:), pointer :: r5aPtr
+      type (field0DInteger), dimension(:), pointer :: i0aPtr
+      type (field1DInteger), dimension(:), pointer :: i1aPtr
+      type (field2DInteger), dimension(:), pointer :: i2aPtr
+      type (field3DInteger), dimension(:), pointer :: i3aPtr
+      type (field0DChar), dimension(:), pointer :: c0aPtr
+      type (field1DChar), dimension(:), pointer :: c1aPtr
+
+      type (mpas_pool_type), pointer :: newSubPool
+      integer :: group_counter
+      logical :: group_started
+      integer :: group_start
+      integer :: index_counter
+      integer, pointer :: const_index
+
+      logical, pointer :: initial_condsActive
+      logical, pointer :: sfc_updateActive
+      logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
+      logical, pointer :: gwd_stage_inActive
+      logical, pointer :: gwd_stage_outActive
+      logical, pointer :: gwd_gsl_stage_outActive
+      logical, pointer :: vertical_stage_inActive
+      logical, pointer :: vertical_stage_outActive
+      logical, pointer :: met_stage_inActive
+      logical, pointer :: met_stage_outActive
+      logical, pointer :: first_guess_fieldActive
+      logical, pointer :: mp_thompson_aers_inActive
+      logical, pointer :: noahmpActive
+      logical, pointer :: gocart2G_static_inActive
+      logical, pointer :: gocart2G_static_outActive
+      logical, pointer :: gocart2G_interp_outActive
+
+
+      integer :: numConstituents
+
+      nullify(newSubPool)
+      group_counter = -1
+      group_started = .false.
+      group_start = -1
+      call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
+      call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
+      call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
+      call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
+      call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
+      call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
+      call mpas_pool_get_package(packagePool, 'vertical_stage_inActive', vertical_stage_inActive)
+      call mpas_pool_get_package(packagePool, 'vertical_stage_outActive', vertical_stage_outActive)
+      call mpas_pool_get_package(packagePool, 'met_stage_inActive', met_stage_inActive)
+      call mpas_pool_get_package(packagePool, 'met_stage_outActive', met_stage_outActive)
+      call mpas_pool_get_package(packagePool, 'first_guess_fieldActive', first_guess_fieldActive)
+      call mpas_pool_get_package(packagePool, 'mp_thompson_aers_inActive', mp_thompson_aers_inActive)
+      call mpas_pool_get_package(packagePool, 'noahmpActive', noahmpActive)
+      call mpas_pool_get_package(packagePool, 'gocart2G_static_inActive', gocart2G_static_inActive)
+      call mpas_pool_get_package(packagePool, 'gocart2G_static_outActive', gocart2G_static_outActive)
+      call mpas_pool_get_package(packagePool, 'gocart2G_interp_outActive', gocart2G_interp_outActive)
+
+      call mpas_pool_create_pool(newSubPool)
+      call mpas_pool_add_subpool(structPool, 'fdda_state', newSubPool)
+      call mpas_pool_add_subpool(block % allStructs, 'fdda_state', newSubPool)
+
+! Define var array scalars_fdda
+      allocate(r3Ptr)
+      index_counter = 0
+      group_counter = -1
+      group_start = -1
+      group_started = .false.
+
+! Starting group moist
+! Define constituent var qv_fdda
+! My Packages are fdda
+      if (fddaActive) then
+         index_counter = index_counter + 1
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_qv_fdda', index_counter)
+         end if
+         group_counter = group_counter + 1
+         if (.not. group_started) then
+            group_start = index_counter
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'moist_start', group_start)
+            end if
+            group_started = .true.
+         end if
+      else
+           if (associated(newSubPool)) then
+              call mpas_pool_add_dimension(newSubPool, 'index_qv_fdda', -1)
+           end if
+      end if
+! Define constituent var qc_fdda
+! My packages are fdda
+      if (fddaActive) then
+         index_counter = index_counter + 1
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_qc_fdda', index_counter)
+         end if
+         group_counter = group_counter + 1
+         if (.not. group_started) then
+            group_start = index_counter
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'moist_start', group_start)
+            end if
+            group_started = .true.
+         end if
+      else
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_qc_fdda', -1)
+         end if
+      end if
+! Define constituent var qr_fdda
+! My packages are fdda
+      if (fddaActive) then
+         index_counter = index_counter + 1
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_qr_fdda', index_counter)
+         end if
+         group_counter = group_counter + 1
+         if (.not. group_started) then
+            group_start = index_counter
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'moist_start', group_start)
+            end if
+            group_started = .true.
+         end if
+      else
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_qr_fdda', -1)
+         end if
+      end if
+         if (.not. group_started) then
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'moist_start', -1)
+               call mpas_pool_add_dimension(newSubPool, 'moist_end', -1)
+            end if
+         else
+            group_started = .false.
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'moist_end', index_counter)
+            end if
+         end if
+! End of group       
+
+      numConstituents = index_counter
+      if (associated(newSubPool)) then
+         call mpas_pool_add_dimension(newSubPool, 'num_scalars_fdda', numConstituents)
+      end if
+! Defining time level 1
+      allocate( r3Ptr % constituentNames(numConstituents) )
+      r3Ptr % fieldName = 'scalars_fdda'
+      r3Ptr % isDecomposed = .true.
+      r3Ptr % hasTimeDimension = .true.
+      r3Ptr % isVarArray = .true.
+      r3Ptr % isPersistent = .true.
+      r3Ptr % isActive = .false.
+
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_qv_fdda', const_index)
+      end if
+      if (const_index > 0) then
+         r3Ptr % constituentNames(const_index) = 'qv_fdda'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_qc_fdda', const_index)
+      end if
+      if (const_index > 0) then
+         r3Ptr % constituentNames(const_index) = 'qc_fdda'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_qr_fdda', const_index)
+      end if
+      if (const_index > 0) then
+         r3Ptr % constituentNames(const_index) = 'qr_fdda'
+      end if
+
+! Setup dimensions for       
+      r3Ptr % dimNames(1) = 'num_scalars_fdda'
+      r3Ptr % dimNames(2) = 'nVertLevels'
+      r3Ptr % dimNames(3) = 'nCells'
+
+      r3Ptr % defaultValue = 0.0
+      allocate(r3Ptr % attLists(size(r3Ptr % constituentNames, dim=1)))
+      do index_counter = 1, size(r3Ptr % constituentNames, dim=1)
+         allocate(r3Ptr % attLists(index_counter) % attList)
+      end do
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_qv_fdda', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'units', 'kg kg^{-1}')
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'long_name', 'Water vapor mixing ratio input for FDDA nudging')
+         r3Ptr % missingValue = MPAS_REAL_FILLVAL
+         r3Ptr % constituentNames(const_index) = 'qv_fdda'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_qc_fdda', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'units', 'kg kg^{-1}')
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'long_name', 'Cloud water mixing ratio input for FDDA nudging')
+         r3Ptr % missingValue = MPAS_REAL_FILLVAL
+         r3Ptr % constituentNames(const_index) = 'qc_fdda'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_qr_fdda', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'units', 'kg kg^{-1}')
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'long_name', 'Rain water mixing ratio input for FDDA nudging')
+         r3Ptr % missingValue = MPAS_REAL_FILLVAL
+         r3Ptr % constituentNames(const_index) = 'qr_fdda'
+      end if
+      r3Ptr % block => block
+
+      if (fddaActive) then
+         r3Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'scalars_fdda', r3Ptr)
+      call mpas_pool_add_field(block % allFields, 'scalars_fdda', r3Ptr)
+
+! Define variable u_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'u_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Zonal component of reconstructed horizontal velocity at cell &
+&centers')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'u_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'u_fdda', r2Ptr)
+
+! Define variable v_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'v_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Meridional component of reconstructed horizontal velocity at &
+&cell centers')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'v_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'v_fdda', r2Ptr)
+
+! Define variable uEdge_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'uEdge_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nEdges'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Horizontal normal velocity input for FDDA nudging')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'uEdge_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'uEdge_fdda', r2Ptr)
+
+! Define variable theta_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'theta_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'K')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Potential temperature input for FDDA nudging')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'theta_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'theta_fdda', r2Ptr)
+
+! Define variable rho_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'rho_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'kg m^{-3}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Dry air density input for FDDA nudging')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'rho_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'rho_fdda', r2Ptr)
+
+! Define variable uReconstructX_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'uReconstructX_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Cartesian x-component of reconstructed horizontal velocity at &
+&cell centers')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'uReconstructX_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'uReconstructX_fdda', r2Ptr)
+
+! Define variable uReconstructY_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'uReconstructY_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Cartesian y-component of reconstructed horizontal velocity at &
+&cell centers')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'uReconstructY_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'uReconstructY_fdda', r2Ptr)
+
+! Define variable uReconstructZ_fdda
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'uReconstructZ_fdda'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Cartesian z-component of reconstructed horizontal velocity at &
+&cell centers')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      if (fddaActive) then
+         r2Ptr % isActive = .true.
+      end if
+      call mpas_pool_add_field(newSubPool, 'uReconstructZ_fdda', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'uReconstructZ_fdda', r2Ptr)
+
+
+
+      if (associated(newSubPool)) then
+         call mpas_pool_add_config(newSubPool, 'on_a_sphere', block % domain % on_a_sphere)
+         call mpas_pool_add_config(newSubPool, 'sphere_radius', block % domain % sphere_radius)
+         call mpas_pool_add_config(newSubPool, 'is_periodic', block % domain % is_periodic)
+         call mpas_pool_add_config(newSubPool, 'x_period', block % domain % x_period)
+         call mpas_pool_add_config(newSubPool, 'y_period', block % domain % y_period)
+      end if
+
+   end subroutine init_atm_generate_pool_fdda_state
+
+
    subroutine init_atm_generate_pool_fg(block, structPool, dimensionPool, packagePool)
       use mpas_derived_types
       use mpas_pool_routines
@@ -6504,6 +6989,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -6528,6 +7014,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -8577,6 +9064,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -8601,6 +9089,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -9331,6 +9820,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -9355,6 +9845,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -9458,6 +9949,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -9482,6 +9974,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -9866,6 +10359,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -9890,6 +10384,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -10016,6 +10511,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -10040,6 +10536,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -12301,6 +12798,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -12325,6 +12823,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -12522,6 +13021,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -12546,6 +13046,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -12791,6 +13292,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -12815,6 +13317,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -13774,6 +14277,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -13798,6 +14302,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -14043,6 +14548,7 @@
       logical, pointer :: initial_condsActive
       logical, pointer :: sfc_updateActive
       logical, pointer :: lbcsActive
+      logical, pointer :: fddaActive
       logical, pointer :: gwd_stage_inActive
       logical, pointer :: gwd_stage_outActive
       logical, pointer :: gwd_gsl_stage_outActive
@@ -14067,6 +14573,7 @@
       call mpas_pool_get_package(packagePool, 'initial_condsActive', initial_condsActive)
       call mpas_pool_get_package(packagePool, 'sfc_updateActive', sfc_updateActive)
       call mpas_pool_get_package(packagePool, 'lbcsActive', lbcsActive)
+      call mpas_pool_get_package(packagePool, 'fddaActive', fddaActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_inActive', gwd_stage_inActive)
       call mpas_pool_get_package(packagePool, 'gwd_stage_outActive', gwd_stage_outActive)
       call mpas_pool_get_package(packagePool, 'gwd_gsl_stage_outActive', gwd_gsl_stage_outActive)
@@ -14304,6 +14811,8 @@
       call init_atm_generate_pool_state(block, structPool, dimensionPool, packagePool)
 
       call init_atm_generate_pool_lbc_state(block, structPool, dimensionPool, packagePool)
+
+      call init_atm_generate_pool_fdda_state(block, structPool, dimensionPool, packagePool)
 
       call init_atm_generate_pool_fg(block, structPool, dimensionPool, packagePool)
 

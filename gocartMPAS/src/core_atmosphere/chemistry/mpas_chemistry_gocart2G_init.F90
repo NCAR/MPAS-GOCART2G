@@ -58,6 +58,11 @@
  real(kind=RKIND),pointer:: wetscavBC,wetscavBR,wetscavOC,wetscavDU,wetscavNI,wetscavSS,wetscavSU
  real(kind=RKIND),dimension(:),allocatable:: channels
 
+! 20260731_rkumar_start
+ real(kind=RKIND),dimension(:),pointer:: areaCell => null()
+ integer :: i, j
+! 20260731_rkumar_end
+
 !------------------------------------------------------------------------------------------------------------------
  call mpas_log_write(' ')
  call mpas_log_write('--- enter subroutine init_gocart2G_chemistry:')
@@ -128,6 +133,10 @@
  nbndlw = mpas_gocart2G%nbndlw
  nbndsw = mpas_gocart2G%nbndsw
 
+! 20260731_rkumar_start
+!--- Extract cell area array from MPAS mesh pool:
+ call mpas_pool_get_array(mesh, 'areaCell', areaCell)
+! 20260731_rkumar_end
 
 !--- CA2G_bc:
  call mpas_log_write(' ')
@@ -257,6 +266,23 @@
 
  call DU2G%gocart2G_allocate(its,ite,jts,jte,kts,kte,nerod,nbndlw,nbndsw)
 
+! 20260731_rkumar_start: Pre-calculate 2D scale-aware factors for dust
+ if (.not. allocated(DU2G_params%emission_scale_du)) then
+    allocate(DU2G_params%emission_scale_du(its:ite, jts:jte))
+ end if
+
+ do j = jts, jte
+    do i = its, ite
+       DU2G_params%emission_scale_du(i,j) = Chem_UtilResVal_MPAS( &
+                                               areaCell(i), &
+                                               DU2G_params%Ch_DU_res(:) )
+    end do
+ end do
+! call mpas_log_write('--- DU2G emission_scale_du min, max: $r $r', &
+!                     realArgs=(/ minval(DU2G_params%emission_scale_du), &
+!                                 maxval(DU2G_params%emission_scale_du) /))
+! 20260731_rkumar_end
+
  if(do_DU2G) then
     !create radiation Mie table for DU2G:
     l_exist = .false.
@@ -341,6 +367,25 @@
  endif
 
  call SS2G%gocart2G_allocate(its,ite,jts,jte,kts,kte,nbndlw,nbndsw)
+
+! 20260731_rkumar_start: Pre-calculate 2D scale-aware factors for sea-salt
+ if (.not. allocated(SS2G_params%emission_scale_ss)) then
+    allocate(SS2G_params%emission_scale_ss(its:ite, jts:jte))
+ end if
+
+ do j = jts, jte
+    do i = its, ite
+       SS2G_params%emission_scale_ss(i,j) = Chem_UtilResVal_MPAS( &
+                                               areaCell(i), &
+                                               SS2G_params%emission_scale_res(:) )
+    end do
+ end do
+
+ call mpas_log_write('--- SS2G emission_scale_ss min, max: $r $r', &
+                     realArgs=(/ minval(SS2G_params%emission_scale_ss), &
+                                 maxval(SS2G_params%emission_scale_ss) /)) 
+
+! 20260731_rkumar_end
 
  if(do_SS2G) then
     !create radiation Mie table for SU2G:
@@ -445,6 +490,53 @@
  call mpas_log_write(' ')
 
  end subroutine init_gocart2G_chemistry
+
+!==================================================================================================================
+! 20260731_rkumar_start
+! Private MPAS helper function: Determines the scale-aware factor for each MPAS grid cell.
+ pure function Chem_UtilResVal_MPAS( areaCell, res_value ) result (val)
+    implicit none
+
+    ! Input parameters:
+    real(kind=RKIND), intent(in) :: areaCell     ! Local cell area in m^2
+    real(kind=RKIND), intent(in) :: res_value(:) ! GOCART scaling values (res_a..res_f)
+
+    real(kind=RKIND) :: val                      ! Smoothly interpolated factor
+    real(kind=RKIND) :: dx_km, weight
+    integer          :: k, nres
+
+    ! Standard reference grid spacings (in km) corresponding to res_value indices 1..6
+    real(kind=RKIND), parameter :: ref_dx(6) = (/ 400.0_RKIND, 200.0_RKIND, 100.0_RKIND, &
+                                                  50.0_RKIND,  25.0_RKIND,  12.5_RKIND /)
+
+    if (size(res_value) < 1) then
+       val = 1.0_RKIND
+       return
+    end if
+
+    nres = min(size(res_value), 6)
+
+    ! Compute local cell effective width: dx = sqrt(Area) in km
+    dx_km = sqrt(max(areaCell, 0.0_RKIND)) / 1000.0_RKIND
+
+    ! Clamp at boundary bounds
+    if (dx_km >= ref_dx(1)) then
+       val = res_value(1)
+    else if (dx_km <= ref_dx(nres)) then
+       val = res_value(nres)
+    else
+       ! Piecewise linear interpolation between standard resolution tiers
+       do k = 1, nres - 1
+          if (dx_km <= ref_dx(k) .and. dx_km > ref_dx(k+1)) then
+             weight = (dx_km - ref_dx(k+1)) / (ref_dx(k) - ref_dx(k+1))
+             val = weight * res_value(k) + (1.0_RKIND - weight) * res_value(k+1)
+             exit
+          end if
+       end do
+    end if
+
+ end function Chem_UtilResVal_MPAS
+! 20260731_rkumar_end
 
 !==================================================================================================================
  end module mpas_chemistry_gocart2G_init

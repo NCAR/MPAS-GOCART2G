@@ -31,6 +31,8 @@
       logical, pointer :: config_use_spechumd
 
       real (kind=RKIND), pointer :: config_ztop
+      logical, pointer :: config_hybrid_coordinate
+      real (kind=RKIND), pointer :: config_hybrid_top_z
       integer, pointer :: config_nsmterrain
       logical, pointer :: config_smooth_surfaces
       real (kind=RKIND), pointer :: config_dzmin

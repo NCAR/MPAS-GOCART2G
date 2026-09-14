@@ -21,14 +21,17 @@
                             SulfateDistributeEMissions, &
                             SulfateUpdateOxidants,      &
                             SU_Compute_Diags,           &
-                            SU_Wet_Removal
+                            SU_Wet_Removal,             &
+                            DryDeposition
 
  use MAPL,only: MAPL_PackTime
 
  use SU2G_instance,only: nbins,particle_radius_microns,particle_density,fscav,molecular_weight, &
                          fnum,rhFlag,pressure_lid_in_hPa,sigma,SO4_anthropogenic_fraction,      &
                          aircraft_fuel_emission_factor,aviation_vertical_layers,                &
+                         ! 20260428_rkumar_start
                          scav_data_gas_params => scav_data_gas
+                         ! 20260428_rkumar_end
  use SU2G_StateSpecs,only: SU2G_State
 
 
@@ -141,8 +144,12 @@
 !--- initialization using parameters defined in SU2G_instance_SU:
  self%diurnal_bb = .false.
 
+! 20260428_rkumar_start
+! call self%load_from_config(nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
+!                            rhFlag,pressure_lid_in_hPa)
  call self%load_from_config(nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
                             rhFlag,pressure_lid_in_hPa, scav_data_gas_in = scav_data_gas_params)
+! 20260428_rkumar_end
 
  if(.not.allocated(self%sigma)) allocate(self%sigma(self%nbins))
  self%eAirCraftFuel = aircraft_fuel_emission_factor
@@ -335,6 +342,10 @@
 
  real(kind=RKIND),allocatable,dimension(:,:,:),target:: rh20,rh80
 
+! 20260610_rkumar_start
+ real(kind=RKIND),dimension(:,:),allocatable:: drydepf_save, dqa
+! 20260610_rkumar_end
+
 !------------------------------------------------------------------------------------------------------------------
 !call mpas_log_write(' ')
  call mpas_log_write('--- enter subroutine processes_SU2G_GridComp:')
@@ -468,6 +479,24 @@
 !   call mpas_log_write('--- end subroutine Chem_Settling:')
  endif
 
+! 20260610_rkumar_start
+ ! Save a copy of the dry deposition frequency BEFORE the driver wipes it out
+ if(to_MYNN) then
+    if(.not.allocated(dqa)) allocate(dqa(its:ite,jts:jte))
+    if(.not.allocated(drydepf_save)) allocate(drydepf_save(its:ite,jts:jte))
+    ! We must explicitly call DryDeposition here to get the frequencies
+    istat = 0
+    call DryDeposition( &
+           km         = self_params%km , tmpu       = self%t         , &
+           rhoa       = self%airdens   , hghte      = self%zle       , &
+           oro        = self%lwi       , ustar      = self%ustar     , &
+           pblh       = self%zpbl      , shflux     = self%sh        , &
+           von_karman = karman         , cpd        = cpd            , &
+           grav       = grav           , z0h        = self%z0h       , &
+           drydepf    = drydepf_save   , rc         = istat            &
+                      )
+ end if
+! 20260610_rkumar_end
 
 !--- SU2G chem driver:
 !call mpas_log_write('--- enter subroutine SulfateChemDriver:')
@@ -539,6 +568,47 @@
 !   call mpas_log_write('--- end subroutine SulfateChemDriver.')
  endif
 
+! 20260610_rkumar_start
+ ! If MYNN is active, GOCART bypassed the internal removal and zeroed out the diagnostic flux.
+ ! We must manually compute the diagnostic flux here using the saved frequencies.
+ if(to_MYNN) then
+    do j = jts, jte
+       do i = its, ite
+          
+          ! DMS (Bin 1)
+          if(associated(self%sudp)) then
+             dqa(i,j) = max(0._RKIND, self%dms(i,j,self_params%km) * (1._RKIND - exp(-drydepf_save(i,j)*self_params%cdt)))
+             self%sudp(i,j,nDMS) = dqa(i,j) * self%delp(i,j,self_params%km) / grav / self_params%cdt
+          end if
+          
+          ! SO2 (Bin 2)
+          if(associated(self%sudp)) then
+             dqa(i,j) = max(0._RKIND, self%so2(i,j,self_params%km) * (1._RKIND - exp(-drydepf_save(i,j)*self_params%cdt)))
+             self%sudp(i,j,nSO2) = dqa(i,j) * self%delp(i,j,self_params%km) / grav / self_params%cdt
+          end if
+          
+          ! SO4 (Bin 3)
+          if(associated(self%sudp)) then
+             dqa(i,j) = max(0._RKIND, self%so4(i,j,self_params%km) * (1._RKIND - exp(-drydepf_save(i,j)*self_params%cdt)))
+             self%sudp(i,j,nSO4) = dqa(i,j) * self%delp(i,j,self_params%km) / grav / self_params%cdt
+          end if
+          
+          ! MSA (Bin 4)
+          if(associated(self%sudp)) then
+             dqa(i,j) = max(0._RKIND, self%msa(i,j,self_params%km) * (1._RKIND - exp(-drydepf_save(i,j)*self_params%cdt)))
+             self%sudp(i,j,nMSA) = dqa(i,j) * self%delp(i,j,self_params%km) / grav / self_params%cdt
+          end if
+          
+       end do
+    end do
+    
+    ! Restore the saved velocity so MYNN can use it later!
+    if(associated(self%suvdep)) self%suvdep(:,:) = drydepf_save(:,:)*self%delz(:,:,self_params%km)
+    
+    if(allocated(drydepf_save)) deallocate(drydepf_save)
+    if(allocated(dqa)) deallocate(dqa)
+ end if
+! 20260610_rkumar_end
 
 !--- SU2G wet removal:
 !call mpas_log_write('--- enter subroutine SU_Wet_Removal:')

@@ -209,7 +209,6 @@
     det_thl,     &!
     det_sqv       !
 
-
 !--- output arguments:
  character(len=*),intent(out):: &
     errmsg        ! output error message (-).
