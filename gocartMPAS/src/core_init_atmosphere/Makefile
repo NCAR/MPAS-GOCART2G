@@ -151,9 +151,9 @@ clean:
 	$(RM) $@ $*.mod
 ifeq "$(GEN_F90)" "true"
 	$(CPP) $(CPPFLAGS) $(CPPINCLUDES) -I./inc $< > $*.f90
-	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../core_atmosphere/chemistry -I../framework -I../operators  -I../external/esmf_time_f90
+	$(FC) $(FFLAGS) -c $*.f90 $(FCINCLUDES) -I../core_atmosphere/chemistry -I../framework -I../operators $(MPAS_ESMF_INC) -I../external/esmf_time_f90
 else
-	$(FC) $(CPPFLAGS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../core_atmosphere/chemistry -I../framework -I../operators  -I../external/esmf_time_f90
+	$(FC) $(CPPFLAGS) $(FFLAGS) -c $*.F $(CPPINCLUDES) $(FCINCLUDES) -I./inc -I../core_atmosphere/chemistry -I../framework -I../operators $(MPAS_ESMF_INC) -I../external/esmf_time_f90
 endif
 
 .c.o:

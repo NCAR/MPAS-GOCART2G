@@ -98,7 +98,6 @@
  real(kind=RKIND),dimension(:,:,:,:),pointer:: ssasy_sw        => null() ! sea salt asymmetry factor for shortwave RRTMG (-)
  real(kind=RKIND),dimension(:,:,:,:),pointer:: ssssa_sw        => null() ! sea salt single scattering albedo for shortwave RRTMG (-)
 
-
 !category: INTERNAL
  real(kind=RKIND),dimension(:,:,:,:),pointer:: ss              => null() ! sea salt mixing ratio (bin %d) (kg kg-1)
  real(kind=RKIND),dimension(:,:),pointer    :: deep_lakes_mask => null() ! deep lakes mask

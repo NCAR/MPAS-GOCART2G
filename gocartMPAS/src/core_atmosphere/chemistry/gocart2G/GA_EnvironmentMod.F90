@@ -40,8 +40,10 @@
     real(kind=RKIND),dimension(:),allocatable:: wavelengths_profile ! wavelengths for profile aop [nm]
     real(kind=RKIND),dimension(:),allocatable:: wavelengths_vertint ! wavelengths for vertically integrated aop [nm]
 
+! --- 20260428_rkumar_start
 ! Gas scavenging metadata (6 params per bin) ---
     real(kind=RKIND),dimension(:,:),allocatable:: scav_data_gas
+! --- 20260428_rkumar_end
 
     contains
        procedure:: load_from_config
@@ -58,8 +60,12 @@
 
 
 !=================================================================================================================
+! 20260428_rkumar_start
+! subroutine load_from_config(self,nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
+!                             rhFlag,pressure_lid_in_hPa)
  subroutine load_from_config(self,nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
                              rhFlag,pressure_lid_in_hPa,scav_data_gas_in)
+! 20260428_rkumar_end
 !=================================================================================================================
 
 !--- input arguments:
@@ -73,8 +79,10 @@
  real(kind=RKIND),intent(in),dimension(nbins):: fscav
  real(kind=RKIND),intent(in),dimension(nbins):: fnum
 
+! 20260428_rkumar_start
 !--- NEW: Optional input for Gas Scavenging ---
     real(kind=RKIND), intent(in), dimension(6, nbins), optional :: scav_data_gas_in
+! 20260428_rkumar_end
 
 !--- inout arguments:
  class(GA_Environment),intent(inout) :: self
@@ -111,6 +119,7 @@
  self%rhFlag = rhFlag
  self%plid   = pressure_lid_in_hPa
 
+! 20260428_rkumar_start
 !--- NEW: Initialize Gas Scavenging Data ---
     if(.not.allocated(self%scav_data_gas)) allocate(self%scav_data_gas(6, nbins))
 
@@ -121,6 +130,7 @@
         ! For Dust, Sea Salt, etc., initialize to zero
         self%scav_data_gas = 0.0_RKIND
     end if
+! 20260428_rkumar_end
 
 !--- DO NOT KNOW YET HOW TO INITIALIZE THOSE ARRAYS:
  n_wavelengths_profile = size(wavelengths_for_profile_aop_in_nm)

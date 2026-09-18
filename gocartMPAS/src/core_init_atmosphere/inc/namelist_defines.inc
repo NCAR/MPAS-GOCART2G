@@ -261,6 +261,8 @@
       integer :: ierr
 
       real (kind=RKIND) :: config_ztop = 30000.000000
+      logical :: config_hybrid_coordinate = .true.
+      real (kind=RKIND) :: config_hybrid_top_z = 30000.000000
       integer :: config_nsmterrain = 1
       logical :: config_smooth_surfaces = .true.
       real (kind=RKIND) :: config_dzmin = 0.300000
@@ -271,6 +273,8 @@
 
       namelist /vertical_grid/ &
          config_ztop, &
+         config_hybrid_coordinate, &
+         config_hybrid_top_z, &
          config_nsmterrain, &
          config_smooth_surfaces, &
          config_dzmin, &
@@ -290,6 +294,8 @@
 
       if (ierr <= 0) then
          call mpas_dmpar_bcast_real(dminfo, config_ztop)
+         call mpas_dmpar_bcast_logical(dminfo, config_hybrid_coordinate)
+         call mpas_dmpar_bcast_real(dminfo, config_hybrid_top_z)
          call mpas_dmpar_bcast_int(dminfo, config_nsmterrain)
          call mpas_dmpar_bcast_logical(dminfo, config_smooth_surfaces)
          call mpas_dmpar_bcast_real(dminfo, config_dzmin)
@@ -302,6 +308,8 @@
             call mpas_log_write('    The following values will be used for variables in this record:')
             call mpas_log_write(' ')
             call mpas_log_write('        config_ztop = $r', realArgs=(/config_ztop/))
+            call mpas_log_write('        config_hybrid_coordinate = $l', logicArgs=(/config_hybrid_coordinate/))
+            call mpas_log_write('        config_hybrid_top_z = $r', realArgs=(/config_hybrid_top_z/))
             call mpas_log_write('        config_nsmterrain = $i', intArgs=(/config_nsmterrain/))
             call mpas_log_write('        config_smooth_surfaces = $l', logicArgs=(/config_smooth_surfaces/))
             call mpas_log_write('        config_dzmin = $r', realArgs=(/config_dzmin/))
@@ -316,6 +324,8 @@
       end if
 
       call mpas_pool_add_config(configPool, 'config_ztop', config_ztop)
+      call mpas_pool_add_config(configPool, 'config_hybrid_coordinate', config_hybrid_coordinate)
+      call mpas_pool_add_config(configPool, 'config_hybrid_top_z', config_hybrid_top_z)
       call mpas_pool_add_config(configPool, 'config_nsmterrain', config_nsmterrain)
       call mpas_pool_add_config(configPool, 'config_smooth_surfaces', config_smooth_surfaces)
       call mpas_pool_add_config(configPool, 'config_dzmin', config_dzmin)

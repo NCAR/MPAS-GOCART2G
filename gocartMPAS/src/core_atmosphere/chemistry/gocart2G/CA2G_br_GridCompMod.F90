@@ -382,16 +382,33 @@
 !    hydrophilic mixing ratio due to dry deposition in the model layer adjacent to the surface, otherwise
 !    we simply skip this step:
  if(associated(self%brvdep)) self%brvdep(:,:) = drydepf(:,:)*self%delz(:,:,self_params%km)
- if(.not. to_MYNN) then
+! 20260610_rkumar_start
     do ibin = 1, self_params%nbins
        dqa = 0.
        dqa = max(0.0,qca2G(:,:,self_params%km,ibin)*(1.-exp(-drydepf*self_params%cdt)))
-       qca2G(:,:,self_params%km,ibin) = qca2G(:,:,self_params%km,ibin) - dqa
+       
+       ! 1. ALWAYS calculate the diagnostic DP flux (kg m-2 s-1)
        if(associated(self%brdp)) then
           self%brdp(:,:,ibin) = dqa*self%delp(:,:,self_params%km)/grav/self_params%cdt
        end if
+       
+       ! 2. ONLY remove the mass internally if MYNN is bypassed
+       if(.not. to_MYNN) then
+          qca2G(:,:,self_params%km,ibin) = qca2G(:,:,self_params%km,ibin) - dqa
+       endif
     enddo
- endif
+! if(.not. to_MYNN) then
+!    do ibin = 1, self_params%nbins
+!       dqa = 0.
+!       dqa = max(0.0,qca2G(:,:,self_params%km,ibin)*(1.-exp(-drydepf*self_params%cdt)))
+!       qca2G(:,:,self_params%km,ibin) = qca2G(:,:,self_params%km,ibin) - dqa
+!       if(associated(self%brdp)) then
+!          self%brdp(:,:,ibin) = dqa*self%delp(:,:,self_params%km)/grav/self_params%cdt
+!       end if
+!    enddo
+! endif
+! 20260610_rkumar_end
+
  if(istat /=0) then
     call mpas_log_write('--- CA2G_br_GridComp: error in subroutine DryDeposition.', &
                         messageType=MPAS_LOG_CRIT)

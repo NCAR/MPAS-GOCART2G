@@ -20,9 +20,7 @@
  public:: update_gocart2G_climatology, &
           vinterp_backgrounds
 
-
  contains
-
 
 !=================================================================================================================
  subroutine update_gocart2G_climatology(current_date,mesh,gocart2G_met,gocart2G_backgrounds)

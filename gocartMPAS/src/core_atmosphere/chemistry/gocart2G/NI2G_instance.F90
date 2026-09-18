@@ -49,6 +49,7 @@
 !sigma of lognormal number distribution:
  real(kind=RKIND),dimension(nbins),parameter:: sigma = (/2.0,2.0,2.0,2.0,2.0/)
 
+! 20260428_rkumar_start
 ! Add to the parameter section
 ! Parameters: [H298 (M/atm), dHR (K), K1 (Kb), fK1 (dfKb), K2 (Kw), fK2 (dfKw)]
  real(kind=RKIND), dimension(6, nbins), parameter :: scav_data_gas = reshape((/ &
@@ -58,6 +59,7 @@
     0.0,  0.0,    0.0,     0.0,     0.0,     0.0,     & ! Bin 4: NO3an2
     0.0,  0.0,    0.0,     0.0,     0.0,     0.0      & ! Bin 5: NO3an3
  /), (/6, nbins/))
+! 20260428_rkumar_end
 
 !==================================================================================================================
  end module NI2G_instance

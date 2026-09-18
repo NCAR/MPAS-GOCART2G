@@ -31,7 +31,9 @@ module mpas_framework
    use musica_util, only : string_t
 #endif
 
+#ifdef MPAS_OPENACC
    private :: report_acc_devices
+#endif
 
 
    contains
@@ -262,6 +264,12 @@ module mpas_framework
       call mpas_log_write('  - MICM version: '//trim(micm_version % value_))
 #else
                           'no')
+#endif
+      call mpas_log_write('  SCOTCH support: ' // &
+#ifdef MPAS_SCOTCH
+                              'yes')
+#else
+                              'no')
 #endif
       call mpas_log_write('')
 

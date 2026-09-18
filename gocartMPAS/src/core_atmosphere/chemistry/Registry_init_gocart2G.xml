@@ -115,8 +115,10 @@
       <var name="background_hno3" type="real" dimensions="nVertLevels nCells Time" units="volume mixing ratio"
            description="background of nitric acid (HNO3)"/>
 
+<!-- 20260413_rkumar_start -->
       <var name="persistent_hno3" type="real" dimensions="nVertLevels nCells Time" units="mole mole^{-1}"
            description="Persistent HNO3 nudged towards background_HNO3 using config_gocart2G_hno3_tau"/>
+<!-- 20260413_rkumar_end -->
 
  </var_struct>
 

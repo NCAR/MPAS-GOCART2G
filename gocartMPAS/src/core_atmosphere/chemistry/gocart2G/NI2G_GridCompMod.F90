@@ -21,7 +21,9 @@
 
  use NI2G_instance,only: nbins,particle_radius_microns,particle_density,fscav,molecular_weight, &
                          fnum,rhFlag,pressure_lid_in_hPa,  &
+                         ! 20260428_rkumar_start
                          scav_data_gas_params => scav_data_gas
+                         ! 20260428_rkumar_end
  use NI2G_StateSpecs,only: NI2G_State
 
  implicit none
@@ -125,8 +127,12 @@
 
 
 !--- initialization of variables in GA_Environment:
+! 20260428_rkumar_start
+! call self%load_from_config(nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
+!                            rhFlag,pressure_lid_in_hPa)
  call self%load_from_config(nbins,particle_radius_microns,particle_density,fscav,molecular_weight,fnum, &
                             rhFlag,pressure_lid_in_hPa, scav_data_gas_in = scav_data_gas_params)
+! 20260428_rkumar_end
 
 
 !--- initialization of all other variables in NI2_GridComp:
@@ -427,46 +433,91 @@
               drydepf    = drydepf        , &
               rc         = istat            &
                    )
+
 !--- if gocart2G does not interact with the MYNN PBL parameterization, then we update the mixing ratios
-!    due to dry deposition in the model layer adjacent to the surface, otherwise we simply skip this step:
+!    due to dry deposition in the model layer adjacent to the surface.
+!    HOWEVER, we ALWAYS compute the diagnostic flux (*dp) for the history files!
  if(associated(self%nivdep)) self%nivdep(:,:) = drydepf(:,:)*self%delz(:,:,self_params%km)
- if(.not. to_MYNN) then
+! 20260610_rkumar_start
     !- nh3:
-    dqa = 0._RKIND
-    do i = 1,ubound(self%lwi,1)
-       do j = 1,ubound(self%lwi,2)
+    do j = jts, jte
+       do i = its, ite
           if(abs(self%lwi(i,j) - OCEAN) < 0.5) then
              dqa(i,j) = max(0._RKIND,self%nh3(i,j,self_params%km)*(1.-exp(-10.*drydepf(i,j)*self_params%cdt)))
           else
              dqa(i,j) = max(0._RKIND,self%nh3(i,j,self_params%km)*(1.-exp(-3.*drydepf(i,j)*self_params%cdt)))
           endif
+          
+          if(associated(self%nh3dp)) then
+             self%nh3dp(i,j) = dqa(i,j)*self%delp(i,j,self_params%km)/grav/self_params%cdt
+          end if
+          
+          if(.not. to_MYNN) then
+             self%nh3(i,j,self_params%km) = self%nh3(i,j,self_params%km) - dqa(i,j)
+          end if
        enddo
     enddo
-    self%nh3(:,:,self_params%km) = self%nh3(:,:,self_params%km) - dqa
-    if(associated(self%nh3dp)) self%nh3dp = dqa(:,:)*self%delp(:,:,self_params%km)/grav/self_params%cdt
 
     !- nh4a:
-    dqa = 0._RKIND
-    dqa = max(0._RKIND,self%nh4a(:,:,self_params%km)*(1.-exp(-drydepf*self_params%cdt)))
-    self%nh4a(:,:,self_params%km) = self%nh4a(:,:,self_params%km) - dqa
-    if(associated(self%nh4dp)) self%nh4dp = dqa(:,:)*self%delp(:,:,self_params%km)/grav/self_params%cdt
+    do j = jts, jte
+       do i = its, ite
+          dqa(i,j) = max(0._RKIND,self%nh4a(i,j,self_params%km)*(1.-exp(-drydepf(i,j)*self_params%cdt)))
+          
+          if(associated(self%nh4dp)) then
+             self%nh4dp(i,j) = dqa(i,j)*self%delp(i,j,self_params%km)/grav/self_params%cdt
+          end if
+          
+          if(.not. to_MYNN) then
+             self%nh4a(i,j,self_params%km) = self%nh4a(i,j,self_params%km) - dqa(i,j)
+          end if
+       enddo
+    enddo
 
-    !- no3anx:
-    dqa = 0._RKIND
-    dqa = max(0._RKIND,self%no3an1(:,:,self_params%km)*(1.-exp(-drydepf*self_params%cdt)))
-    self%no3an1(:,:,self_params%km) = self%no3an1(:,:,self_params%km) - dqa
-    if(associated(self%nidp)) self%nidp(:,:,1) = dqa*self%delp(:,:,self_params%km)/grav/self_params%cdt
+    !- no3an1:
+    do j = jts, jte
+       do i = its, ite
+          dqa(i,j) = max(0._RKIND,self%no3an1(i,j,self_params%km)*(1.-exp(-drydepf(i,j)*self_params%cdt)))
+          
+          if(associated(self%nidp)) then
+             self%nidp(i,j,1) = dqa(i,j)*self%delp(i,j,self_params%km)/grav/self_params%cdt
+          end if
+          
+          if(.not. to_MYNN) then
+             self%no3an1(i,j,self_params%km) = self%no3an1(i,j,self_params%km) - dqa(i,j)
+          end if
+       enddo
+    enddo
 
-    dqa = 0._RKIND
-    dqa = max(0._RKIND,self%no3an2(:,:,self_params%km)*(1.-exp(-drydepf*self_params%cdt)))
-    self%no3an2(:,:,self_params%km) = self%no3an2(:,:,self_params%km) - dqa
-    if(associated(self%nidp)) self%nidp(:,:,2) = dqa*self%delp(:,:,self_params%km)/grav/self_params%cdt
+    !- no3an2:
+    do j = jts, jte
+       do i = its, ite
+          dqa(i,j) = max(0._RKIND,self%no3an2(i,j,self_params%km)*(1.-exp(-drydepf(i,j)*self_params%cdt)))
+          
+          if(associated(self%nidp)) then
+             self%nidp(i,j,2) = dqa(i,j)*self%delp(i,j,self_params%km)/grav/self_params%cdt
+          end if
+          
+          if(.not. to_MYNN) then
+             self%no3an2(i,j,self_params%km) = self%no3an2(i,j,self_params%km) - dqa(i,j)
+          end if
+       enddo
+    enddo
 
-    dqa = 0._RKIND
-    dqa = max(0._RKIND,self%no3an3(:,:,self_params%km)*(1.-exp(-drydepf*self_params%cdt)))
-    self%no3an3(:,:,self_params%km) = self%no3an3(:,:,self_params%km) - dqa
-    if(associated(self%nidp)) self%nidp(:,:,3) = dqa*self%delp(:,:,self_params%km)/grav/self_params%cdt
- endif
+    !- no3an3:
+    do j = jts, jte
+       do i = its, ite
+          dqa(i,j) = max(0._RKIND,self%no3an3(i,j,self_params%km)*(1.-exp(-drydepf(i,j)*self_params%cdt)))
+          
+          if(associated(self%nidp)) then
+             self%nidp(i,j,3) = dqa(i,j)*self%delp(i,j,self_params%km)/grav/self_params%cdt
+          end if
+          
+          if(.not. to_MYNN) then
+             self%no3an3(i,j,self_params%km) = self%no3an3(i,j,self_params%km) - dqa(i,j)
+          end if
+       enddo
+    enddo
+! 20260610_rkumar_end
  if(istat /=0) then
     call mpas_log_write('--- NI2G_GridComp: error in subroutine DryDeposition.', &
                         messageType=MPAS_LOG_CRIT)

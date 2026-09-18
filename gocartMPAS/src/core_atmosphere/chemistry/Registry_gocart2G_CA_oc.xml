@@ -37,16 +37,16 @@
      <var name="ocDP_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Dry deposition of hydrophilic organic carbon aerosols"/>
 
-     <var name="ocWT_phobic" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="ocWT_phobic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Wet deposition of hydrophobic organic carbon aerosols"/>
 
-     <var name="ocWT_philic" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="ocWT_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Wet deposition of hydrophilic organic carbon aerosols"/>
 
-     <var name="ocSV_phobic" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="ocSV_phobic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Convective scavenging of hydrophobic organic carbon aerosols"/>
 
-     <var name="ocSV_philic" type="real" dimensions="nCells Time" units="kg m^{-2}"
+     <var name="ocSV_philic" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}"
                description="Convective scavenging of hydrophilic organic carbon aerosols"/>
 
      <var name="ocSMASS" type="real" dimensions="nCells Time" units="kg m^{-3}"

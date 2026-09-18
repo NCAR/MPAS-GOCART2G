@@ -11,6 +11,7 @@
       call mpas_pool_add_package(packagePool, 'initial_condsActive', .false.)
       call mpas_pool_add_package(packagePool, 'sfc_updateActive', .false.)
       call mpas_pool_add_package(packagePool, 'lbcsActive', .false.)
+      call mpas_pool_add_package(packagePool, 'fddaActive', .false.)
       call mpas_pool_add_package(packagePool, 'gwd_stage_inActive', .false.)
       call mpas_pool_add_package(packagePool, 'gwd_stage_outActive', .false.)
       call mpas_pool_add_package(packagePool, 'gwd_gsl_stage_outActive', .false.)

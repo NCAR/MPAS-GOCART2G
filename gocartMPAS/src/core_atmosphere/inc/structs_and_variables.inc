@@ -59,6 +59,8 @@
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -85,6 +87,8 @@
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'mesh', newSubPool)
@@ -1500,6 +1504,102 @@
       call mpas_pool_add_field(newSubPool, 'rdzw', r1Ptr)
       call mpas_pool_add_field(block % allFields, 'rdzw', r1Ptr)
 
+! Define variable etp
+      allocate(r1Ptr)
+
+! Setting up time level 1
+      r1Ptr % fieldName = 'etp'
+      r1Ptr % isVarArray = .false.
+      r1Ptr % isDecomposed = .false.
+      r1Ptr % hasTimeDimension = .false.
+      r1Ptr % isPersistent = .true.
+      r1Ptr % isActive = .false.
+! Setting up dimensions
+      r1Ptr % dimNames(1) = 'nVertLevels'
+      r1Ptr % defaultValue = 0.0
+      allocate(r1Ptr % attLists(1))
+      allocate(r1Ptr % attLists(1) % attList)
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'etp = (1+epssm(z))/2 at theta point')
+      r1Ptr % missingValue = MPAS_REAL_FILLVAL
+      r1Ptr % block => block
+
+      r1Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'etp', r1Ptr)
+      call mpas_pool_add_field(block % allFields, 'etp', r1Ptr)
+
+! Define variable etm
+      allocate(r1Ptr)
+
+! Setting up time level 1
+      r1Ptr % fieldName = 'etm'
+      r1Ptr % isVarArray = .false.
+      r1Ptr % isDecomposed = .false.
+      r1Ptr % hasTimeDimension = .false.
+      r1Ptr % isPersistent = .true.
+      r1Ptr % isActive = .false.
+! Setting up dimensions
+      r1Ptr % dimNames(1) = 'nVertLevels'
+      r1Ptr % defaultValue = 0.0
+      allocate(r1Ptr % attLists(1))
+      allocate(r1Ptr % attLists(1) % attList)
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'etm = (1-epssm(z))/2 at theta point')
+      r1Ptr % missingValue = MPAS_REAL_FILLVAL
+      r1Ptr % block => block
+
+      r1Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'etm', r1Ptr)
+      call mpas_pool_add_field(block % allFields, 'etm', r1Ptr)
+
+! Define variable ewp
+      allocate(r1Ptr)
+
+! Setting up time level 1
+      r1Ptr % fieldName = 'ewp'
+      r1Ptr % isVarArray = .false.
+      r1Ptr % isDecomposed = .false.
+      r1Ptr % hasTimeDimension = .false.
+      r1Ptr % isPersistent = .true.
+      r1Ptr % isActive = .false.
+! Setting up dimensions
+      r1Ptr % dimNames(1) = 'nVertLevelsP1'
+      r1Ptr % defaultValue = 0.0
+      allocate(r1Ptr % attLists(1))
+      allocate(r1Ptr % attLists(1) % attList)
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'ewp = (1+epssm(z))/2 at w point')
+      r1Ptr % missingValue = MPAS_REAL_FILLVAL
+      r1Ptr % block => block
+
+      r1Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'ewp', r1Ptr)
+      call mpas_pool_add_field(block % allFields, 'ewp', r1Ptr)
+
+! Define variable ewm
+      allocate(r1Ptr)
+
+! Setting up time level 1
+      r1Ptr % fieldName = 'ewm'
+      r1Ptr % isVarArray = .false.
+      r1Ptr % isDecomposed = .false.
+      r1Ptr % hasTimeDimension = .false.
+      r1Ptr % isPersistent = .true.
+      r1Ptr % isActive = .false.
+! Setting up dimensions
+      r1Ptr % dimNames(1) = 'nVertLevelsP1'
+      r1Ptr % defaultValue = 0.0
+      allocate(r1Ptr % attLists(1))
+      allocate(r1Ptr % attLists(1) % attList)
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'ewm = (1-epssm(z))/2 at w point')
+      r1Ptr % missingValue = MPAS_REAL_FILLVAL
+      r1Ptr % block => block
+
+      r1Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'ewm', r1Ptr)
+      call mpas_pool_add_field(block % allFields, 'ewm', r1Ptr)
+
 ! Define variable dzu
       allocate(r1Ptr)
 
@@ -2007,11 +2107,11 @@
       call mpas_pool_add_field(newSubPool, 'nAdvCellsForEdge', i1Ptr)
       call mpas_pool_add_field(block % allFields, 'nAdvCellsForEdge', i1Ptr)
 
-! Define variable defc_a
+! Define variable deformation_coef_c2
       allocate(r2Ptr)
 
 ! Setting up time level 1
-      r2Ptr % fieldName = 'defc_a'
+      r2Ptr % fieldName = 'deformation_coef_c2'
       r2Ptr % isVarArray = .false.
       r2Ptr % isDecomposed = .true.
       r2Ptr % hasTimeDimension = .false.
@@ -2024,20 +2124,20 @@
       allocate(r2Ptr % attLists(1))
       allocate(r2Ptr % attLists(1) % attList)
       call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the off-diagonal components of the &
-&horizontal deformation')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the cos-squared terms of the 3d &
+&deformation')
       r2Ptr % missingValue = MPAS_REAL_FILLVAL
       r2Ptr % block => block
 
       r2Ptr % isActive = .true.
-      call mpas_pool_add_field(newSubPool, 'defc_a', r2Ptr)
-      call mpas_pool_add_field(block % allFields, 'defc_a', r2Ptr)
+      call mpas_pool_add_field(newSubPool, 'deformation_coef_c2', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'deformation_coef_c2', r2Ptr)
 
-! Define variable defc_b
+! Define variable deformation_coef_s2
       allocate(r2Ptr)
 
 ! Setting up time level 1
-      r2Ptr % fieldName = 'defc_b'
+      r2Ptr % fieldName = 'deformation_coef_s2'
       r2Ptr % isVarArray = .false.
       r2Ptr % isDecomposed = .true.
       r2Ptr % hasTimeDimension = .false.
@@ -2050,14 +2150,92 @@
       allocate(r2Ptr % attLists(1))
       allocate(r2Ptr % attLists(1) % attList)
       call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the diagonal components of the &
-&horizontal deformation')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the sine-squared terms of the 3d &
+&deformation')
       r2Ptr % missingValue = MPAS_REAL_FILLVAL
       r2Ptr % block => block
 
       r2Ptr % isActive = .true.
-      call mpas_pool_add_field(newSubPool, 'defc_b', r2Ptr)
-      call mpas_pool_add_field(block % allFields, 'defc_b', r2Ptr)
+      call mpas_pool_add_field(newSubPool, 'deformation_coef_s2', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'deformation_coef_s2', r2Ptr)
+
+! Define variable deformation_coef_cs
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'deformation_coef_cs'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .false.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'maxEdges'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the cos-sine terms of the 3d &
+&deformation')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'deformation_coef_cs', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'deformation_coef_cs', r2Ptr)
+
+! Define variable deformation_coef_c
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'deformation_coef_c'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .false.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'maxEdges'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the cos-only terms of the 3d &
+&deformation')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'deformation_coef_c', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'deformation_coef_c', r2Ptr)
+
+! Define variable deformation_coef_s
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'deformation_coef_s'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .false.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'maxEdges'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Coefficients for computing the sine-only terms of the 3d &
+&deformation')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'deformation_coef_s', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'deformation_coef_s', r2Ptr)
 
 ! Define variable coeffs_reconstruct
       allocate(r3Ptr)
@@ -2774,6 +2952,8 @@
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -2800,6 +2980,8 @@
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'state', newSubPool)
@@ -3053,6 +3235,39 @@ mp_wsm6_inActive) then
             group_started = .false.
             if (associated(newSubPool)) then
                call mpas_pool_add_dimension(newSubPool, 'number_end', index_counter)
+            end if
+         end if
+! End of group       
+! Starting group turbulence
+! Define constituent var tke
+! My Packages are les
+      if (lesActive) then
+         index_counter = index_counter + 1
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_tke', index_counter)
+         end if
+         group_counter = group_counter + 1
+         if (.not. group_started) then
+            group_start = index_counter
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', group_start)
+            end if
+            group_started = .true.
+         end if
+      else
+           if (associated(newSubPool)) then
+              call mpas_pool_add_dimension(newSubPool, 'index_tke', -1)
+           end if
+      end if
+         if (.not. group_started) then
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', -1)
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', -1)
+            end if
+         else
+            group_started = .false.
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', index_counter)
             end if
          end if
 ! End of group       
@@ -3570,6 +3785,12 @@ mp_wsm6_inActive) then
          r3aPtr(1) % constituentNames(const_index) = 'nwfa'
       end if
       if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+         r3aPtr(1) % constituentNames(const_index) = 'tke'
+      end if
+      if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
       end if
       if (const_index > 0) then
@@ -3858,6 +4079,16 @@ mp_wsm6_inActive) then
       call mpas_add_att(r3aPtr(1) % attLists(const_index) % attList, 'long_name', 'Water-friendly aerosol number concentration')
          r3aPtr(1) % missingValue = MPAS_REAL_FILLVAL
          r3aPtr(1) % constituentNames(const_index) = 'nwfa'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3aPtr(1) % attLists(const_index) % attList, 'units', 'm^2 s^{-2}')
+      call mpas_add_att(r3aPtr(1) % attLists(const_index) % attList, 'long_name', 'Turbulent kinetic energy for the prognostic tke &
+&LES scheme')
+         r3aPtr(1) % missingValue = MPAS_REAL_FILLVAL
+         r3aPtr(1) % constituentNames(const_index) = 'tke'
       end if
       if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
@@ -4221,6 +4452,12 @@ mp_wsm6_inActive) then
          r3aPtr(2) % constituentNames(const_index) = 'nwfa'
       end if
       if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+         r3aPtr(2) % constituentNames(const_index) = 'tke'
+      end if
+      if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
       end if
       if (const_index > 0) then
@@ -4509,6 +4746,16 @@ mp_wsm6_inActive) then
       call mpas_add_att(r3aPtr(2) % attLists(const_index) % attList, 'long_name', 'Water-friendly aerosol number concentration')
          r3aPtr(2) % missingValue = MPAS_REAL_FILLVAL
          r3aPtr(2) % constituentNames(const_index) = 'nwfa'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3aPtr(2) % attLists(const_index) % attList, 'units', 'm^2 s^{-2}')
+      call mpas_add_att(r3aPtr(2) % attLists(const_index) % attList, 'long_name', 'Turbulent kinetic energy for the prognostic tke &
+&LES scheme')
+         r3aPtr(2) % missingValue = MPAS_REAL_FILLVAL
+         r3aPtr(2) % constituentNames(const_index) = 'tke'
       end if
       if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
@@ -5710,6 +5957,291 @@ mp_wsm6_inActive) then
    end subroutine atm_generate_pool_state
 
 
+   subroutine atm_generate_pool_fdda(block, structPool, dimensionPool, packagePool)
+      use mpas_derived_types
+      use mpas_pool_routines
+      use mpas_io_units
+      use mpas_io, only : MPAS_REAL_FILLVAL, MPAS_INT_FILLVAL, MPAS_CHAR_FILLVAL
+      implicit none
+      type (block_type), intent(inout), pointer :: block
+      type (mpas_pool_type), intent(inout) :: structPool
+      type (mpas_pool_type), intent(inout) :: dimensionPool
+      type (mpas_pool_type), intent(in) :: packagePool
+
+      type (field0DReal), pointer :: r0Ptr
+      type (field1DReal), pointer :: r1Ptr
+      type (field2DReal), pointer :: r2Ptr
+      type (field3DReal), pointer :: r3Ptr
+      type (field4DReal), pointer :: r4Ptr
+      type (field5DReal), pointer :: r5Ptr
+      type (field0DInteger), pointer :: i0Ptr
+      type (field1DInteger), pointer :: i1Ptr
+      type (field2DInteger), pointer :: i2Ptr
+      type (field3DInteger), pointer :: i3Ptr
+      type (field0DChar), pointer :: c0Ptr
+      type (field1DChar), pointer :: c1Ptr
+      type (field0DReal), dimension(:), pointer :: r0aPtr
+      type (field1DReal), dimension(:), pointer :: r1aPtr
+      type (field2DReal), dimension(:), pointer :: r2aPtr
+      type (field3DReal), dimension(:), pointer :: r3aPtr
+      type (field4DReal), dimension(:), pointer :: r4aPtr
+      type (field5DReal), dimension(:), pointer :: r5aPtr
+      type (field0DInteger), dimension(:), pointer :: i0aPtr
+      type (field1DInteger), dimension(:), pointer :: i1aPtr
+      type (field2DInteger), dimension(:), pointer :: i2aPtr
+      type (field3DInteger), dimension(:), pointer :: i3aPtr
+      type (field0DChar), dimension(:), pointer :: c0aPtr
+      type (field1DChar), dimension(:), pointer :: c1aPtr
+
+      type (mpas_pool_type), pointer :: newSubPool
+      integer :: group_counter
+      logical :: group_started
+      integer :: group_start
+      integer :: index_counter
+      integer, pointer :: const_index
+
+      logical, pointer :: mp_kessler_inActive
+      logical, pointer :: mp_gocart2G_inActive
+      logical, pointer :: mp_thompson_inActive
+      logical, pointer :: mp_thompson_aers_inActive
+      logical, pointer :: mp_wsm6_inActive
+      logical, pointer :: cu_grell_freitas_inActive
+      logical, pointer :: cu_kain_fritsch_inActive
+      logical, pointer :: cu_ntiedtke_inActive
+      logical, pointer :: bl_ysu_inActive
+      logical, pointer :: bl_mynn_inActive
+      logical, pointer :: sf_noahmp_inActive
+      logical, pointer :: iauActive
+      logical, pointer :: limited_areaActive
+      logical, pointer :: jedi_daActive
+      logical, pointer :: no_invariant_streamActive
+      logical, pointer :: ugwp_orog_streamActive
+      logical, pointer :: ugwp_ngw_streamActive
+      logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
+
+
+      integer :: numConstituents
+
+      nullify(newSubPool)
+      group_counter = -1
+      group_started = .false.
+      group_start = -1
+      call mpas_pool_get_package(packagePool, 'mp_kessler_inActive', mp_kessler_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_gocart2G_inActive', mp_gocart2G_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_thompson_inActive', mp_thompson_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_thompson_aers_inActive', mp_thompson_aers_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_wsm6_inActive', mp_wsm6_inActive)
+      call mpas_pool_get_package(packagePool, 'cu_grell_freitas_inActive', cu_grell_freitas_inActive)
+      call mpas_pool_get_package(packagePool, 'cu_kain_fritsch_inActive', cu_kain_fritsch_inActive)
+      call mpas_pool_get_package(packagePool, 'cu_ntiedtke_inActive', cu_ntiedtke_inActive)
+      call mpas_pool_get_package(packagePool, 'bl_ysu_inActive', bl_ysu_inActive)
+      call mpas_pool_get_package(packagePool, 'bl_mynn_inActive', bl_mynn_inActive)
+      call mpas_pool_get_package(packagePool, 'sf_noahmp_inActive', sf_noahmp_inActive)
+      call mpas_pool_get_package(packagePool, 'iauActive', iauActive)
+      call mpas_pool_get_package(packagePool, 'limited_areaActive', limited_areaActive)
+      call mpas_pool_get_package(packagePool, 'jedi_daActive', jedi_daActive)
+      call mpas_pool_get_package(packagePool, 'no_invariant_streamActive', no_invariant_streamActive)
+      call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
+      call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
+      call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
+
+      call mpas_pool_create_pool(newSubPool)
+      call mpas_pool_add_subpool(structPool, 'fdda', newSubPool)
+      call mpas_pool_add_subpool(block % allStructs, 'fdda', newSubPool)
+
+! Define variable qv_fdda
+      allocate(r2aPtr(2))
+
+! Setting up time level 1
+      r2aPtr(1) % fieldName = 'qv_fdda'
+      r2aPtr(1) % isVarArray = .false.
+      r2aPtr(1) % isDecomposed = .true.
+      r2aPtr(1) % hasTimeDimension = .true.
+      r2aPtr(1) % isPersistent = .true.
+      r2aPtr(1) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(1) % dimNames(1) = 'nVertLevels'
+      r2aPtr(1) % dimNames(2) = 'nCells'
+      r2aPtr(1) % defaultValue = 0.0
+      allocate(r2aPtr(1) % attLists(1))
+      allocate(r2aPtr(1) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'units', 'kg kg^{-1}')
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'long_name', 'water vapor mixing ratio for FDDA grid nudging')
+      r2aPtr(1) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(1) % block => block
+
+! Setting up time level 2
+      r2aPtr(2) % fieldName = 'qv_fdda'
+      r2aPtr(2) % isVarArray = .false.
+      r2aPtr(2) % isDecomposed = .true.
+      r2aPtr(2) % hasTimeDimension = .true.
+      r2aPtr(2) % isPersistent = .true.
+      r2aPtr(2) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(2) % dimNames(1) = 'nVertLevels'
+      r2aPtr(2) % dimNames(2) = 'nCells'
+      r2aPtr(2) % defaultValue = 0.0
+      allocate(r2aPtr(2) % attLists(1))
+      allocate(r2aPtr(2) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'units', 'kg kg^{-1}')
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'long_name', 'water vapor mixing ratio for FDDA grid nudging')
+      r2aPtr(2) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(2) % block => block
+
+      r2aPtr(1) % isActive = .true.
+      r2aPtr(2) % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'qv_fdda', r2aPtr)
+      call mpas_pool_add_field(block % allFields, 'qv_fdda', r2aPtr)
+
+! Define variable theta_fdda
+      allocate(r2aPtr(2))
+
+! Setting up time level 1
+      r2aPtr(1) % fieldName = 'theta_fdda'
+      r2aPtr(1) % isVarArray = .false.
+      r2aPtr(1) % isDecomposed = .true.
+      r2aPtr(1) % hasTimeDimension = .true.
+      r2aPtr(1) % isPersistent = .true.
+      r2aPtr(1) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(1) % dimNames(1) = 'nVertLevels'
+      r2aPtr(1) % dimNames(2) = 'nCells'
+      r2aPtr(1) % defaultValue = 0.0
+      allocate(r2aPtr(1) % attLists(1))
+      allocate(r2aPtr(1) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'units', 'K')
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'long_name', 'potential temperature for FDDA grid nudging')
+      r2aPtr(1) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(1) % block => block
+
+! Setting up time level 2
+      r2aPtr(2) % fieldName = 'theta_fdda'
+      r2aPtr(2) % isVarArray = .false.
+      r2aPtr(2) % isDecomposed = .true.
+      r2aPtr(2) % hasTimeDimension = .true.
+      r2aPtr(2) % isPersistent = .true.
+      r2aPtr(2) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(2) % dimNames(1) = 'nVertLevels'
+      r2aPtr(2) % dimNames(2) = 'nCells'
+      r2aPtr(2) % defaultValue = 0.0
+      allocate(r2aPtr(2) % attLists(1))
+      allocate(r2aPtr(2) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'units', 'K')
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'long_name', 'potential temperature for FDDA grid nudging')
+      r2aPtr(2) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(2) % block => block
+
+      r2aPtr(1) % isActive = .true.
+      r2aPtr(2) % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'theta_fdda', r2aPtr)
+      call mpas_pool_add_field(block % allFields, 'theta_fdda', r2aPtr)
+
+! Define variable u_fdda
+      allocate(r2aPtr(2))
+
+! Setting up time level 1
+      r2aPtr(1) % fieldName = 'u_fdda'
+      r2aPtr(1) % isVarArray = .false.
+      r2aPtr(1) % isDecomposed = .true.
+      r2aPtr(1) % hasTimeDimension = .true.
+      r2aPtr(1) % isPersistent = .true.
+      r2aPtr(1) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(1) % dimNames(1) = 'nVertLevels'
+      r2aPtr(1) % dimNames(2) = 'nCells'
+      r2aPtr(1) % defaultValue = 0.0
+      allocate(r2aPtr(1) % attLists(1))
+      allocate(r2aPtr(1) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'long_name', 'zonal wind component for FDDA grid nudging')
+      r2aPtr(1) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(1) % block => block
+
+! Setting up time level 2
+      r2aPtr(2) % fieldName = 'u_fdda'
+      r2aPtr(2) % isVarArray = .false.
+      r2aPtr(2) % isDecomposed = .true.
+      r2aPtr(2) % hasTimeDimension = .true.
+      r2aPtr(2) % isPersistent = .true.
+      r2aPtr(2) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(2) % dimNames(1) = 'nVertLevels'
+      r2aPtr(2) % dimNames(2) = 'nCells'
+      r2aPtr(2) % defaultValue = 0.0
+      allocate(r2aPtr(2) % attLists(1))
+      allocate(r2aPtr(2) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'long_name', 'zonal wind component for FDDA grid nudging')
+      r2aPtr(2) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(2) % block => block
+
+      r2aPtr(1) % isActive = .true.
+      r2aPtr(2) % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'u_fdda', r2aPtr)
+      call mpas_pool_add_field(block % allFields, 'u_fdda', r2aPtr)
+
+! Define variable v_fdda
+      allocate(r2aPtr(2))
+
+! Setting up time level 1
+      r2aPtr(1) % fieldName = 'v_fdda'
+      r2aPtr(1) % isVarArray = .false.
+      r2aPtr(1) % isDecomposed = .true.
+      r2aPtr(1) % hasTimeDimension = .true.
+      r2aPtr(1) % isPersistent = .true.
+      r2aPtr(1) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(1) % dimNames(1) = 'nVertLevels'
+      r2aPtr(1) % dimNames(2) = 'nCells'
+      r2aPtr(1) % defaultValue = 0.0
+      allocate(r2aPtr(1) % attLists(1))
+      allocate(r2aPtr(1) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2aPtr(1) % attLists(1) % attList, 'long_name', 'meridional wind component for FDDA grid nudging')
+      r2aPtr(1) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(1) % block => block
+
+! Setting up time level 2
+      r2aPtr(2) % fieldName = 'v_fdda'
+      r2aPtr(2) % isVarArray = .false.
+      r2aPtr(2) % isDecomposed = .true.
+      r2aPtr(2) % hasTimeDimension = .true.
+      r2aPtr(2) % isPersistent = .true.
+      r2aPtr(2) % isActive = .false.
+! Setting up dimensions
+      r2aPtr(2) % dimNames(1) = 'nVertLevels'
+      r2aPtr(2) % dimNames(2) = 'nCells'
+      r2aPtr(2) % defaultValue = 0.0
+      allocate(r2aPtr(2) % attLists(1))
+      allocate(r2aPtr(2) % attLists(1) % attList)
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2aPtr(2) % attLists(1) % attList, 'long_name', 'meridional wind component for FDDA grid nudging')
+      r2aPtr(2) % missingValue = MPAS_REAL_FILLVAL
+      r2aPtr(2) % block => block
+
+      r2aPtr(1) % isActive = .true.
+      r2aPtr(2) % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'v_fdda', r2aPtr)
+      call mpas_pool_add_field(block % allFields, 'v_fdda', r2aPtr)
+
+
+
+      if (associated(newSubPool)) then
+         call mpas_pool_add_config(newSubPool, 'on_a_sphere', block % domain % on_a_sphere)
+         call mpas_pool_add_config(newSubPool, 'sphere_radius', block % domain % sphere_radius)
+         call mpas_pool_add_config(newSubPool, 'is_periodic', block % domain % is_periodic)
+         call mpas_pool_add_config(newSubPool, 'x_period', block % domain % x_period)
+         call mpas_pool_add_config(newSubPool, 'y_period', block % domain % y_period)
+      end if
+
+   end subroutine atm_generate_pool_fdda
+
+
    subroutine atm_generate_pool_diag(block, structPool, dimensionPool, packagePool)
       use mpas_derived_types
       use mpas_pool_routines
@@ -5771,6 +6303,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -5797,6 +6331,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'diag', newSubPool)
@@ -7376,11 +7912,11 @@ mp_wsm6_inActive) then
       call mpas_pool_add_field(newSubPool, 'rho_p_save', r2Ptr)
       call mpas_pool_add_field(block % allFields, 'rho_p_save', r2Ptr)
 
-! Define variable kdiff
+! Define variable eddy_visc_vert
       allocate(r2Ptr)
 
 ! Setting up time level 1
-      r2Ptr % fieldName = 'kdiff'
+      r2Ptr % fieldName = 'eddy_visc_vert'
       r2Ptr % isVarArray = .false.
       r2Ptr % isDecomposed = .true.
       r2Ptr % hasTimeDimension = .true.
@@ -7393,13 +7929,115 @@ mp_wsm6_inActive) then
       allocate(r2Ptr % attLists(1))
       allocate(r2Ptr % attLists(1) % attList)
       call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm^2 s^{-1}')
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Smagorinsky horizontal eddy viscosity')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'vertical eddy viscosity for les models')
       r2Ptr % missingValue = MPAS_REAL_FILLVAL
       r2Ptr % block => block
 
       r2Ptr % isActive = .true.
-      call mpas_pool_add_field(newSubPool, 'kdiff', r2Ptr)
-      call mpas_pool_add_field(block % allFields, 'kdiff', r2Ptr)
+      call mpas_pool_add_field(newSubPool, 'eddy_visc_vert', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'eddy_visc_vert', r2Ptr)
+
+! Define variable eddy_visc_horz
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'eddy_visc_horz'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm^2 s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'horizontal eddy viscosity for les models')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'eddy_visc_horz', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'eddy_visc_horz', r2Ptr)
+
+! Define variable prandtl_3d_inv
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'prandtl_3d_inv'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'unitless')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Inverse prandtl number used for vertical mixing in prognostic &
+&LES formulation')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'prandtl_3d_inv', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'prandtl_3d_inv', r2Ptr)
+
+! Define variable bn2
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'bn2'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 's^{-2}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'Square of Brunt-Vaisala frequency')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'bn2', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'bn2', r2Ptr)
+
+! Define variable tend_rtheta_adv
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'tend_rtheta_adv'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'kg K m^{-3} s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'flux divergence for rho*theta_m/zz, used in the Tiedtke &
+&convective parameterization')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'tend_rtheta_adv', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'tend_rtheta_adv', r2Ptr)
 
 ! Define variable surface_pressure
       allocate(r1Ptr)
@@ -10228,6 +10866,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -10254,6 +10894,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'tend', newSubPool)
@@ -10507,6 +11149,39 @@ mp_wsm6_inActive) then
             group_started = .false.
             if (associated(newSubPool)) then
                call mpas_pool_add_dimension(newSubPool, 'number_end', index_counter)
+            end if
+         end if
+! End of group       
+! Starting group turbulence
+! Define constituent var tend_tke
+! My Packages are les
+      if (lesActive) then
+         index_counter = index_counter + 1
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_tke', index_counter)
+         end if
+         group_counter = group_counter + 1
+         if (.not. group_started) then
+            group_start = index_counter
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', group_start)
+            end if
+            group_started = .true.
+         end if
+      else
+           if (associated(newSubPool)) then
+              call mpas_pool_add_dimension(newSubPool, 'index_tke', -1)
+           end if
+      end if
+         if (.not. group_started) then
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', -1)
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', -1)
+            end if
+         else
+            group_started = .false.
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', index_counter)
             end if
          end if
 ! End of group       
@@ -11024,6 +11699,12 @@ mp_wsm6_inActive) then
          r3Ptr % constituentNames(const_index) = 'tend_nwfa'
       end if
       if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+         r3Ptr % constituentNames(const_index) = 'tend_tke'
+      end if
+      if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
       end if
       if (const_index > 0) then
@@ -11323,6 +12004,16 @@ mp_wsm6_inActive) then
 &concentration multiplied by dry air density divided by d(zeta)/dz')
          r3Ptr % missingValue = MPAS_REAL_FILLVAL
          r3Ptr % constituentNames(const_index) = 'tend_nwfa'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'units', 'kg m^{-3} m^2 s^{-2} s^{-1}')
+      call mpas_add_att(r3Ptr % attLists(const_index) % attList, 'long_name', 'Tendency of tke multiplied by dry air density &
+&divided by d(zeta)/dz')
+         r3Ptr % missingValue = MPAS_REAL_FILLVAL
+         r3Ptr % constituentNames(const_index) = 'tend_tke'
       end if
       if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_qbcphobic', const_index)
@@ -11921,6 +12612,240 @@ mp_wsm6_inActive) then
    end subroutine atm_generate_pool_tend
 
 
+   subroutine atm_generate_pool_tend_fdda(block, structPool, dimensionPool, packagePool)
+      use mpas_derived_types
+      use mpas_pool_routines
+      use mpas_io_units
+      use mpas_io, only : MPAS_REAL_FILLVAL, MPAS_INT_FILLVAL, MPAS_CHAR_FILLVAL
+      implicit none
+      type (block_type), intent(inout), pointer :: block
+      type (mpas_pool_type), intent(inout) :: structPool
+      type (mpas_pool_type), intent(inout) :: dimensionPool
+      type (mpas_pool_type), intent(in) :: packagePool
+
+      type (field0DReal), pointer :: r0Ptr
+      type (field1DReal), pointer :: r1Ptr
+      type (field2DReal), pointer :: r2Ptr
+      type (field3DReal), pointer :: r3Ptr
+      type (field4DReal), pointer :: r4Ptr
+      type (field5DReal), pointer :: r5Ptr
+      type (field0DInteger), pointer :: i0Ptr
+      type (field1DInteger), pointer :: i1Ptr
+      type (field2DInteger), pointer :: i2Ptr
+      type (field3DInteger), pointer :: i3Ptr
+      type (field0DChar), pointer :: c0Ptr
+      type (field1DChar), pointer :: c1Ptr
+      type (field0DReal), dimension(:), pointer :: r0aPtr
+      type (field1DReal), dimension(:), pointer :: r1aPtr
+      type (field2DReal), dimension(:), pointer :: r2aPtr
+      type (field3DReal), dimension(:), pointer :: r3aPtr
+      type (field4DReal), dimension(:), pointer :: r4aPtr
+      type (field5DReal), dimension(:), pointer :: r5aPtr
+      type (field0DInteger), dimension(:), pointer :: i0aPtr
+      type (field1DInteger), dimension(:), pointer :: i1aPtr
+      type (field2DInteger), dimension(:), pointer :: i2aPtr
+      type (field3DInteger), dimension(:), pointer :: i3aPtr
+      type (field0DChar), dimension(:), pointer :: c0aPtr
+      type (field1DChar), dimension(:), pointer :: c1aPtr
+
+      type (mpas_pool_type), pointer :: newSubPool
+      integer :: group_counter
+      logical :: group_started
+      integer :: group_start
+      integer :: index_counter
+      integer, pointer :: const_index
+
+      logical, pointer :: mp_kessler_inActive
+      logical, pointer :: mp_gocart2G_inActive
+      logical, pointer :: mp_thompson_inActive
+      logical, pointer :: mp_thompson_aers_inActive
+      logical, pointer :: mp_wsm6_inActive
+      logical, pointer :: cu_grell_freitas_inActive
+      logical, pointer :: cu_kain_fritsch_inActive
+      logical, pointer :: cu_ntiedtke_inActive
+      logical, pointer :: bl_ysu_inActive
+      logical, pointer :: bl_mynn_inActive
+      logical, pointer :: sf_noahmp_inActive
+      logical, pointer :: iauActive
+      logical, pointer :: limited_areaActive
+      logical, pointer :: jedi_daActive
+      logical, pointer :: no_invariant_streamActive
+      logical, pointer :: ugwp_orog_streamActive
+      logical, pointer :: ugwp_ngw_streamActive
+      logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
+
+
+      integer :: numConstituents
+
+      nullify(newSubPool)
+      group_counter = -1
+      group_started = .false.
+      group_start = -1
+      call mpas_pool_get_package(packagePool, 'mp_kessler_inActive', mp_kessler_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_gocart2G_inActive', mp_gocart2G_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_thompson_inActive', mp_thompson_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_thompson_aers_inActive', mp_thompson_aers_inActive)
+      call mpas_pool_get_package(packagePool, 'mp_wsm6_inActive', mp_wsm6_inActive)
+      call mpas_pool_get_package(packagePool, 'cu_grell_freitas_inActive', cu_grell_freitas_inActive)
+      call mpas_pool_get_package(packagePool, 'cu_kain_fritsch_inActive', cu_kain_fritsch_inActive)
+      call mpas_pool_get_package(packagePool, 'cu_ntiedtke_inActive', cu_ntiedtke_inActive)
+      call mpas_pool_get_package(packagePool, 'bl_ysu_inActive', bl_ysu_inActive)
+      call mpas_pool_get_package(packagePool, 'bl_mynn_inActive', bl_mynn_inActive)
+      call mpas_pool_get_package(packagePool, 'sf_noahmp_inActive', sf_noahmp_inActive)
+      call mpas_pool_get_package(packagePool, 'iauActive', iauActive)
+      call mpas_pool_get_package(packagePool, 'limited_areaActive', limited_areaActive)
+      call mpas_pool_get_package(packagePool, 'jedi_daActive', jedi_daActive)
+      call mpas_pool_get_package(packagePool, 'no_invariant_streamActive', no_invariant_streamActive)
+      call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
+      call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
+      call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
+
+      call mpas_pool_create_pool(newSubPool)
+      call mpas_pool_add_subpool(structPool, 'tend_fdda', newSubPool)
+      call mpas_pool_add_subpool(block % allStructs, 'tend_fdda', newSubPool)
+
+! Define variable rthfddaten
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'rthfddaten'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'K s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'tendency of potential temperature due to FDDA')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'rthfddaten', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'rthfddaten', r2Ptr)
+
+! Define variable rqvfddaten
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'rqvfddaten'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'kg kg^{-1} s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'tendency of water vapor mixing ratio due to FDDA')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'rqvfddaten', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'rqvfddaten', r2Ptr)
+
+! Define variable rufddaten
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'rufddaten'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'tendency of zonal wind component due to FDDA')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'rufddaten', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'rufddaten', r2Ptr)
+
+! Define variable rvfddaten
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'rvfddaten'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nCells'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'tendency of meridional wind component due to FDDA')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'rvfddaten', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'rvfddaten', r2Ptr)
+
+! Define variable rufddaten_Edge
+      allocate(r2Ptr)
+
+! Setting up time level 1
+      r2Ptr % fieldName = 'rufddaten_Edge'
+      r2Ptr % isVarArray = .false.
+      r2Ptr % isDecomposed = .true.
+      r2Ptr % hasTimeDimension = .true.
+      r2Ptr % isPersistent = .true.
+      r2Ptr % isActive = .false.
+! Setting up dimensions
+      r2Ptr % dimNames(1) = 'nVertLevels'
+      r2Ptr % dimNames(2) = 'nEdges'
+      r2Ptr % defaultValue = 0.0
+      allocate(r2Ptr % attLists(1))
+      allocate(r2Ptr % attLists(1) % attList)
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'tendency of horizontal normal velocity due to FDDA')
+      r2Ptr % missingValue = MPAS_REAL_FILLVAL
+      r2Ptr % block => block
+
+      r2Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'rufddaten_Edge', r2Ptr)
+      call mpas_pool_add_field(block % allFields, 'rufddaten_Edge', r2Ptr)
+
+
+
+      if (associated(newSubPool)) then
+         call mpas_pool_add_config(newSubPool, 'on_a_sphere', block % domain % on_a_sphere)
+         call mpas_pool_add_config(newSubPool, 'sphere_radius', block % domain % sphere_radius)
+         call mpas_pool_add_config(newSubPool, 'is_periodic', block % domain % is_periodic)
+         call mpas_pool_add_config(newSubPool, 'x_period', block % domain % x_period)
+         call mpas_pool_add_config(newSubPool, 'y_period', block % domain % y_period)
+      end if
+
+   end subroutine atm_generate_pool_tend_fdda
+
+
    subroutine atm_generate_pool_lbc(block, structPool, dimensionPool, packagePool)
       use mpas_derived_types
       use mpas_pool_routines
@@ -11982,6 +12907,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -12008,6 +12935,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'lbc', newSubPool)
@@ -12266,6 +13195,39 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
             group_started = .false.
             if (associated(newSubPool)) then
                call mpas_pool_add_dimension(newSubPool, 'number_end', index_counter)
+            end if
+         end if
+! End of group       
+! Starting group turbulence
+! Define constituent var lbc_tke
+! My Packages are les
+      if (lesActive) then
+         index_counter = index_counter + 1
+         if (associated(newSubPool)) then
+            call mpas_pool_add_dimension(newSubPool, 'index_tke', index_counter)
+         end if
+         group_counter = group_counter + 1
+         if (.not. group_started) then
+            group_start = index_counter
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', group_start)
+            end if
+            group_started = .true.
+         end if
+      else
+           if (associated(newSubPool)) then
+              call mpas_pool_add_dimension(newSubPool, 'index_tke', -1)
+           end if
+      end if
+         if (.not. group_started) then
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_start', -1)
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', -1)
+            end if
+         else
+            group_started = .false.
+            if (associated(newSubPool)) then
+               call mpas_pool_add_dimension(newSubPool, 'turbulence_end', index_counter)
             end if
          end if
 ! End of group       
@@ -12963,6 +13925,12 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
          r3aPtr(1) % constituentNames(const_index) = 'lbc_nwfa'
       end if
       if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+         r3aPtr(1) % constituentNames(const_index) = 'lbc_tke'
+      end if
+      if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_lbc_qbcphobic', const_index)
       end if
       if (const_index > 0) then
@@ -13260,6 +14228,15 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
 &aerosol number concentration')
          r3aPtr(1) % missingValue = MPAS_REAL_FILLVAL
          r3aPtr(1) % constituentNames(const_index) = 'lbc_nwfa'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3aPtr(1) % attLists(const_index) % attList, 'units', 'm^2 s^{-3}')
+      call mpas_add_att(r3aPtr(1) % attLists(const_index) % attList, 'long_name', 'Lateral boundary tendency of TKE')
+         r3aPtr(1) % missingValue = MPAS_REAL_FILLVAL
+         r3aPtr(1) % constituentNames(const_index) = 'lbc_tke'
       end if
       if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_lbc_qbcphobic', const_index)
@@ -13638,6 +14615,12 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
          r3aPtr(2) % constituentNames(const_index) = 'lbc_nwfa'
       end if
       if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+         r3aPtr(2) % constituentNames(const_index) = 'lbc_tke'
+      end if
+      if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_lbc_qbcphobic', const_index)
       end if
       if (const_index > 0) then
@@ -13935,6 +14918,15 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
 &aerosol number concentration')
          r3aPtr(2) % missingValue = MPAS_REAL_FILLVAL
          r3aPtr(2) % constituentNames(const_index) = 'lbc_nwfa'
+      end if
+      if (associated(newSubPool)) then
+         call mpas_pool_get_dimension(newSubPool, 'index_tke', const_index)
+      end if
+      if (const_index > 0) then
+      call mpas_add_att(r3aPtr(2) % attLists(const_index) % attList, 'units', 'm^2 s^{-3}')
+      call mpas_add_att(r3aPtr(2) % attLists(const_index) % attList, 'long_name', 'Lateral boundary tendency of TKE')
+         r3aPtr(2) % missingValue = MPAS_REAL_FILLVAL
+         r3aPtr(2) % constituentNames(const_index) = 'lbc_tke'
       end if
       if (associated(newSubPool)) then
          call mpas_pool_get_dimension(newSubPool, 'index_lbc_qbcphobic', const_index)
@@ -14239,7 +15231,7 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r3aPtr(2) % block => block
 
       if (limited_areaActive .or. bl_mynn_inActive .or. cu_ntiedtke_inActive .or. mp_kessler_inActive .or. mp_gocart2G_inActive &
-.or. mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
+.or. mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive .or. lesActive) then
          r3aPtr(1) % isActive = .true.
          r3aPtr(2) % isActive = .true.
       end if
@@ -14690,6 +15682,8 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -14716,6 +15710,8 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'halo_scratch', newSubPool)
@@ -14821,6 +15817,8 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -14847,6 +15845,8 @@ mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'diag_physics', newSubPool)
@@ -17105,7 +18105,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (bl_mynn_inActive .or. bl_ysu_inActive .or. sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'hpbl', r1Ptr)
@@ -17977,7 +18977,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'hfx', r1Ptr)
@@ -18003,7 +19003,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'mavail', r1Ptr)
@@ -18029,7 +19029,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'mol', r1Ptr)
@@ -18055,7 +19055,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'qfx', r1Ptr)
@@ -18081,7 +19081,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'qsfc', r1Ptr)
@@ -18107,7 +19107,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'ust', r1Ptr)
@@ -18133,7 +19133,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'ustm', r1Ptr)
@@ -18159,7 +19159,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'zol', r1Ptr)
@@ -18185,7 +19185,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'br', r1Ptr)
@@ -18211,7 +19211,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'cd', r1Ptr)
@@ -18237,7 +19237,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'cda', r1Ptr)
@@ -18263,7 +19263,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'chs', r1Ptr)
@@ -18289,7 +19289,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'chs2', r1Ptr)
@@ -18315,7 +19315,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'cqs2', r1Ptr)
@@ -18341,7 +19341,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'ck', r1Ptr)
@@ -18367,7 +19367,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'cka', r1Ptr)
@@ -18394,7 +19394,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'cpm', r1Ptr)
@@ -18420,7 +19420,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'flhc', r1Ptr)
@@ -18446,7 +19446,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'flqc', r1Ptr)
@@ -18472,7 +19472,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'gz1oz0', r1Ptr)
@@ -18498,7 +19498,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'lh', r1Ptr)
@@ -18524,7 +19524,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'psim', r1Ptr)
@@ -18550,7 +19550,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'psih', r1Ptr)
@@ -18576,7 +19576,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'qgh', r1Ptr)
@@ -18602,7 +19602,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'regime', r1Ptr)
@@ -18628,7 +19628,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'rmol', r1Ptr)
@@ -18654,7 +19654,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'wspd', r1Ptr)
@@ -18680,7 +19680,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'fh', r1Ptr)
@@ -18706,7 +19706,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'fm', r1Ptr)
@@ -18732,7 +19732,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'ch', r1Ptr)
@@ -18758,7 +19758,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'qcg', r1Ptr)
@@ -18838,7 +19838,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'u10', r1Ptr)
@@ -18864,7 +19864,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'v10', r1Ptr)
@@ -18890,7 +19890,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'q2', r1Ptr)
@@ -18916,7 +19916,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 't2m', r1Ptr)
@@ -18942,7 +19942,7 @@ mp_wsm6_inActive) then
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
 
-      if (bl_mynn_inActive .or. bl_ysu_inActive) then
+      if (sfclayerActive) then
          r1Ptr % isActive = .true.
       end if
       call mpas_pool_add_field(newSubPool, 'th2m', r1Ptr)
@@ -18963,7 +19963,7 @@ mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'Pa m s^{-1}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'Pa')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'vertically-integrated gravity wave drag over orography &
 &u-stress')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
@@ -18988,7 +19988,7 @@ mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'Pa m s^{-1}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'Pa')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'vertically-integrated gravity wave drag over orography &
 &v-stress')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
@@ -19226,7 +20226,7 @@ mp_wsm6_inActive) then
       r2Ptr % defaultValue = 0.0
       allocate(r2Ptr % attLists(1))
       allocate(r2Ptr % attLists(1) % attList)
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-2}')
       call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'gravity wave drag over orography u-stress')
       r2Ptr % missingValue = MPAS_REAL_FILLVAL
       r2Ptr % block => block
@@ -19251,7 +20251,7 @@ mp_wsm6_inActive) then
       r2Ptr % defaultValue = 0.0
       allocate(r2Ptr % attLists(1))
       allocate(r2Ptr % attLists(1) % attList)
-      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-1}')
+      call mpas_add_att(r2Ptr % attLists(1) % attList, 'units', 'm s^{-2}')
       call mpas_add_att(r2Ptr % attLists(1) % attList, 'long_name', 'gravity wave drag over orography v-stress')
       r2Ptr % missingValue = MPAS_REAL_FILLVAL
       r2Ptr % block => block
@@ -23679,6 +24679,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -23705,6 +24707,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'tend_physics', newSubPool)
@@ -25612,6 +26616,27 @@ mp_wsm6_inActive) then
       call mpas_pool_add_field(newSubPool, 'cu_chemistry', r3Ptr)
       call mpas_pool_add_field(block % allFields, 'cu_chemistry', r3Ptr)
 
+! Define variable mp_top_level
+      allocate(i0Ptr)
+
+! Setting up time level 1
+      i0Ptr % fieldName = 'mp_top_level'
+      i0Ptr % isVarArray = .false.
+      i0Ptr % isDecomposed = .false.
+      i0Ptr % hasTimeDimension = .false.
+      i0Ptr % defaultValue = 0
+      i0Ptr % scalar = 0
+      allocate(i0Ptr % attLists(1))
+      allocate(i0Ptr % attLists(1) % attList)
+      call mpas_add_att(i0Ptr % attLists(1) % attList, 'units', '-')
+      call mpas_add_att(i0Ptr % attLists(1) % attList, 'long_name', 'Vertical layer above which microphysics tendency is ignored')
+      i0Ptr % missingValue = MPAS_INT_FILLVAL
+      i0Ptr % block => block
+
+      i0Ptr % isActive = .true.
+      call mpas_pool_add_field(newSubPool, 'mp_top_level', i0Ptr)
+      call mpas_pool_add_field(block % allFields, 'mp_top_level', i0Ptr)
+
 ! Define variable tend_ru_physics
       allocate(r2Ptr)
 
@@ -26811,6 +27836,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -26837,6 +27864,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'atm_input', newSubPool)
@@ -26968,6 +27997,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -26994,6 +28025,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'ngw_input', newSubPool)
@@ -27260,6 +28293,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -27286,6 +28321,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'sfc_input', newSubPool)
@@ -28840,6 +29877,8 @@ mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -28866,6 +29905,8 @@ mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'tend_iau', newSubPool)
@@ -29292,6 +30333,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -29318,6 +30361,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'diag_physics_noahmp', newSubPool)
@@ -30994,6 +32039,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -31020,6 +32067,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'output_noahmp', newSubPool)
@@ -33521,6 +34570,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -33547,6 +34598,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'gocart2G_backgrounds', newSubPool)
@@ -33902,6 +34955,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -33928,6 +34983,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'gocart2G_met', newSubPool)
@@ -34031,6 +35088,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -34057,6 +35116,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CAMS_anth_emissions', newSubPool)
@@ -34640,6 +35701,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -34666,6 +35729,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CAMS_biog_emissions', newSubPool)
@@ -34865,6 +35930,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -34891,6 +35958,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'FINN_biob_emissions', newSubPool)
@@ -35138,6 +36207,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -35164,6 +36235,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'anth_emissions', newSubPool)
@@ -36125,6 +37198,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -36151,6 +37226,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'biob_emissions', newSubPool)
@@ -36398,6 +37475,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -36424,6 +37503,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'biog_emissions', newSubPool)
@@ -36695,6 +37776,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -36721,6 +37804,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'GOCART2G_diags', newSubPool)
@@ -36944,6 +38029,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -36970,6 +38057,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'GOCART2G_aops', newSubPool)
@@ -37514,6 +38603,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -37540,6 +38631,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CA2G_bc_diags', newSubPool)
@@ -37825,7 +38918,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of hydrophobic black carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -37849,7 +38942,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of hydrophilic black carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -37873,7 +38966,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of hydrophobic black carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -37897,7 +38990,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of hydrophilic black carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -38126,6 +39219,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -38152,6 +39247,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CA2G_bc_aops', newSubPool)
@@ -38568,6 +39665,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -38594,6 +39693,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CA2G_br_diags', newSubPool)
@@ -38879,7 +39980,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of hydrophobic brown carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -38903,7 +40004,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of hydrophilic brown carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -38927,7 +40028,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of hydrophobic brown carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -38951,7 +40052,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of hydrophilic brown carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -39180,6 +40281,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -39206,6 +40309,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CA2G_br_aops', newSubPool)
@@ -39646,6 +40751,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -39672,6 +40779,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CA2G_oc_diags', newSubPool)
@@ -39957,7 +41066,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of hydrophobic organic carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -39981,7 +41090,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of hydrophilic organic carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -40005,7 +41114,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of hydrophobic organic carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -40029,7 +41138,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of hydrophilic organic carbon aerosols')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -40258,6 +41367,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -40284,6 +41395,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'CA2G_oc_aops', newSubPool)
@@ -40724,6 +41837,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -40750,6 +41865,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'DU2G_diags', newSubPool)
@@ -41130,7 +42247,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of dust in size bin 1 [0.1um-1.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41154,7 +42271,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of dust in size bin 2 [1.0um-1.8um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41178,7 +42295,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of dust in size bin 3 [1.8um-3.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41202,7 +42319,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of dust in size bin 4 [3.0um-6.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41226,7 +42343,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of dust in size bin 5 [6.0um-10.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41250,7 +42367,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of dust in size bin 1 [0.1um-1.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41274,7 +42391,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of dust in size bin 2 [1.0um-1.8um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41298,7 +42415,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of dust in size bin 3 [1.8um-3.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41322,7 +42439,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of dust in size bin 4 [3.0um-6.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41346,7 +42463,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of dust in size bin 5 [6.0um-10.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -41648,6 +42765,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -41674,6 +42793,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'DU2G_aops', newSubPool)
@@ -42190,6 +43311,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -42216,6 +43339,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'NI2G_diags', newSubPool)
@@ -42728,7 +43853,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of nitrate in size bin 1 []')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -42752,7 +43877,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of nitrate in size bin 2 []')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -42776,7 +43901,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of nitrate in size bin 3 []')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -42800,7 +43925,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of nitrate in size bin 1 []')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -42824,7 +43949,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of nitrate in size bin 2 []')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -42848,7 +43973,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of nitrate in size bin 3 []')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -42920,7 +44045,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of ammonia')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -42944,7 +44069,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of ammonia')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -43016,7 +44141,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of ammonium')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -43040,7 +44165,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of ammonium')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -43435,6 +44560,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -43461,6 +44588,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'NI2G_aops', newSubPool)
@@ -43953,6 +45082,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -43979,6 +45110,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'SS2G_diags', newSubPool)
@@ -44359,7 +45492,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of sea-salt in size bin 1 [0.03um-0.1um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -44383,7 +45516,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of sea-salt in size bin 2 [0.1um-0.5um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -44407,7 +45540,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of sea-salt in size bin 3 [0.5um-1.5um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -44431,7 +45564,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of sea-salt in size bin 4 [1.5um-5.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -44455,7 +45588,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of sea-salt in size bin 5 [5.0um-10.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -44479,7 +45612,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of sea-salt in size bin 1 &
 &[0.03um-0.1um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
@@ -44504,7 +45637,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of sea-salt in size bin 2 &
 &[0.1um-0.5um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
@@ -44529,7 +45662,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of sea-salt in size bin 3 &
 &[0.5um-1.5um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
@@ -44554,7 +45687,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of sea-salt in size bin 4 &
 &[1.5um-5.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
@@ -44579,7 +45712,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of sea-salt in size bin 5 &
 &[5.0um-10.0um]')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
@@ -44882,6 +46015,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -44908,6 +46043,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'SS2G_aops', newSubPool)
@@ -45424,6 +46561,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -45450,6 +46589,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'SU2G_diags', newSubPool)
@@ -45878,7 +47019,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of DMS')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -45902,7 +47043,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of SO2')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -45926,7 +47067,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of SO4')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -45950,7 +47091,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Wet deposition of MSA')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -45974,7 +47115,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of DMS')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -45998,7 +47139,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of SO2')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -46022,7 +47163,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of SO4')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -46046,7 +47187,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       r1Ptr % defaultValue = 0.0
       allocate(r1Ptr % attLists(1))
       allocate(r1Ptr % attLists(1) % attList)
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2}')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', 'kg m^{-2} s^{-1}')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'Convective scavenging of MSA')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -46242,7 +47383,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       allocate(r1Ptr % attLists(1) % attList)
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'kg', '')
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-3}"', '')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-2}"', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'SO2 column mass density')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -46294,7 +47435,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       allocate(r1Ptr % attLists(1) % attList)
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'kg', '')
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-3}"', '')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-2}"', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'SO4 column mass density')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -46346,7 +47487,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       allocate(r1Ptr % attLists(1) % attList)
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'kg', '')
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-3}"', '')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-2}"', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'DMS column mass density')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -46398,7 +47539,7 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       allocate(r1Ptr % attLists(1) % attList)
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'units', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'kg', '')
-      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-3}"', '')
+      call mpas_add_att(r1Ptr % attLists(1) % attList, 'm^{-2}"', '')
       call mpas_add_att(r1Ptr % attLists(1) % attList, 'long_name', 'MSA column mass density')
       r1Ptr % missingValue = MPAS_REAL_FILLVAL
       r1Ptr % block => block
@@ -46707,6 +47848,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       logical, pointer :: ugwp_orog_streamActive
       logical, pointer :: ugwp_ngw_streamActive
       logical, pointer :: ugwp_diags_streamActive
+      logical, pointer :: lesActive
+      logical, pointer :: sfclayerActive
 
 
       integer :: numConstituents
@@ -46733,6 +47876,8 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
       call mpas_pool_get_package(packagePool, 'ugwp_orog_streamActive', ugwp_orog_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_ngw_streamActive', ugwp_ngw_streamActive)
       call mpas_pool_get_package(packagePool, 'ugwp_diags_streamActive', ugwp_diags_streamActive)
+      call mpas_pool_get_package(packagePool, 'lesActive', lesActive)
+      call mpas_pool_get_package(packagePool, 'sfclayerActive', sfclayerActive)
 
       call mpas_pool_create_pool(newSubPool)
       call mpas_pool_add_subpool(structPool, 'SU2G_aops', newSubPool)
@@ -47077,9 +48222,13 @@ mp_thompson_inActive .or. mp_thompson_aers_inActive .or. mp_wsm6_inActive) then
 
       call atm_generate_pool_state(block, structPool, dimensionPool, packagePool)
 
+      call atm_generate_pool_fdda(block, structPool, dimensionPool, packagePool)
+
       call atm_generate_pool_diag(block, structPool, dimensionPool, packagePool)
 
       call atm_generate_pool_tend(block, structPool, dimensionPool, packagePool)
+
+      call atm_generate_pool_tend_fdda(block, structPool, dimensionPool, packagePool)
 
       call atm_generate_pool_lbc(block, structPool, dimensionPool, packagePool)
 

@@ -26,4 +26,6 @@
       call mpas_pool_add_package(packagePool, 'ugwp_orog_streamActive', .false.)
       call mpas_pool_add_package(packagePool, 'ugwp_ngw_streamActive', .false.)
       call mpas_pool_add_package(packagePool, 'ugwp_diags_streamActive', .false.)
+      call mpas_pool_add_package(packagePool, 'lesActive', .false.)
+      call mpas_pool_add_package(packagePool, 'sfclayerActive', .false.)
    end function atm_define_packages

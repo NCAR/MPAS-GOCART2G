@@ -15,8 +15,14 @@
       real (kind=RKIND), pointer :: config_h_theta_eddy_visc4
       real (kind=RKIND), pointer :: config_v_theta_eddy_visc2
       character (len=StrKIND), pointer :: config_horiz_mixing
+      character (len=StrKIND), pointer :: config_les_model
+      character (len=StrKIND), pointer :: config_les_surface
+      real (kind=RKIND), pointer :: config_surface_heat_flux
+      real (kind=RKIND), pointer :: config_surface_moisture_flux
+      real (kind=RKIND), pointer :: config_surface_drag_coefficient
       real (kind=RKIND), pointer :: config_len_disp
       real (kind=RKIND), pointer :: config_visc4_2dsmag
+      logical, pointer :: config_mix_scalars
       real (kind=RKIND), pointer :: config_del4u_div_factor
       integer, pointer :: config_w_adv_order
       integer, pointer :: config_theta_adv_order
@@ -45,6 +51,10 @@
       logical, pointer :: config_rayleigh_damp_u
       real (kind=RKIND), pointer :: config_rayleigh_damp_u_timescale_days
       integer, pointer :: config_number_rayleigh_damp_u_levels
+      real (kind=RKIND), pointer :: config_epssm_minimum
+      real (kind=RKIND), pointer :: config_epssm_maximum
+      real (kind=RKIND), pointer :: config_epssm_transition_bottom_z
+      real (kind=RKIND), pointer :: config_epssm_transition_top_z
 
       logical, pointer :: config_apply_lbcs
 
@@ -64,12 +74,30 @@
       logical, pointer :: config_print_detailed_minmax_vel
       logical, pointer :: config_print_global_minmax_sca
 
+      character (len=StrKIND), pointer :: config_fdda_scheme
+      real (kind=RKIND), pointer :: config_fdda_int
+      real (kind=RKIND), pointer :: config_fdda_scale_min
+      real (kind=RKIND), pointer :: config_fdda_scale_max
+      logical, pointer :: config_fdda_t
+      real (kind=RKIND), pointer :: config_fdda_t_coef
+      logical, pointer :: config_fdda_t_in_pbl
+      integer, pointer :: config_fdda_t_min_layer
+      logical, pointer :: config_fdda_q
+      real (kind=RKIND), pointer :: config_fdda_q_coef
+      logical, pointer :: config_fdda_q_in_pbl
+      integer, pointer :: config_fdda_q_min_layer
+      logical, pointer :: config_fdda_uv
+      real (kind=RKIND), pointer :: config_fdda_uv_coef
+      logical, pointer :: config_fdda_uv_in_pbl
+      integer, pointer :: config_fdda_uv_min_layer
+
       character (len=StrKIND), pointer :: config_IAU_option
       real (kind=RKIND), pointer :: config_IAU_window_length_s
 
       logical, pointer :: config_jedi_da
 
       character (len=StrKIND), pointer :: config_halo_exch_method
+      logical, pointer :: config_gpu_aware_mpi
 
       character (len=StrKIND), pointer :: input_soil_data
       integer, pointer :: input_soil_temperature_lag
@@ -89,6 +117,7 @@
       logical, pointer :: config_ysu_pblmix
       logical, pointer :: config_urban_physics
       integer, pointer :: config_n_microp
+      real (kind=RKIND), pointer :: config_microphysics_top
       character (len=StrKIND), pointer :: config_radtlw_interval
       character (len=StrKIND), pointer :: config_radtsw_interval
       character (len=StrKIND), pointer :: config_conv_interval

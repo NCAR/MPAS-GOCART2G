@@ -29,6 +29,7 @@
       call atm_setup_nmlrec_decomposition(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_restart(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_printout(configPool, unitNumber, dminfo)
+      call atm_setup_nmlrec_nudging(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_IAU(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_assimilation(configPool, unitNumber, dminfo)
       call atm_setup_nmlrec_development(configPool, unitNumber, dminfo)

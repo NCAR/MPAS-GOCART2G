@@ -31,6 +31,8 @@
       call mpas_pool_get_config(configPool, 'config_use_spechumd', config_use_spechumd)
 
       call mpas_pool_get_config(configPool, 'config_ztop', config_ztop)
+      call mpas_pool_get_config(configPool, 'config_hybrid_coordinate', config_hybrid_coordinate)
+      call mpas_pool_get_config(configPool, 'config_hybrid_top_z', config_hybrid_top_z)
       call mpas_pool_get_config(configPool, 'config_nsmterrain', config_nsmterrain)
       call mpas_pool_get_config(configPool, 'config_smooth_surfaces', config_smooth_surfaces)
       call mpas_pool_get_config(configPool, 'config_dzmin', config_dzmin)

@@ -24,8 +24,14 @@
       real (kind=RKIND) :: config_h_theta_eddy_visc4 = 0.000000
       real (kind=RKIND) :: config_v_theta_eddy_visc2 = 0.000000
       character (len=StrKIND) :: config_horiz_mixing = '2d_smagorinsky'
+      character (len=StrKIND) :: config_les_model = 'none'
+      character (len=StrKIND) :: config_les_surface = 'none'
+      real (kind=RKIND) :: config_surface_heat_flux = 0.000000
+      real (kind=RKIND) :: config_surface_moisture_flux = 0.000000
+      real (kind=RKIND) :: config_surface_drag_coefficient = 0.000000
       real (kind=RKIND) :: config_len_disp = 0.000000
       real (kind=RKIND) :: config_visc4_2dsmag = 0.050000
+      logical :: config_mix_scalars = .false.
       real (kind=RKIND) :: config_del4u_div_factor = 10.000000
       integer :: config_w_adv_order = 3
       integer :: config_theta_adv_order = 3
@@ -40,7 +46,7 @@
       real (kind=RKIND) :: config_coef_3rd_order = 0.250000
       real (kind=RKIND) :: config_smagorinsky_coef = 0.125000
       logical :: config_mix_full = .true.
-      real (kind=RKIND) :: config_epssm = 0.100000
+      real (kind=RKIND) :: config_epssm = 0.000000
       real (kind=RKIND) :: config_smdiv = 0.100000
       real (kind=RKIND) :: config_apvm_upwinding = 0.500000
       logical :: config_h_ScaleWithMesh = .true.
@@ -65,8 +71,14 @@
          config_h_theta_eddy_visc4, &
          config_v_theta_eddy_visc2, &
          config_horiz_mixing, &
+         config_les_model, &
+         config_les_surface, &
+         config_surface_heat_flux, &
+         config_surface_moisture_flux, &
+         config_surface_drag_coefficient, &
          config_len_disp, &
          config_visc4_2dsmag, &
+         config_mix_scalars, &
          config_del4u_div_factor, &
          config_w_adv_order, &
          config_theta_adv_order, &
@@ -115,8 +127,14 @@
          call mpas_dmpar_bcast_real(dminfo, config_h_theta_eddy_visc4)
          call mpas_dmpar_bcast_real(dminfo, config_v_theta_eddy_visc2)
          call mpas_dmpar_bcast_char(dminfo, config_horiz_mixing)
+         call mpas_dmpar_bcast_char(dminfo, config_les_model)
+         call mpas_dmpar_bcast_char(dminfo, config_les_surface)
+         call mpas_dmpar_bcast_real(dminfo, config_surface_heat_flux)
+         call mpas_dmpar_bcast_real(dminfo, config_surface_moisture_flux)
+         call mpas_dmpar_bcast_real(dminfo, config_surface_drag_coefficient)
          call mpas_dmpar_bcast_real(dminfo, config_len_disp)
          call mpas_dmpar_bcast_real(dminfo, config_visc4_2dsmag)
+         call mpas_dmpar_bcast_logical(dminfo, config_mix_scalars)
          call mpas_dmpar_bcast_real(dminfo, config_del4u_div_factor)
          call mpas_dmpar_bcast_int(dminfo, config_w_adv_order)
          call mpas_dmpar_bcast_int(dminfo, config_theta_adv_order)
@@ -158,8 +176,14 @@
             call mpas_log_write('        config_h_theta_eddy_visc4 = $r', realArgs=(/config_h_theta_eddy_visc4/))
             call mpas_log_write('        config_v_theta_eddy_visc2 = $r', realArgs=(/config_v_theta_eddy_visc2/))
             call mpas_log_write('        config_horiz_mixing = '//mpas_log_escape_dollars(config_horiz_mixing))
+            call mpas_log_write('        config_les_model = '//mpas_log_escape_dollars(config_les_model))
+            call mpas_log_write('        config_les_surface = '//mpas_log_escape_dollars(config_les_surface))
+            call mpas_log_write('        config_surface_heat_flux = $r', realArgs=(/config_surface_heat_flux/))
+            call mpas_log_write('        config_surface_moisture_flux = $r', realArgs=(/config_surface_moisture_flux/))
+            call mpas_log_write('        config_surface_drag_coefficient = $r', realArgs=(/config_surface_drag_coefficient/))
             call mpas_log_write('        config_len_disp = $r', realArgs=(/config_len_disp/))
             call mpas_log_write('        config_visc4_2dsmag = $r', realArgs=(/config_visc4_2dsmag/))
+            call mpas_log_write('        config_mix_scalars = $l', logicArgs=(/config_mix_scalars/))
             call mpas_log_write('        config_del4u_div_factor = $r', realArgs=(/config_del4u_div_factor/))
             call mpas_log_write('        config_w_adv_order = $i', intArgs=(/config_w_adv_order/))
             call mpas_log_write('        config_theta_adv_order = $i', intArgs=(/config_theta_adv_order/))
@@ -203,8 +227,14 @@
       call mpas_pool_add_config(configPool, 'config_h_theta_eddy_visc4', config_h_theta_eddy_visc4)
       call mpas_pool_add_config(configPool, 'config_v_theta_eddy_visc2', config_v_theta_eddy_visc2)
       call mpas_pool_add_config(configPool, 'config_horiz_mixing', config_horiz_mixing)
+      call mpas_pool_add_config(configPool, 'config_les_model', config_les_model)
+      call mpas_pool_add_config(configPool, 'config_les_surface', config_les_surface)
+      call mpas_pool_add_config(configPool, 'config_surface_heat_flux', config_surface_heat_flux)
+      call mpas_pool_add_config(configPool, 'config_surface_moisture_flux', config_surface_moisture_flux)
+      call mpas_pool_add_config(configPool, 'config_surface_drag_coefficient', config_surface_drag_coefficient)
       call mpas_pool_add_config(configPool, 'config_len_disp', config_len_disp)
       call mpas_pool_add_config(configPool, 'config_visc4_2dsmag', config_visc4_2dsmag)
+      call mpas_pool_add_config(configPool, 'config_mix_scalars', config_mix_scalars)
       call mpas_pool_add_config(configPool, 'config_del4u_div_factor', config_del4u_div_factor)
       call mpas_pool_add_config(configPool, 'config_w_adv_order', config_w_adv_order)
       call mpas_pool_add_config(configPool, 'config_theta_adv_order', config_theta_adv_order)
@@ -245,6 +275,10 @@
       logical :: config_rayleigh_damp_u = .false.
       real (kind=RKIND) :: config_rayleigh_damp_u_timescale_days = 5.000000
       integer :: config_number_rayleigh_damp_u_levels = 6
+      real (kind=RKIND) :: config_epssm_minimum = 0.100000
+      real (kind=RKIND) :: config_epssm_maximum = 0.500000
+      real (kind=RKIND) :: config_epssm_transition_bottom_z = 30000.000000
+      real (kind=RKIND) :: config_epssm_transition_top_z = 50000.000000
 
       namelist /damping/ &
          config_zd, &
@@ -253,7 +287,11 @@
          config_number_cam_damping_levels, &
          config_rayleigh_damp_u, &
          config_rayleigh_damp_u_timescale_days, &
-         config_number_rayleigh_damp_u_levels
+         config_number_rayleigh_damp_u_levels, &
+         config_epssm_minimum, &
+         config_epssm_maximum, &
+         config_epssm_transition_bottom_z, &
+         config_epssm_transition_top_z
       if (dminfo % my_proc_id == IO_NODE) then
 ! Rewinding before each read leads to errors when the code is built with
 ! the NAG Fortran compiler. If building with NAG, be kind and don't rewind.
@@ -272,6 +310,10 @@
          call mpas_dmpar_bcast_logical(dminfo, config_rayleigh_damp_u)
          call mpas_dmpar_bcast_real(dminfo, config_rayleigh_damp_u_timescale_days)
          call mpas_dmpar_bcast_int(dminfo, config_number_rayleigh_damp_u_levels)
+         call mpas_dmpar_bcast_real(dminfo, config_epssm_minimum)
+         call mpas_dmpar_bcast_real(dminfo, config_epssm_maximum)
+         call mpas_dmpar_bcast_real(dminfo, config_epssm_transition_bottom_z)
+         call mpas_dmpar_bcast_real(dminfo, config_epssm_transition_top_z)
          if (ierr < 0) then
             call mpas_log_write('*** Encountered an issue while attempting to read namelist record damping')
             call mpas_log_write('    The following values will be used for variables in this record:')
@@ -285,6 +327,10 @@
 realArgs=(/config_rayleigh_damp_u_timescale_days/))
             call mpas_log_write('        config_number_rayleigh_damp_u_levels = $i', &
 intArgs=(/config_number_rayleigh_damp_u_levels/))
+            call mpas_log_write('        config_epssm_minimum = $r', realArgs=(/config_epssm_minimum/))
+            call mpas_log_write('        config_epssm_maximum = $r', realArgs=(/config_epssm_maximum/))
+            call mpas_log_write('        config_epssm_transition_bottom_z = $r', realArgs=(/config_epssm_transition_bottom_z/))
+            call mpas_log_write('        config_epssm_transition_top_z = $r', realArgs=(/config_epssm_transition_top_z/))
             call mpas_log_write(' ')
          end if
       else if (ierr > 0) then
@@ -298,6 +344,10 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
       call mpas_pool_add_config(configPool, 'config_rayleigh_damp_u', config_rayleigh_damp_u)
       call mpas_pool_add_config(configPool, 'config_rayleigh_damp_u_timescale_days', config_rayleigh_damp_u_timescale_days)
       call mpas_pool_add_config(configPool, 'config_number_rayleigh_damp_u_levels', config_number_rayleigh_damp_u_levels)
+      call mpas_pool_add_config(configPool, 'config_epssm_minimum', config_epssm_minimum)
+      call mpas_pool_add_config(configPool, 'config_epssm_maximum', config_epssm_maximum)
+      call mpas_pool_add_config(configPool, 'config_epssm_transition_bottom_z', config_epssm_transition_bottom_z)
+      call mpas_pool_add_config(configPool, 'config_epssm_transition_top_z', config_epssm_transition_top_z)
 
    end subroutine atm_setup_nmlrec_damping
 
@@ -549,6 +599,122 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
    end subroutine atm_setup_nmlrec_printout
 
 
+   subroutine atm_setup_nmlrec_nudging(configPool, unitNumber, dminfo)
+      use mpas_log, only : mpas_log_write, mpas_log_escape_dollars
+      implicit none
+      type (mpas_pool_type), intent(inout) :: configPool
+      integer, intent(in) :: unitNumber
+      type (dm_info), intent(in) :: dminfo
+      type (mpas_pool_type), pointer :: recordPool
+      integer :: ierr
+
+      character (len=StrKIND) :: config_fdda_scheme = 'off'
+      real (kind=RKIND) :: config_fdda_int = 21600.000000
+      real (kind=RKIND) :: config_fdda_scale_min = 0.000000
+      real (kind=RKIND) :: config_fdda_scale_max = 100000.000000
+      logical :: config_fdda_t = .false.
+      real (kind=RKIND) :: config_fdda_t_coef = 0.000300
+      logical :: config_fdda_t_in_pbl = .true.
+      integer :: config_fdda_t_min_layer = 0
+      logical :: config_fdda_q = .false.
+      real (kind=RKIND) :: config_fdda_q_coef = 0.000300
+      logical :: config_fdda_q_in_pbl = .true.
+      integer :: config_fdda_q_min_layer = 0
+      logical :: config_fdda_uv = .false.
+      real (kind=RKIND) :: config_fdda_uv_coef = 0.000300
+      logical :: config_fdda_uv_in_pbl = .true.
+      integer :: config_fdda_uv_min_layer = 0
+
+      namelist /nudging/ &
+         config_fdda_scheme, &
+         config_fdda_int, &
+         config_fdda_scale_min, &
+         config_fdda_scale_max, &
+         config_fdda_t, &
+         config_fdda_t_coef, &
+         config_fdda_t_in_pbl, &
+         config_fdda_t_min_layer, &
+         config_fdda_q, &
+         config_fdda_q_coef, &
+         config_fdda_q_in_pbl, &
+         config_fdda_q_min_layer, &
+         config_fdda_uv, &
+         config_fdda_uv_coef, &
+         config_fdda_uv_in_pbl, &
+         config_fdda_uv_min_layer
+      if (dminfo % my_proc_id == IO_NODE) then
+! Rewinding before each read leads to errors when the code is built with
+! the NAG Fortran compiler. If building with NAG, be kind and don't rewind.
+#ifndef NAG_COMPILER
+         rewind(unitNumber)
+#endif
+         read(unitNumber, nudging, iostat=ierr)
+      end if
+      call mpas_dmpar_bcast_int(dminfo, ierr)
+
+      if (ierr <= 0) then
+         call mpas_dmpar_bcast_char(dminfo, config_fdda_scheme)
+         call mpas_dmpar_bcast_real(dminfo, config_fdda_int)
+         call mpas_dmpar_bcast_real(dminfo, config_fdda_scale_min)
+         call mpas_dmpar_bcast_real(dminfo, config_fdda_scale_max)
+         call mpas_dmpar_bcast_logical(dminfo, config_fdda_t)
+         call mpas_dmpar_bcast_real(dminfo, config_fdda_t_coef)
+         call mpas_dmpar_bcast_logical(dminfo, config_fdda_t_in_pbl)
+         call mpas_dmpar_bcast_int(dminfo, config_fdda_t_min_layer)
+         call mpas_dmpar_bcast_logical(dminfo, config_fdda_q)
+         call mpas_dmpar_bcast_real(dminfo, config_fdda_q_coef)
+         call mpas_dmpar_bcast_logical(dminfo, config_fdda_q_in_pbl)
+         call mpas_dmpar_bcast_int(dminfo, config_fdda_q_min_layer)
+         call mpas_dmpar_bcast_logical(dminfo, config_fdda_uv)
+         call mpas_dmpar_bcast_real(dminfo, config_fdda_uv_coef)
+         call mpas_dmpar_bcast_logical(dminfo, config_fdda_uv_in_pbl)
+         call mpas_dmpar_bcast_int(dminfo, config_fdda_uv_min_layer)
+         if (ierr < 0) then
+            call mpas_log_write('*** Encountered an issue while attempting to read namelist record nudging')
+            call mpas_log_write('    The following values will be used for variables in this record:')
+            call mpas_log_write(' ')
+            call mpas_log_write('        config_fdda_scheme = '//mpas_log_escape_dollars(config_fdda_scheme))
+            call mpas_log_write('        config_fdda_int = $r', realArgs=(/config_fdda_int/))
+            call mpas_log_write('        config_fdda_scale_min = $r', realArgs=(/config_fdda_scale_min/))
+            call mpas_log_write('        config_fdda_scale_max = $r', realArgs=(/config_fdda_scale_max/))
+            call mpas_log_write('        config_fdda_t = $l', logicArgs=(/config_fdda_t/))
+            call mpas_log_write('        config_fdda_t_coef = $r', realArgs=(/config_fdda_t_coef/))
+            call mpas_log_write('        config_fdda_t_in_pbl = $l', logicArgs=(/config_fdda_t_in_pbl/))
+            call mpas_log_write('        config_fdda_t_min_layer = $i', intArgs=(/config_fdda_t_min_layer/))
+            call mpas_log_write('        config_fdda_q = $l', logicArgs=(/config_fdda_q/))
+            call mpas_log_write('        config_fdda_q_coef = $r', realArgs=(/config_fdda_q_coef/))
+            call mpas_log_write('        config_fdda_q_in_pbl = $l', logicArgs=(/config_fdda_q_in_pbl/))
+            call mpas_log_write('        config_fdda_q_min_layer = $i', intArgs=(/config_fdda_q_min_layer/))
+            call mpas_log_write('        config_fdda_uv = $l', logicArgs=(/config_fdda_uv/))
+            call mpas_log_write('        config_fdda_uv_coef = $r', realArgs=(/config_fdda_uv_coef/))
+            call mpas_log_write('        config_fdda_uv_in_pbl = $l', logicArgs=(/config_fdda_uv_in_pbl/))
+            call mpas_log_write('        config_fdda_uv_min_layer = $i', intArgs=(/config_fdda_uv_min_layer/))
+            call mpas_log_write(' ')
+         end if
+      else if (ierr > 0) then
+         call mpas_log_write('Error while reading namelist record nudging.', MPAS_LOG_CRIT)
+      end if
+
+      call mpas_pool_add_config(configPool, 'config_fdda_scheme', config_fdda_scheme)
+      call mpas_pool_add_config(configPool, 'config_fdda_int', config_fdda_int)
+      call mpas_pool_add_config(configPool, 'config_fdda_scale_min', config_fdda_scale_min)
+      call mpas_pool_add_config(configPool, 'config_fdda_scale_max', config_fdda_scale_max)
+      call mpas_pool_add_config(configPool, 'config_fdda_t', config_fdda_t)
+      call mpas_pool_add_config(configPool, 'config_fdda_t_coef', config_fdda_t_coef)
+      call mpas_pool_add_config(configPool, 'config_fdda_t_in_pbl', config_fdda_t_in_pbl)
+      call mpas_pool_add_config(configPool, 'config_fdda_t_min_layer', config_fdda_t_min_layer)
+      call mpas_pool_add_config(configPool, 'config_fdda_q', config_fdda_q)
+      call mpas_pool_add_config(configPool, 'config_fdda_q_coef', config_fdda_q_coef)
+      call mpas_pool_add_config(configPool, 'config_fdda_q_in_pbl', config_fdda_q_in_pbl)
+      call mpas_pool_add_config(configPool, 'config_fdda_q_min_layer', config_fdda_q_min_layer)
+      call mpas_pool_add_config(configPool, 'config_fdda_uv', config_fdda_uv)
+      call mpas_pool_add_config(configPool, 'config_fdda_uv_coef', config_fdda_uv_coef)
+      call mpas_pool_add_config(configPool, 'config_fdda_uv_in_pbl', config_fdda_uv_in_pbl)
+      call mpas_pool_add_config(configPool, 'config_fdda_uv_min_layer', config_fdda_uv_min_layer)
+
+   end subroutine atm_setup_nmlrec_nudging
+
+
    subroutine atm_setup_nmlrec_IAU(configPool, unitNumber, dminfo)
       use mpas_log, only : mpas_log_write, mpas_log_escape_dollars
       implicit none
@@ -646,9 +812,11 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
       integer :: ierr
 
       character (len=StrKIND) :: config_halo_exch_method = 'mpas_halo'
+      logical :: config_gpu_aware_mpi = .false.
 
       namelist /development/ &
-         config_halo_exch_method
+         config_halo_exch_method, &
+         config_gpu_aware_mpi
       if (dminfo % my_proc_id == IO_NODE) then
 ! Rewinding before each read leads to errors when the code is built with
 ! the NAG Fortran compiler. If building with NAG, be kind and don't rewind.
@@ -661,11 +829,13 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
 
       if (ierr <= 0) then
          call mpas_dmpar_bcast_char(dminfo, config_halo_exch_method)
+         call mpas_dmpar_bcast_logical(dminfo, config_gpu_aware_mpi)
          if (ierr < 0) then
             call mpas_log_write('*** Encountered an issue while attempting to read namelist record development')
             call mpas_log_write('    The following values will be used for variables in this record:')
             call mpas_log_write(' ')
             call mpas_log_write('        config_halo_exch_method = '//mpas_log_escape_dollars(config_halo_exch_method))
+            call mpas_log_write('        config_gpu_aware_mpi = $l', logicArgs=(/config_gpu_aware_mpi/))
             call mpas_log_write(' ')
          end if
       else if (ierr > 0) then
@@ -673,6 +843,7 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
       end if
 
       call mpas_pool_add_config(configPool, 'config_halo_exch_method', config_halo_exch_method)
+      call mpas_pool_add_config(configPool, 'config_gpu_aware_mpi', config_gpu_aware_mpi)
 
    end subroutine atm_setup_nmlrec_development
 
@@ -704,6 +875,7 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
       logical :: config_ysu_pblmix = .false.
       logical :: config_urban_physics = .false.
       integer :: config_n_microp = 1
+      real (kind=RKIND) :: config_microphysics_top = 45000.000000
       character (len=StrKIND) :: config_radtlw_interval = '00:30:00'
       character (len=StrKIND) :: config_radtsw_interval = '00:30:00'
       character (len=StrKIND) :: config_conv_interval = 'none'
@@ -775,6 +947,7 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
          config_ysu_pblmix, &
          config_urban_physics, &
          config_n_microp, &
+         config_microphysics_top, &
          config_radtlw_interval, &
          config_radtsw_interval, &
          config_conv_interval, &
@@ -855,6 +1028,7 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
          call mpas_dmpar_bcast_logical(dminfo, config_ysu_pblmix)
          call mpas_dmpar_bcast_logical(dminfo, config_urban_physics)
          call mpas_dmpar_bcast_int(dminfo, config_n_microp)
+         call mpas_dmpar_bcast_real(dminfo, config_microphysics_top)
          call mpas_dmpar_bcast_char(dminfo, config_radtlw_interval)
          call mpas_dmpar_bcast_char(dminfo, config_radtsw_interval)
          call mpas_dmpar_bcast_char(dminfo, config_conv_interval)
@@ -928,6 +1102,7 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
             call mpas_log_write('        config_ysu_pblmix = $l', logicArgs=(/config_ysu_pblmix/))
             call mpas_log_write('        config_urban_physics = $l', logicArgs=(/config_urban_physics/))
             call mpas_log_write('        config_n_microp = $i', intArgs=(/config_n_microp/))
+            call mpas_log_write('        config_microphysics_top = $r', realArgs=(/config_microphysics_top/))
             call mpas_log_write('        config_radtlw_interval = '//mpas_log_escape_dollars(config_radtlw_interval))
             call mpas_log_write('        config_radtsw_interval = '//mpas_log_escape_dollars(config_radtsw_interval))
             call mpas_log_write('        config_conv_interval = '//mpas_log_escape_dollars(config_conv_interval))
@@ -1003,6 +1178,7 @@ intArgs=(/config_number_rayleigh_damp_u_levels/))
       call mpas_pool_add_config(configPool, 'config_ysu_pblmix', config_ysu_pblmix)
       call mpas_pool_add_config(configPool, 'config_urban_physics', config_urban_physics)
       call mpas_pool_add_config(configPool, 'config_n_microp', config_n_microp)
+      call mpas_pool_add_config(configPool, 'config_microphysics_top', config_microphysics_top)
       call mpas_pool_add_config(configPool, 'config_radtlw_interval', config_radtlw_interval)
       call mpas_pool_add_config(configPool, 'config_radtsw_interval', config_radtsw_interval)
       call mpas_pool_add_config(configPool, 'config_conv_interval', config_conv_interval)

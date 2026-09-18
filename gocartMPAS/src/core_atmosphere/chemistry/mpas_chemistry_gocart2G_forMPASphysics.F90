@@ -55,11 +55,15 @@
     real(kind=RKIND),dimension(:,:,:),pointer:: chemblten => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: chemcuten => null()
 
+! 20260421_rkumar_start
     logical,dimension(:),pointer :: is_aerosol => null()
     logical,dimension(:),pointer :: is_coarse  => null()
+! 20260421_rkumar_end
 
+! --- 20260428_rkumar_start ---
     ! Gas scavenging metadata (6 params for each species index nchem)
     real(kind=RKIND),dimension(:,:),pointer :: scav_data_gas => null()
+! --- 20260428_rkumar_end ---
 
     contains
        procedure:: gocart2G_dims       => gocart2G_forMPASphys_dims
@@ -193,11 +197,15 @@
  if(.not.associated(self%chemblten)) allocate(self%chemblten(its:ite,kts:kte,nchem))
  if(.not.associated(self%chemcuten)) allocate(self%chemcuten(its:ite,kts:kte,nchem))
 
+! 20260421_rkumar_start
  if(.not.associated(self%is_aerosol)) allocate(self%is_aerosol(nchem))
  if(.not.associated(self%is_coarse)) allocate(self%is_coarse(nchem))
+! 20260421_rkumar_end
 
+! --- 20260428_rkumar_start ---
  if(.not.associated(self%scav_data_gas)) allocate(self%scav_data_gas(6, nchem))
  self%scav_data_gas(:,:) = 0.0_RKIND ! Initialize to 0.0 (default for aerosols)
+! --- 20260428_rkumar_end ---
 
  call mpas_log_write('--- end subroutine gocart2G_forMPASphys_allocate.')
 
@@ -229,9 +237,11 @@
 
  if(associated(self%chemblten)) deallocate(self%chemblten)
  if(associated(self%chemcuten)) deallocate(self%chemcuten)
-
+! 20260421_rkumar_start
  if(associated(self%is_aerosol)) deallocate(self%is_aerosol)
  if(associated(self%is_coarse)) deallocate(self%is_coarse)
+! 20260421_rkumar_end
+ if(associated(self%scav_data_gas)) deallocate(self%scav_data_gas)
 
  call mpas_log_write('--- end subroutine gocart2G_forMPASphys_deallocate.')
 
@@ -266,8 +276,10 @@
  if(associated(self%fthom_w)) self%fthom_w(:) = .false.
  if(associated(self%fthom_i)) self%fthom_i(:) = .false.
 
+! 20260421_rkumar_start
  if(associated(self%is_aerosol)) self%is_aerosol(:) = .true.
  if(associated(self%is_coarse) ) self%is_coarse(:)  = .false.
+! 20260421_rkumar_end
 
  n = 0
 !--- black carbon:
@@ -335,27 +347,33 @@
  self%fnum(n)    = NI2G_params%fnum(4)     ! no3an2
  self%fscav(n)   = NI2G_params%fscav(4)    ! no3an2
  self%fthom_w(n) = .true.                  ! no3an2
- self%is_coarse(n) = .true.                ! no3an2
+ self%is_coarse(n) = .true.                ! no3an2      
  n = n+1
  self%fnum(n)    = NI2G_params%fnum(5)     ! no3an3
  self%fscav(n)   = NI2G_params%fscav(5)    ! no3an3
  self%fthom_w(n) = .true.                  ! no3an3
- self%is_coarse(n) = .true.                ! no3an3
+ self%is_coarse(n) = .true.                ! no3an3      
 
 !--- sulfate:
  n = n+1
  self%fnum(n)    = SU2G_params%fnum(2)     ! so2
  self%fscav(n)   = SU2G_params%fscav(2)    ! so2
  self%fthom_w(n) = .false.                 ! so2
+! 20260421_rkumar_start
  self%is_aerosol(n) = .false.
+! 20260421_rkumar_end
 
+! 20260428_rkumar_start
  self%scav_data_gas(:,n) = SU2G_params%scav_data_gas(:,2)
+! 20260428_rkumar_end
 
  n = n+1
  self%fnum(n)    = SU2G_params%fnum(2)     ! volcanic so2
  self%fscav(n)   = SU2G_params%fscav(2)    ! volcanic so2
  self%fthom_w(n) = .false.                 ! volcanic so2
+! 20260421_rkumar_start
  self%is_aerosol(n) = .false.
+! 20260421_rkumar_end
  n = n+1
  self%fnum(n)    = SU2G_params%fnum(3)     ! so4
  self%fscav(n)   = SU2G_params%fscav(3)    ! so4
@@ -395,26 +413,38 @@
  self%fnum(n)    = SU2G_params%fnum(1)     ! dms
  self%fscav(n)   = SU2G_params%fscav(1)    ! dms
  self%fthom_w(n) = .false.                 ! dms
+! 20260421_rkumar_start
  self%is_aerosol(n) = .false.
+! 20260421_rkumar_end 
 
+! 20260428_rkumar_start
  self%scav_data_gas(:,n) = SU2G_params%scav_data_gas(:,1)
+! 20260428_rkumar_end
 
  n = n+1
  self%fnum(n)    = SU2G_params%fnum(4)     ! msa
  self%fscav(n)   = SU2G_params%fscav(4)    ! msa
  self%fthom_w(n) = .false.                 ! msa
+! 20260421_rkumar_start
  self%is_aerosol(n) = .false.
+! 20260421_rkumar_end
 
+! 20260428_rkumar_start
  self%scav_data_gas(:,n) = SU2G_params%scav_data_gas(:,4)
+! 20260428_rkumar_end
 
 !--- ammonia and ammonium ion needed for nitrate:
  n = n+1
  self%fnum(n)    = NI2G_params%fnum(1)     ! nh3
  self%fscav(n)   = NI2G_params%fscav(1)    ! nh3
  self%fthom_w(n) = .false.                 ! nh3
+! 20260421_rkumar_start
  self%is_aerosol(n) = .false.
+! 20260421_rkumar_end
 
+! 20260428_rkumar_start
  self%scav_data_gas(:,n) = NI2G_params%scav_data_gas(:,1)
+! 20260428_rkumar_end
 
  n = n+1
  self%fnum(n)    = NI2G_params%fnum(2)     ! nh4a

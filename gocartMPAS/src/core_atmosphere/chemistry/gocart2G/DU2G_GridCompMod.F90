@@ -70,6 +70,10 @@
     real(kind=RKIND):: Ch_DU                         ! dust emission tuning coefficient [kg s2 m-5].
     real(kind=RKIND),dimension(NHRES):: Ch_DU_res    ! resolutions used for Ch_DU
 
+! 20260731_rkumar_start: Pre-calculated 2D scale-aware factors
+    real(kind=RKIND),dimension(:,:),allocatable:: emission_scale_du
+! 20260731_rkumar_end
+
     real(kind=RKIND),dimension(:),allocatable:: rlow ! particle effective radius lower bound [um]
     real(kind=RKIND),dimension(:),allocatable:: rup  ! particle effective radius upper bound [um]
     real(kind=RKIND),dimension(:),allocatable:: sfra ! fraction of total source
@@ -158,11 +162,14 @@
 !    dims(1) and dims(2) are the number of grid-points in the longitude and latitude directions. In MPAS,
 !    we will need to adjust subroutine Chem_UtilResVal since MPAS uses an unstructured grid. For now, we
 !    set self%Ch_DU to the same value as the one used in WRF-chem:
-!do n = 1, NHRES
+! 20260731_rkumar_start (uncommented the block below)
+!do n = 1, NHRES 
 !   self%Ch_DU_res(n) = Ch_DU(n)
 !enddo
+! 20260731_rkumar_end
+
 !self%Ch_DU = Chem_UtilResVal(dims(1),dims(2),self%Ch_DU_res(:),stat)
- self%Ch_DU = 0.8e-09
+ self%Ch_DU = 0.65e-09
 
 
 !call mpas_log_write('--- end subroutine load_DU2G_GridCOMP.')
@@ -230,7 +237,10 @@
           radius    = self_params%radius*1.e-6,         &
           rhop      = self_params%rhop,                 &
           sfra      = self_params%sfra,                 &
+! 20260731_rkumar_start
           Ch_DU     = self_params%Ch_Du,                &
+!          Ch_DU     = self_params%emission_scale_du,    &
+! 20260731_rkumar_end
           ipoint    = self_params%ipoint,               &
           grav      = grav,                             &
           du_src    = self%du_src,                      &
@@ -368,20 +378,36 @@
               drydepf    = drydepf        , &
               rc         = istat            &
                    )
+
 !--- if gocart2G does not interact with the MYNN PBL parameterization, then we update the mixing ratios
-!    due to dry deposition in the model layer adjacent to the surface, otherwise we simply skip this step:
+!    due to dry deposition in the model layer adjacent to the surface.
+!    HOWEVER, we ALWAYS compute the diagnostic flux (*dp) for the history files!
  if(associated(self%duvdep)) self%duvdep(:,:) = drydepf(:,:)*self%delz(:,:,self_params%km)
- if(.not. to_MYNN) then
+
+! 20260610_rkumar_start
     do ibin = 1, self_params%nbins
-       if(associated(self%dudp)) self%dudp(:,:,ibin) = 0._RKIND
-       dqa = 0._RKIND
-       dqa = max(0._RKIND,self%du(:,:,self_params%km,ibin)*(1.-exp(-drydepf*self_params%cdt)))
-       self%du(:,:,self_params%km,ibin) = self%du(:,:,self_params%km,ibin) - dqa
-       if(associated(self%dudp)) then
-          self%dudp(:,:,ibin) = dqa*self%delp(:,:,self_params%km)/grav/self_params%cdt
-       end if
+       do j = jts, jte
+          do i = its, ite
+             
+             ! Calculate removed mass for this specific grid cell
+             dqa(i,j) = max(0._RKIND, self%du(i,j,self_params%km,ibin) * &
+                                      (1._RKIND - exp(-drydepf(i,j)*self_params%cdt)))
+             
+             ! 1. ALWAYS calculate the diagnostic DP flux (kg m-2 s-1)
+             if(associated(self%dudp)) then
+                self%dudp(i,j,ibin) = dqa(i,j) * self%delp(i,j,self_params%km) / grav / self_params%cdt
+             end if
+             
+             ! 2. ONLY remove the mass internally if MYNN is bypassed
+             if(.not. to_MYNN) then
+                self%du(i,j,self_params%km,ibin) = self%du(i,j,self_params%km,ibin) - dqa(i,j)
+             endif
+             
+          enddo
+       enddo
     enddo
- endif
+! 20260610_rkumar_end
+
  if(istat /=0) then
     call mpas_log_write('--- DU2G_bc_GridComp: error in subroutine DryDeposition.', &
                         messageType=MPAS_LOG_CRIT)
@@ -734,7 +760,10 @@
  integer,intent(in),dimension(:):: ipoint
 
  real(kind=RKIND),intent(in):: grav
+! 20260731_rkumar_start
  real(kind=RKIND),intent(in):: Ch_DU
+! real(kind=RKIND),intent(in),dimension(:,:):: Ch_DU
+! 20260731_rkumar_end
  real(kind=RKIND),intent(in),dimension(:):: radius
  real(kind=RKIND),intent(in),dimension(:):: rhop
  real(kind=RKIND),intent(in),dimension(:):: sfra
@@ -809,7 +838,10 @@
              u_thresh = max(0.,u_thresh0*(1.2+0.2*alog10(max(1.e-3,gwet1))))
              if(w10m .gt. u_thresh) then
                 emissions(i,j,n) = (1.-frlake(i,j))*w10m**2*(w10m-u_thresh)
+! 20260731_rkumar_start
                 emissions(i,j,n) = Ch_DU*du_src(i,j,m)*emissions(i,j,n)
+!                emissions(i,j,n) = Ch_DU(i,j)*1.e-9*du_src(i,j,m)*emissions(i,j,n)
+! 20260731_rkumar_end
 !               call mpas_log_write('--- land: $i $i $r $r $r $r $r $r',intArgs=(/n,i/), &
 !                         realArgs=(/w10m,air_dens,u_thresh0,u_thresh,gwet1,emissions(i,j,n)/))
              endif

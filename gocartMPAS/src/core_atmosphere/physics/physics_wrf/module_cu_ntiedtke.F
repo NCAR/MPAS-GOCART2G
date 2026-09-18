@@ -7,11 +7,13 @@
  use cu_ntiedtke_common
  use cu_ntiedtke_post,only: cu_ntiedtke_post_run
  use cu_ntiedtke_pre,only: cu_ntiedtke_pre_run
+use mpas_derived_types,only: mpas_pool_type
 
 #ifdef DO_GOCART2G
  use mpas_chemistry_gocart2G_vars
- use mpas_derived_types,only: mpas_pool_type
+! 20260429_rkumar_start
  use mpas_pool_routines,only: mpas_pool_get_array,mpas_pool_get_dimension, mpas_pool_get_subpool
+! 20260429_rkumar_end
  use cu_ntiedtke_ctrans_post
  use cu_ntiedtke_ctrans_pre
  use cu_ntiedtke_ctrans
@@ -39,7 +41,9 @@
                 ,rthcuten,rqvcuten,rqccuten,rqicuten     &
                 ,rucuten,rvcuten                         &
                 ,do_ctrchems,do_scavchems                &
+                ! 20260429_rkumar_start
                 ,block_structs                           &
+                ! 20260429_rkumar_end
                 ,ids,ide,jds,jde,kds,kde                 &
                 ,ims,ime,jms,jme,kms,kme                 &
                 ,its,ite,jts,jte,kts,kte                 &
@@ -100,6 +104,8 @@
 !--- input arguments:
  logical,intent(in):: do_ctrchems,do_scavchems
  logical,intent(in),optional:: f_qc,f_qi
+
+ type(mpas_pool_type), intent(inout) :: block_structs
 
  integer,intent(in):: ids,ide,jds,jde,kds,kde, &
                       ims,ime,jms,jme,kms,kme, &
@@ -179,7 +185,8 @@
  real(kind=kind_phys),dimension(:,:,:),allocatable:: chem,chemf
  real(kind=kind_phys),dimension(:,:,:),allocatable:: ptenc,ptencf
 
- type(mpas_pool_type), intent(inout) :: block_structs
+#ifdef DO_GOCART2G
+! 20260421_rkumar_start
  type (mpas_pool_type), pointer :: CA2G_bc_diags, CA2G_br_diags, CA2G_oc_diags
  type (mpas_pool_type), pointer :: DU2G_diags, NI2G_diags, SS2G_diags, SU2G_diags 
 
@@ -204,97 +211,14 @@
  integer, parameter :: n_ss1 = 19, n_ss2 = 20, n_ss3 = 21, n_ss4 = 22, n_ss5 = 23
  integer, parameter :: n_dms = 24, n_msa = 25
  integer, parameter :: n_nh3 = 26, n_nh4 = 27
- integer :: idx, offset 
-
+ integer :: idx, offset
+ real(kind=kind_phys) :: col_tendency 
+! 20260421_rkumar_end
+#endif
 !-----------------------------------------------------------------------------------------------------------------
 
  errmsg = ' '
  errflg = 0
-
-#ifdef DO_GOCART2G
-! Retrieve all the diagnostic pools
-     call mpas_pool_get_subpool(block_structs, 'CA2G_bc_diags', CA2G_bc_diags)
-     call mpas_pool_get_subpool(block_structs, 'CA2G_br_diags', CA2G_br_diags)
-     call mpas_pool_get_subpool(block_structs, 'CA2G_oc_diags', CA2G_oc_diags)
-     call mpas_pool_get_subpool(block_structs, 'DU2G_diags',    DU2G_diags)
-     call mpas_pool_get_subpool(block_structs, 'NI2G_diags',    NI2G_diags)
-     call mpas_pool_get_subpool(block_structs, 'SS2G_diags',    SS2G_diags)
-     call mpas_pool_get_subpool(block_structs, 'SU2G_diags',    SU2G_diags)
-
-     call mpas_pool_get_array(CA2G_bc_diags,'bcSV_phobic',bcSV_phobic)
-     call mpas_pool_get_array(CA2G_bc_diags,'bcSV_philic',bcSV_philic)
-    
-     call mpas_pool_get_array(CA2G_br_diags,'brSV_phobic',brSV_phobic)
-     call mpas_pool_get_array(CA2G_br_diags,'brSV_philic',brSV_philic)
-    
-     call mpas_pool_get_array(CA2G_oc_diags,'ocSV_phobic',ocSV_phobic)
-     call mpas_pool_get_array(CA2G_oc_diags,'ocSV_philic',ocSV_philic)
-    
-     call mpas_pool_get_array(DU2G_diags,'duSV_bin1',duSV_bin1)
-     call mpas_pool_get_array(DU2G_diags,'duSV_bin2',duSV_bin2)
-     call mpas_pool_get_array(DU2G_diags,'duSV_bin3',duSV_bin3)
-     call mpas_pool_get_array(DU2G_diags,'duSV_bin4',duSV_bin4)
-     call mpas_pool_get_array(DU2G_diags,'duSV_bin5',duSV_bin5)
-    
-     call mpas_pool_get_array(NI2G_diags,'niSV_bin1',niSV_bin1)
-     call mpas_pool_get_array(NI2G_diags,'niSV_bin2',niSV_bin2)
-     call mpas_pool_get_array(NI2G_diags,'niSV_bin3',niSV_bin3)
-     call mpas_pool_get_array(NI2G_diags,'nh3SV',nh3SV)
-     call mpas_pool_get_array(NI2G_diags,'nh4SV',nh4SV)
-    
-     call mpas_pool_get_array(SS2G_diags,'ssSV_bin1',ssSV_bin1)
-     call mpas_pool_get_array(SS2G_diags,'ssSV_bin2',ssSV_bin2)
-     call mpas_pool_get_array(SS2G_diags,'ssSV_bin3',ssSV_bin3)
-     call mpas_pool_get_array(SS2G_diags,'ssSV_bin4',ssSV_bin4)
-     call mpas_pool_get_array(SS2G_diags,'ssSV_bin5',ssSV_bin5)
-    
-     call mpas_pool_get_array(SU2G_diags,'suSV_dms',suSV_dms)
-     call mpas_pool_get_array(SU2G_diags,'suSV_so2',suSV_so2)
-     call mpas_pool_get_array(SU2G_diags,'suSV_so4',suSV_so4)
-     call mpas_pool_get_array(SU2G_diags,'suSV_msa',suSV_msa)
-
-! --- Initializing Integrated Sinks to Zero at Start of Simulation ---
-     offset = lbound(bcSV_phobic, 1) - its 
-     if (itimestep == 1) then
-        do i = its, ite
-           idx = i + offset       
-           ! Carbonaceous
-           bcSV_phobic(idx) = 0.0_kind_phys
-           bcSV_philic(idx) = 0.0_kind_phys
-           brSV_phobic(idx) = 0.0_kind_phys
-           brSV_philic(idx) = 0.0_kind_phys
-           ocSV_phobic(idx) = 0.0_kind_phys
-           ocSV_philic(idx) = 0.0_kind_phys
- 
-           ! Dust bins
-           duSV_bin1(idx)   = 0.0_kind_phys
-           duSV_bin2(idx)   = 0.0_kind_phys
-           duSV_bin3(idx)   = 0.0_kind_phys
-           duSV_bin4(idx)   = 0.0_kind_phys
-           duSV_bin5(idx)   = 0.0_kind_phys
- 
-           ! Nitrate and Ammonia
-           niSV_bin1(idx)   = 0.0_kind_phys
-           niSV_bin2(idx)   = 0.0_kind_phys
-           niSV_bin3(idx)   = 0.0_kind_phys
-           nh3SV(idx)       = 0.0_kind_phys
-           nh4SV(idx)       = 0.0_kind_phys
- 
-           ! Sea salt bins
-           ssSV_bin1(idx)   = 0.0_kind_phys
-           ssSV_bin2(idx)   = 0.0_kind_phys
-           ssSV_bin3(idx)   = 0.0_kind_phys
-           ssSV_bin4(idx)   = 0.0_kind_phys
-           ssSV_bin5(idx)   = 0.0_kind_phys
- 
-           ! Sulfur group
-           suSV_dms(idx)    = 0.0_kind_phys
-           suSV_so2(idx)    = 0.0_kind_phys
-           suSV_so4(idx)    = 0.0_kind_phys
-           suSV_msa(idx)    = 0.0_kind_phys
-        end do
-     end if
-#endif
 
  call cu_ntiedtke_init( &
                        con_cp  = cp  , con_rd = rd   , con_rv   = rv   , con_xlv = xlv    , &
@@ -421,10 +345,12 @@
     nchem = mpas_chem_gocart2G%nchem
     if(do_ctrchems) then
        if(.not.allocated(fscav) ) allocate(fscav(nchem))
+! 20260421_rkumar_start
        if(.not.allocated(is_aerosol)) allocate(is_aerosol(nchem))
        if(.not.allocated(is_coarse)) allocate(is_coarse(nchem))
        if(.not.allocated(rate_incloud)) allocate(rate_incloud(its:ite,nchem))
        if(.not.allocated(rate_washout)) allocate(rate_washout(its:ite,nchem))
+! 20260421_rkumar_end
        if(.not.allocated(chem)  ) allocate(chem(its:ite,kts:kte,nchem)  )
        if(.not.allocated(chemf) ) allocate(chemf(its:ite,kts:kte,nchem) )
        if(.not.allocated(ptenc) ) allocate(ptenc(its:ite,kts:kte,nchem) )
@@ -436,14 +362,31 @@
        do ic = 1,nchem
           fscav(ic) = mpas_chem_gocart2G%fscav(ic)
           chem(:,:,ic) = mpas_chem_gocart2G%chem_mr(:,:,ic)
+! 20260421_rkumar_start
           is_aerosol(ic) = mpas_chem_gocart2G%is_aerosol(ic)
           is_coarse(ic) = mpas_chem_gocart2G%is_coarse(ic)
+! 20260421_rkumar_end
        enddo
        call cu_ntiedtke_ctrans_pre_run( &
                its    = its    , ite  = ite  , kts   = kts   , kte    = kte    , &
                nchem  = nchem  , chem = chem , chemf = chemf , errmsg = errmsg , &
                errflg = errflg                                                   &
                                       )
+
+! 20260428_rkumar_start
+!       call cu_ntiedtke_ctrans_run( &
+!               klon        = im        , klev    = kx           , ldcum       = ldcum     , &
+!               lddraf      = lddraf    , kctype  = kctype       , kcbot       = kcbot     , &
+!               kctop       = kctop     , kdtop   = kdtop        , grav        = grav      , &
+!               ztmst       = delt      , ghti    = ghti         , paph        = prsi      , &
+!               pmfu        = pmfu      , pmfd    = pmfd         , pmfude_rate = pmfu_detr , &
+!               pmfdde_rate = pmfd_detr , do_scav = do_scavchems , nchem       = nchem     , &
+!               fscav       = fscav     , chem    = chemf        , ptenc       = ptenc     , &
+!               errmsg      = errmsg    , errflg  = errflg,                                  &
+!               ! 20260421_rkumar_start
+!               itimestep   = itimestep                                                      &
+!               ! 20260421_rkumar_end
+!                                  )
 
        call cu_ntiedtke_ctrans_run( &
                klon          = im                 , &
@@ -476,72 +419,135 @@
                rate_incloud  = rate_incloud         &
                                    )
 
+! 20260428_rkumar_end
        call cu_ntiedtke_ctrans_post_run( &
                its    = its   , ite   = ite   , kts    = kts    , kte    = kte    , &
                nchem  = nchem , ptenc = ptenc , ptencf = ptencf , errmsg = errmsg , &
                errflg = errflg &
                                        )
+! 20260421_rkumar_start
        if (do_scavchems) then
           call cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, delt, itimestep, &
                                                 kcbot, pratec_hv, prsi_hv, t_hv, dz_hv, rho_hv, chem, is_aerosol, &
-                                                is_coarse, mpas_chem_gocart2G%scav_data_gas, rate_washout, ptencf)
+                                                is_coarse, mpas_chem_gocart2G%scav_data_gas, rate_washout, ptencf)   
        endif
+! 20260421_rkumar_end
 
-! --- Final Transfer to Diagnostic Pointers (Cumulative kg/m2) ---
-     do i = its, ite
-      if (i == its) then
-         call mpas_log_write('DEBUG SCAV [Step $i]: delt=$r, PTR=$r, RateIn=$r, RateWash=$r', &
-                        intArgs=(/ itimestep /), &
-                        realArgs=(/ delt, bcSV_phobic(i), &
-                                   rate_incloud(i, n_bc_phobic), &
-                                   rate_washout(i, n_bc_phobic) /))
-      end if
-        idx = i + offset
-        ! Black Carbon
-        bcSV_phobic(idx) = bcSV_phobic(idx) + ((rate_incloud(i, n_bc_phobic) + rate_washout(i, n_bc_phobic)) * delt)
-        bcSV_philic(idx) = bcSV_philic(idx) + ((rate_incloud(i, n_bc_philic) + rate_washout(i, n_bc_philic)) * delt)
+! 20260429_rkumar_start
+! --- NEW: Calculate Convective Scavenging Rate (Column Integral of Cumulus Tendency) ---
+! Retrieve all the diagnostic pools
+     call mpas_pool_get_subpool(block_structs, 'CA2G_bc_diags', CA2G_bc_diags)
+     call mpas_pool_get_subpool(block_structs, 'CA2G_br_diags', CA2G_br_diags)
+     call mpas_pool_get_subpool(block_structs, 'CA2G_oc_diags', CA2G_oc_diags)
+     call mpas_pool_get_subpool(block_structs, 'DU2G_diags',    DU2G_diags)
+     call mpas_pool_get_subpool(block_structs, 'NI2G_diags',    NI2G_diags)
+     call mpas_pool_get_subpool(block_structs, 'SS2G_diags',    SS2G_diags)
+     call mpas_pool_get_subpool(block_structs, 'SU2G_diags',    SU2G_diags)
+
+     call mpas_pool_get_array(CA2G_bc_diags,'bcSV_phobic',bcSV_phobic)
+     call mpas_pool_get_array(CA2G_bc_diags,'bcSV_philic',bcSV_philic)
     
-        ! Brown Carbon
-        brSV_phobic(idx) = brSV_phobic(idx) + ((rate_incloud(i, n_br_phobic) + rate_washout(i, n_br_phobic)) * delt)
-        brSV_philic(idx) = brSV_philic(idx) + ((rate_incloud(i, n_br_philic) + rate_washout(i, n_br_philic)) * delt)
+     call mpas_pool_get_array(CA2G_br_diags,'brSV_phobic',brSV_phobic)
+     call mpas_pool_get_array(CA2G_br_diags,'brSV_philic',brSV_philic)
     
-        ! Organic Carbon
-        ocSV_phobic(idx) = ocSV_phobic(idx) + ((rate_incloud(i, n_oc_phobic) + rate_washout(i, n_oc_phobic)) * delt)
-        ocSV_philic(idx) = ocSV_philic(idx) + ((rate_incloud(i, n_oc_philic) + rate_washout(i, n_oc_philic)) * delt)
+     call mpas_pool_get_array(CA2G_oc_diags,'ocSV_phobic',ocSV_phobic)
+     call mpas_pool_get_array(CA2G_oc_diags,'ocSV_philic',ocSV_philic)
     
-        ! Mineral Dust
-        duSV_bin1(idx) = duSV_bin1(idx) + ((rate_incloud(i, n_du1) + rate_washout(i, n_du1)) * delt)
-        duSV_bin2(idx) = duSV_bin2(idx) + ((rate_incloud(i, n_du2) + rate_washout(i, n_du2)) * delt)
-        duSV_bin3(idx) = duSV_bin3(idx) + ((rate_incloud(i, n_du3) + rate_washout(i, n_du3)) * delt)
-        duSV_bin4(idx) = duSV_bin4(idx) + ((rate_incloud(i, n_du4) + rate_washout(i, n_du4)) * delt)
-        duSV_bin5(idx) = duSV_bin5(idx) + ((rate_incloud(i, n_du5) + rate_washout(i, n_du5)) * delt)
+     call mpas_pool_get_array(DU2G_diags,'duSV_bin1',duSV_bin1)
+     call mpas_pool_get_array(DU2G_diags,'duSV_bin2',duSV_bin2)
+     call mpas_pool_get_array(DU2G_diags,'duSV_bin3',duSV_bin3)
+     call mpas_pool_get_array(DU2G_diags,'duSV_bin4',duSV_bin4)
+     call mpas_pool_get_array(DU2G_diags,'duSV_bin5',duSV_bin5)
     
-        ! Nitrate Bins
-        niSV_bin1(idx) = niSV_bin1(idx) + ((rate_incloud(i, n_ni1) + rate_washout(i, n_ni1)) * delt)
-        niSV_bin2(idx) = niSV_bin2(idx) + ((rate_incloud(i, n_ni2) + rate_washout(i, n_ni2)) * delt)
-        niSV_bin3(idx) = niSV_bin3(idx) + ((rate_incloud(i, n_ni3) + rate_washout(i, n_ni3)) * delt)
+     call mpas_pool_get_array(NI2G_diags,'niSV_bin1',niSV_bin1)
+     call mpas_pool_get_array(NI2G_diags,'niSV_bin2',niSV_bin2)
+     call mpas_pool_get_array(NI2G_diags,'niSV_bin3',niSV_bin3)
+     call mpas_pool_get_array(NI2G_diags,'nh3SV',nh3SV)
+     call mpas_pool_get_array(NI2G_diags,'nh4SV',nh4SV)
     
-        ! Sulfur Species (Summing volcanic and non-volcanic into one diagnostic)
-        suSV_so2(idx) = suSV_so2(idx) + ((rate_incloud(i, n_so2) + rate_washout(i, n_so2)) * delt) + &
-                                   ((rate_incloud(i, n_so2_vol) + rate_washout(i, n_so2_vol)) * delt)
-        
-        suSV_so4(idx) = suSV_so4(idx) + ((rate_incloud(i, n_so4) + rate_washout(i, n_so4)) * delt) + &
-                                   ((rate_incloud(i, n_so4_vol) + rate_washout(i, n_so4_vol)) * delt)
-        
-        suSV_dms(idx) = suSV_dms(idx) + ((rate_incloud(i, n_dms) + rate_washout(i, n_dms)) * delt)
-        suSV_msa(idx) = suSV_msa(idx) + ((rate_incloud(i, n_msa) + rate_washout(i, n_msa)) * delt)
+     call mpas_pool_get_array(SS2G_diags,'ssSV_bin1',ssSV_bin1)
+     call mpas_pool_get_array(SS2G_diags,'ssSV_bin2',ssSV_bin2)
+     call mpas_pool_get_array(SS2G_diags,'ssSV_bin3',ssSV_bin3)
+     call mpas_pool_get_array(SS2G_diags,'ssSV_bin4',ssSV_bin4)
+     call mpas_pool_get_array(SS2G_diags,'ssSV_bin5',ssSV_bin5)
     
-        ! Sea Salt Bins
-        ssSV_bin1(idx) = ssSV_bin1(idx) + ((rate_incloud(i, n_ss1) + rate_washout(i, n_ss1)) * delt)
-        ssSV_bin2(idx) = ssSV_bin2(idx) + ((rate_incloud(i, n_ss2) + rate_washout(i, n_ss2)) * delt)
-        ssSV_bin3(idx) = ssSV_bin3(idx) + ((rate_incloud(i, n_ss3) + rate_washout(i, n_ss3)) * delt)
-        ssSV_bin4(idx) = ssSV_bin4(idx) + ((rate_incloud(i, n_ss4) + rate_washout(i, n_ss4)) * delt)
-        ssSV_bin5(idx) = ssSV_bin5(idx) + ((rate_incloud(i, n_ss5) + rate_washout(i, n_ss5)) * delt)
-    
-        ! Ammonia and Ammonium
-        nh3SV(idx) = nh3SV(idx) + ((rate_incloud(i, n_nh3) + rate_washout(i, n_nh3)) * delt)
-        nh4SV(idx) = nh4SV(idx) + ((rate_incloud(i, n_nh4) + rate_washout(i, n_nh4)) * delt)
-     end do
+     call mpas_pool_get_array(SU2G_diags,'suSV_dms',suSV_dms)
+     call mpas_pool_get_array(SU2G_diags,'suSV_so2',suSV_so2)
+     call mpas_pool_get_array(SU2G_diags,'suSV_so4',suSV_so4)
+     call mpas_pool_get_array(SU2G_diags,'suSV_msa',suSV_msa)
+
+     offset = lbound(bcSV_phobic, 1) - its
+
+       ! Initialize diagnostics to zero to ensure clean accumulation per cell
+       do i = its, ite
+          idx = i + offset
+          bcSV_phobic(idx) = 0.0_kind_phys
+          bcSV_philic(idx) = 0.0_kind_phys
+          brSV_phobic(idx) = 0.0_kind_phys
+          brSV_philic(idx) = 0.0_kind_phys
+          ocSV_phobic(idx) = 0.0_kind_phys
+          ocSV_philic(idx) = 0.0_kind_phys
+          duSV_bin1(idx)   = 0.0_kind_phys
+          duSV_bin2(idx)   = 0.0_kind_phys
+          duSV_bin3(idx)   = 0.0_kind_phys
+          duSV_bin4(idx)   = 0.0_kind_phys
+          duSV_bin5(idx)   = 0.0_kind_phys
+          niSV_bin1(idx)   = 0.0_kind_phys
+          niSV_bin2(idx)   = 0.0_kind_phys
+          niSV_bin3(idx)   = 0.0_kind_phys
+          suSV_so2(idx)    = 0.0_kind_phys
+          suSV_so4(idx)    = 0.0_kind_phys
+          suSV_dms(idx)    = 0.0_kind_phys
+          suSV_msa(idx)    = 0.0_kind_phys
+          ssSV_bin1(idx)   = 0.0_kind_phys
+          ssSV_bin2(idx)   = 0.0_kind_phys
+          ssSV_bin3(idx)   = 0.0_kind_phys
+          ssSV_bin4(idx)   = 0.0_kind_phys
+          ssSV_bin5(idx)   = 0.0_kind_phys
+          nh3SV(idx)       = 0.0_kind_phys
+          nh4SV(idx)       = 0.0_kind_phys
+       end do
+
+       do ic = 1, nchem
+          do i = its, ite
+             idx = i + offset
+             col_tendency = 0.0_kind_phys
+             do k = kts, kte
+                col_tendency = col_tendency + ptencf(i,k,ic) * rho_hv(i,k) * dz_hv(i,k)
+             end do
+
+             ! Convection conserves mass, so net column loss is purely due to scavenging.
+             ! Accumulate (subtracting negative = adding) in case multiple ic match the same diagnostic
+             select case(ic)
+                case(1);     bcSV_phobic(idx) = bcSV_phobic(idx) - col_tendency
+                case(2);     bcSV_philic(idx) = bcSV_philic(idx) - col_tendency
+                case(3);     brSV_phobic(idx) = brSV_phobic(idx) - col_tendency
+                case(4);     brSV_philic(idx) = brSV_philic(idx) - col_tendency
+                case(5);     ocSV_phobic(idx) = ocSV_phobic(idx) - col_tendency
+                case(6);     ocSV_philic(idx) = ocSV_philic(idx) - col_tendency
+                case(7);     duSV_bin1(idx)   = duSV_bin1(idx) - col_tendency
+                case(8);     duSV_bin2(idx)   = duSV_bin2(idx) - col_tendency
+                case(9);     duSV_bin3(idx)   = duSV_bin3(idx) - col_tendency
+                case(10);    duSV_bin4(idx)   = duSV_bin4(idx) - col_tendency
+                case(11);    duSV_bin5(idx)   = duSV_bin5(idx) - col_tendency
+                case(12);    niSV_bin1(idx)   = niSV_bin1(idx) - col_tendency
+                case(13);    niSV_bin2(idx)   = niSV_bin2(idx) - col_tendency
+                case(14);    niSV_bin3(idx)   = niSV_bin3(idx) - col_tendency
+                case(15,16); suSV_so2(idx)    = suSV_so2(idx)  - col_tendency
+                case(17,18); suSV_so4(idx)    = suSV_so4(idx)  - col_tendency
+                case(19);    ssSV_bin1(idx)   = ssSV_bin1(idx) - col_tendency
+                case(20);    ssSV_bin2(idx)   = ssSV_bin2(idx) - col_tendency
+                case(21);    ssSV_bin3(idx)   = ssSV_bin3(idx) - col_tendency
+                case(22);    ssSV_bin4(idx)   = ssSV_bin4(idx) - col_tendency
+                case(23);    ssSV_bin5(idx)   = ssSV_bin5(idx) - col_tendency
+                case(24);    suSV_dms(idx)    = suSV_dms(idx)  - col_tendency
+                case(25);    suSV_msa(idx)    = suSV_msa(idx)  - col_tendency
+                case(26);    nh3SV(idx)       = nh3SV(idx)     - col_tendency
+                case(27);    nh4SV(idx)       = nh4SV(idx)     - col_tendency
+             end select
+          end do
+       end do
+! 20260429_rkumar_end
 
        do ic = 1,nchem
           mpas_chem_gocart2G%chemcuten(:,:,ic) = ptencf(:,:,ic)
@@ -552,10 +558,12 @@
        if(allocated(chemf) ) deallocate(chemf )
        if(allocated(ptenc) ) deallocate(ptenc )
        if(allocated(ptencf)) deallocate(ptencf)
+       ! 20260421_rkumar_start
        if(allocated(is_aerosol)) deallocate(is_aerosol)
        if(allocated(is_coarse)) deallocate(is_coarse)
        if(allocated(rate_incloud)) deallocate(rate_incloud)
        if(allocated(rate_washout)) deallocate(rate_washout)
+       ! 20260421_rkumar_end
     else
        do ic = 1,nchem
           mpas_chem_gocart2G%chemcuten(:,:,ic) = 0._kind_phys
@@ -642,8 +650,8 @@
 
  end subroutine ntiedtkeinit
 
-!=================================================================================================================
-subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itimestep, &
+! 20260421_rkumar_start
+     subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itimestep, &
                                             kcbot, pratec, prsi, t_hv, dz, rho, chem, is_aerosol, &
                                             is_coarse, scav_data_gas, rate_washout, ptencf)
 !=================================================================================================================
@@ -664,8 +672,8 @@ subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itime
         real(kind=kind_phys), dimension(its:ite, kts:kte, nchem), intent(inout) :: chem, ptencf
         real(kind=kind_phys), dimension(its:ite, nchem), intent(inout) :: rate_washout
         logical, dimension(nchem), intent(in) :: is_aerosol
-        logical, dimension(nchem), intent(in) :: is_coarse ! <--- New: Clean size classification flag  
-
+        logical, dimension(nchem), intent(in) :: is_coarse ! <--- New: Clean size classification flag
+        
         real(kind=kind_phys), dimension(6, nchem), intent(in) :: scav_data_gas
 
         ! Local variables
@@ -698,17 +706,18 @@ subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itime
                         ! PHASE A: AEROSOL SCAVENGING (SIZE-SEGREGATED BRANCH)
                         ! ---------------------------------------------------------
                         if (is_aerosol(jn)) then
-
+                            
                             if (.not. is_coarse(jn)) then
-                                ! --- FINE MODE BRANCH (Phase-Dependent) ---
-                                if (t_hv(i,k) >= 268.15_kind_phys) then
-                                    ! Liquid rain regime: Baseline Laakso (2003)
-                                    lambda = laakso_a * (rain_rate_mm_hr**laakso_b)
-                                else
-                                    ! Ice/Snow regime: Amplified UFS-style structural scavenging
-                                    ! (3.4 * 1.0e-4 = 3.4e-4) derived from coarse-mode coeffs (8.72e-4/2.56e-4 = 3.4)
-                                    lambda = 3.4e-4_kind_phys * (rain_rate_mm_hr**0.96_kind_phys)
-                                end if
+                               ! --- FINE MODE BRANCH (Phase-Dependent) ---
+                               if (t_hv(i,k) >= 268.15_kind_phys) then
+                               ! Liquid rain regime: Baseline Laakso (2003)
+                               lambda = laakso_a * (rain_rate_mm_hr**laakso_b)
+                            else
+                               ! Ice/Snow regime: Amplified UFS-style structural scavenging
+                               ! (3.4 * 1.0e-4 = 3.4e-4) is derived from coarse-mode coefficients (8.72e-4/2.56e-4 = 3.4)
+                               lambda = 3.4e-4_kind_phys * (rain_rate_mm_hr**0.96_kind_phys)
+                            end if
+
                             else
                                 ! --- COARSE MODE: UFS/GEOS-Chem Inertial Impaction Logic ---
                                 if (t_hv(i,k) >= 268.15_kind_phys) then
@@ -772,6 +781,8 @@ subroutine cu_ntiedtke_below_cloud_scavenge(its, ite, kts, kte, nchem, dt, itime
         end do
 
      end subroutine cu_ntiedtke_below_cloud_scavenge
+
+! 20260421_rkumar_end
 
 !=================================================================================================================
  end module module_cu_ntiedtke

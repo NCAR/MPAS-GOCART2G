@@ -23,7 +23,6 @@ option(MPAS_OPENMP "Enable OpenMP" OFF)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 option(MPAS_USE_PIO "Build with PIO I/O library" OFF)
 option(DO_GOCART2G "Build with GOCART2G" ON)
-option(DO_PRM "Build with Plume Rise Model" ON)
 
 message(STATUS "[OPTION] MPAS_CORES: ${MPAS_CORES}")
 message(STATUS "[OPTION] MPAS_DOUBLE_PRECISION: ${MPAS_DOUBLE_PRECISION}")
@@ -32,7 +31,6 @@ message(STATUS "[OPTION] MPAS_OPENMP: ${MPAS_OPENMP}")
 message(STATUS "[OPTION] BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 message(STATUS "[OPTION] MPAS_USE_PIO: ${MPAS_USE_PIO}")
 message(STATUS "[OPTION] DO_GOCART2G: ${DO_GOCART2G}")
-message(STATUS "[OPTION] DO_PRM: ${DO_PRM}")
 
 # Build product output locations
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

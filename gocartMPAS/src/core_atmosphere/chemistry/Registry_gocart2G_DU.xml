@@ -49,34 +49,34 @@
      <var name="duDP_bin5" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Dry deposition of dust in size bin 5 [6.0um-10.0um]"/>
 
-     <var name="duWT_bin1" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duWT_bin1" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Wet deposition of dust in size bin 1 [0.1um-1.0um]"/>
 
-     <var name="duWT_bin2" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duWT_bin2" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Wet deposition of dust in size bin 2 [1.0um-1.8um]"/>
 
-     <var name="duWT_bin3" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duWT_bin3" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Wet deposition of dust in size bin 3 [1.8um-3.0um]"/>
 
-     <var name="duWT_bin4" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duWT_bin4" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Wet deposition of dust in size bin 4 [3.0um-6.0um]"/>
 
-     <var name="duWT_bin5" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duWT_bin5" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Wet deposition of dust in size bin 5 [6.0um-10.0um]"/>
 
-     <var name="duSV_bin1" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duSV_bin1" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Convective scavenging of dust in size bin 1 [0.1um-1.0um]"/>
 
-     <var name="duSV_bin2" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duSV_bin2" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Convective scavenging of dust in size bin 2 [1.0um-1.8um]"/>
 
-     <var name="duSV_bin3" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duSV_bin3" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Convective scavenging of dust in size bin 3 [1.8um-3.0um]"/>
 
-     <var name="duSV_bin4" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duSV_bin4" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Convective scavenging of dust in size bin 4 [3.0um-6.0um]"/>
 
-     <var name="duSV_bin5" type="real" dimensions="nCells Time" units="kg m^{-2}" 
+     <var name="duSV_bin5" type="real" dimensions="nCells Time" units="kg m^{-2} s^{-1}" 
                description="Convective scavenging of dust in size bin 5 [6.0um-10.0um]"/>
 
      <var name="duSMASS" type="real" dimensions="nCells Time" units="kg m^{-3}"

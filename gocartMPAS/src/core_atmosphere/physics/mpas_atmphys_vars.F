@@ -311,7 +311,7 @@
  real(kind=RKIND),dimension(:,:),allocatable::   &
     rainc_p,          &!
     raincv_p,         &!
-    pratec_p           !
+    pratec_p          !
 
  real(kind=RKIND),dimension(:,:,:),allocatable:: &
     rthcuten_p,       &!

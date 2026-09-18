@@ -26,7 +26,9 @@
  character(len=*),parameter:: gocart2GanthAlarmID = 'gocart2G_anth'
  character(len=*),parameter:: gocart2GbiobAlarmID = 'gocart2G_biob'
  character(len=*),parameter:: gocart2GbiogAlarmID = 'gocart2G_biog'
+! 20260413_rkumar_start
  character(len=*),parameter:: gocart2Ghno3AlarmID = 'gocart2G_hno3'
+! 20260413_rkumar_end
 
  integer,public:: iyear
  integer,public:: imonth
@@ -67,19 +69,21 @@
  character(len=StrKIND),pointer:: biob_interval
  character(len=StrKIND),pointer:: biog_interval
 
+! 20260413_rkumar_start
  type(mpas_pool_type),pointer:: state
  real(kind=RKIND), pointer:: hno3_tau      ! relaxation time
  real(kind=RKIND) :: nudging_factor        ! Local scalar
  real(kind=RKIND) :: tno3_model, nitrogen_deficit
- real(kind=RKIND), parameter :: kg_to_mole_nitrate = 0.46712_RKIND  ! MW_air (28.964) / MW_NO3 (62.004)
+ real(kind=RKIND), parameter :: kg_to_mole_nitrate = 0.46712_RKIND  ! MW_air (28.964) / MW_NO3 (62.004) 
  real(kind=RKIND), pointer:: dt            ! Model time step
  real(kind=RKIND),dimension(:,:),pointer:: persistent_hno3
  real(kind=RKIND),dimension(:,:),pointer:: background_hno3
  real(kind=RKIND),dimension(:,:,:),pointer:: scalars
  integer,pointer:: index_qni1,index_qni2,index_qni3
- integer,pointer:: nCells, nVertLevels
+ integer,pointer:: nCells, nVertLevels 
  integer :: i, k
  integer :: time_lev
+! 20260413_rkumar_end
 
  integer:: ierr
 
@@ -113,6 +117,7 @@
        call update_gocart2G_climatology(timeStamp,mesh,gocart2G_met,gocart2G_backgrounds)
     endif
 
+! 20260413_rkumar_start
 ! Apply HNO3 nudging
     call mpas_pool_get_config(block%configs, 'config_gocart2G_hno3_tau', hno3_tau)
     call mpas_pool_get_config(block%configs, 'config_dt', dt)
@@ -120,7 +125,6 @@
     call mpas_pool_get_dimension(mesh,'nVertLevels' ,nVertLevels )
     call mpas_pool_get_array(gocart2G_backgrounds,'background_hno3',background_hno3)
     call mpas_pool_get_array(gocart2G_backgrounds,'persistent_hno3',persistent_hno3)
-
 
 ! Perform the Nudging Calculation
     ! We use 'hno3_tau' directly; Fortran automatically dereferences the pointer
@@ -131,12 +135,12 @@
         call mpas_pool_get_dimension(state,'index_qni1' ,index_qni1)
         call mpas_pool_get_dimension(state,'index_qni2' ,index_qni2)
         call mpas_pool_get_dimension(state,'index_qni3' ,index_qni3)
-
+    
         nudging_factor = dt / hno3_tau
 
         do i = 1, nCells
            do k = 1, nVertLevels
-
+            
             ! 1. Sum components converting the aerosol mass (kg/kg) to molar equivalents (mol/mol)
             tno3_model = persistent_hno3(k,i) + (scalars(index_qni1,k,i) + &
                          scalars(index_qni2,k,i) + scalars(index_qni3,k,i)) * kg_to_mole_nitrate
@@ -154,7 +158,7 @@
             end if
 
            end do
-        end do
+        end do        
 
 ! OLD Nudging
 !        do i = 1, nCells
@@ -164,7 +168,8 @@
 !                    (background_hno3(k,i) - persistent_hno3(k,i)) * nudging_factor
 !            end do
 !        end do
-    endif
+    endif    
+! 20260413_rkumar_end
 
     block => block%next
 
