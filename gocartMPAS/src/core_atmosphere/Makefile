@@ -97,7 +97,6 @@ clean:
 	$(RM) *.i
 	$(RM) -r default_inputs
 
-
 #.F.o:
 #	$(RM) $@ $*.mod
 #ifeq "$(GEN_F90)" "true"
