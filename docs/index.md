@@ -1,6 +1,6 @@
-# MPAS_GOCART2G_TOOLS Documentation
+# MPAS-GOCART2G Documentation
 
-Welcome to the official documentation for MPAS_GOCART2G_TOOLS.
+Welcome to the official documentation for MPAS-GOCART2G.
 
 ```{toctree}
 :maxdepth: 2
