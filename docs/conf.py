@@ -1,6 +1,6 @@
 # docs/conf.py
 
-project = 'MPAS-GOCART2G'
+project = 'MPAS_GOCART2G_TOOLS'
 copyright = '2026, flacey19'
 author = 'flacey19'
 
@@ -14,5 +14,7 @@ source_suffix = {
     '.rst': 'restructuredtext',
     '.md': 'markdown',
 }
+
+html_static_path = ['static']
 
 html_theme = 'sphinx_rtd_theme'
