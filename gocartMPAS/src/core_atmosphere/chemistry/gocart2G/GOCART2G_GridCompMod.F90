@@ -392,7 +392,7 @@
  if(associated(self%pm) .and. associated(NI2G%nismass) .and. associated(NI2G%nh4smass)) &
     self%pm = self%pm + NI2G%nismass + NI2G%nh4smass
  if(associated(self%pm25) .and. associated(NI2G%nismass25) .and. associated(NI2G%nh4smass)) &
-    self%pm25 = self%pm25 + NI2G%nismass + NI2G%nh4smass
+    self%pm25 = self%pm25 + NI2G%nismass25 + NI2G%nh4smass
  if(associated(self%pm_rh35) .and. associated(NI2G%nismass) .and. associated(NI2G%nh4smass)) &
     self%pm_rh35   = self%pm_rh35 + 1.33*(NI2G%nismass + NI2G%nh4smass)
  if(associated(self%pm25_rh35) .and. associated(NI2G%nismass25) .and. associated(NI2G%nh4smass)) &
