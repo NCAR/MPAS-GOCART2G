@@ -36,6 +36,7 @@
  real(kind=RKIND),dimension(:,:),pointer    :: area          => null() ! grid_cell_area (m^2)
 !.................................................................................................................
  real(kind=RKIND),dimension(:,:,:),pointer  :: airdens       => null() ! moist_air_density (kg/m^3)
+ real(kind=RKIND),dimension(:,:,:),pointer:: airdens_dry => null() ! MPAS dry-air density for optics (kg/m^3)
  real(kind=RKIND),dimension(:,:,:),pointer  :: delp          => null() ! pressure_thickness (Pa)
  real(kind=RKIND),dimension(:,:,:),pointer  :: delz          => null() ! geometric_layer_thickness (m)
  real(kind=RKIND),dimension(:,:,:),pointer  :: t             => null() ! air_temperature (K)

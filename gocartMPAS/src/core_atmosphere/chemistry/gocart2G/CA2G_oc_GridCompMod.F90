@@ -523,6 +523,7 @@
  if(associated(self%ocaeridx)  ) self%ocaeridx(:,:)      = 0._RKIND
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
               mie                 = self_params%diag_Mie                   , &
               km                  = self_params%km                         , &
               klid                = self_params%klid                       , &
@@ -577,6 +578,7 @@
  rh20(:,:,:) = 0.20
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -614,6 +616,7 @@
  rh80(:,:,:) = 0.80
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -700,8 +703,8 @@
  ext_s(:,:,:) = 0._RKIND
  ssa_s(:,:,:) = 0._RKIND
 
- qca2G(:,:,:,1) = self%ocphobic(:,:,:)*self%delp(:,:,:)/grav
- qca2G(:,:,:,2) = self%ocphilic(:,:,:)*self%delp(:,:,:)/grav
+ qca2G(:,:,:,1) = self%ocphobic(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
+ qca2G(:,:,:,2) = self%ocphilic(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
 
 
  nl = 0

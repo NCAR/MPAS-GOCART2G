@@ -113,6 +113,7 @@
     !--- atmospheric fields:
     real(kind=RKIND),dimension(:,:),pointer:: coszr        => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: airdens    => null()
+    real(kind=RKIND),dimension(:,:,:),pointer:: airdens_dry    => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: delp       => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: delz       => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: t          => null()
@@ -290,6 +291,7 @@
 !--- allocate atmospheric fields:
  if(.not.associated(self%coszr)      ) allocate(self%coszr(its:ite,jts:jte)             )
  if(.not.associated(self%airdens)    ) allocate(self%airdens(its:ite,jts:jte,kts:kte)   )
+ if(.not.associated(self%airdens_dry)    ) allocate(self%airdens_dry(its:ite,jts:jte,kts:kte)   )
  if(.not.associated(self%delp)       ) allocate(self%delp(its:ite,jts:jte,kts:kte)      )
  if(.not.associated(self%delz)       ) allocate(self%delz(its:ite,jts:jte,kts:kte)      )
  if(.not.associated(self%t)          ) allocate(self%t(its:ite,jts:jte,kts:kte)         )
@@ -399,6 +401,7 @@
 !--- deallocate atmospheric fields:
  if(associated(self%coszr)      ) deallocate(self%coszr      )
  if(associated(self%airdens)    ) deallocate(self%airdens    )
+ if(associated(self%airdens_dry)    ) deallocate(self%airdens_dry    )
  if(associated(self%delp)       ) deallocate(self%delp       )
  if(associated(self%delz)       ) deallocate(self%delz       )
  if(associated(self%t)          ) deallocate(self%t          )
@@ -736,6 +739,8 @@
     do j = jts,jte
        do i = its,ite
           self%delz(i,j,kk)     = zgrid(k+1,i) - zgrid(k,i)
+          ! MPAS tracer mixing ratios are per dry air; retain native density for optics.
+          self%airdens_dry(i,j,kk) = airdens(k,i)
           self%airdens(i,j,kk)  = airdens(k,i)*(1._RKIND+qv(k,i))
           self%t(i,j,kk)        = theta(k,i)/(1._RKIND+R_v/R_d*max(0._RKIND,qv(k,i)))
           self%t(i,j,kk)        = self%t(i,j,kk)*exner(k,i)

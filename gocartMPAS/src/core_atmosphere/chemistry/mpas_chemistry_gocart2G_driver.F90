@@ -212,6 +212,7 @@
        CA2G_bc%ncn_prcp => mpas_gocart2G%ncn_prcp  ; CA2G_bc%tropp    => mpas_gocart2G%backg_ptrop
 
        CA2G_bc%airdens  => mpas_gocart2G%airdens   ; CA2G_bc%delp     => mpas_gocart2G%delp
+       CA2G_bc%airdens_dry => mpas_gocart2G%airdens_dry
        CA2G_bc%delz     => mpas_gocart2G%delz      ; CA2G_bc%t        => mpas_gocart2G%t
        CA2G_bc%rh2      => mpas_gocart2G%rh2       ; CA2G_bc%zle      => mpas_gocart2G%zle
        CA2G_bc%ple      => mpas_gocart2G%ple       ; CA2G_bc%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -256,6 +257,7 @@
        CA2G_br%ncn_prcp => mpas_gocart2G%ncn_prcp ; CA2G_br%tropp    => mpas_gocart2G%backg_ptrop
 
        CA2G_br%airdens  => mpas_gocart2G%airdens  ; CA2G_br%delp     => mpas_gocart2G%delp
+       CA2G_br%airdens_dry => mpas_gocart2G%airdens_dry
        CA2G_br%delz     => mpas_gocart2G%delz     ; CA2G_br%t        => mpas_gocart2G%t
        CA2G_br%rh2      => mpas_gocart2G%rh2      ; CA2G_br%zle      => mpas_gocart2G%zle
        CA2G_br%ple      => mpas_gocart2G%ple      ; CA2G_br%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -305,6 +307,7 @@
        CA2G_oc%ncn_prcp => mpas_gocart2G%ncn_prcp ; CA2G_oc%tropp    => mpas_gocart2G%backg_ptrop
 
        CA2G_oc%airdens  => mpas_gocart2G%airdens  ; CA2G_oc%delp     => mpas_gocart2G%delp
+       CA2G_oc%airdens_dry => mpas_gocart2G%airdens_dry
        CA2G_oc%delz     => mpas_gocart2G%delz     ; CA2G_oc%t        => mpas_gocart2G%t
        CA2G_oc%rh2      => mpas_gocart2G%rh2      ; CA2G_oc%zle      => mpas_gocart2G%zle
        CA2G_oc%ple      => mpas_gocart2G%ple      ; CA2G_oc%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -355,6 +358,7 @@
        DU2G%ncn_prcp   => mpas_gocart2G%ncn_prcp ; DU2G%tropp     => mpas_gocart2G%backg_ptrop
 
        DU2G%airdens    => mpas_gocart2G%airdens  ; DU2G%delp     => mpas_gocart2G%delp
+       DU2G%airdens_dry => mpas_gocart2G%airdens_dry
        DU2G%delz       => mpas_gocart2G%delz     ; DU2G%t        => mpas_gocart2G%t
        DU2G%rh2        => mpas_gocart2G%rh2      ; DU2G%zle      => mpas_gocart2G%zle
        DU2G%ple        => mpas_gocart2G%ple      ; DU2G%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -390,6 +394,7 @@
        NI2G%cn_prcp  => mpas_gocart2G%cn_prcp  ; NI2G%ncn_prcp => mpas_gocart2G%ncn_prcp
 
        NI2G%airdens  => mpas_gocart2G%airdens  ; NI2G%delp     => mpas_gocart2G%delp
+       NI2G%airdens_dry => mpas_gocart2G%airdens_dry
        NI2G%delz     => mpas_gocart2G%delz     ; NI2G%t        => mpas_gocart2G%t
        NI2G%rh2      => mpas_gocart2G%rh2      ; NI2G%u        => mpas_gocart2g%u
        NI2G%v        => mpas_gocart2G%v        ; NI2G%ple      => mpas_gocart2G%ple
@@ -433,6 +438,7 @@
        SS2G%deep_lakes_mask => mpas_gocart2G%dlakes_mask ; SS2G%tropp    => mpas_gocart2G%backg_ptrop
 
        SS2G%airdens  => mpas_gocart2G%airdens  ; SS2G%delp     => mpas_gocart2G%delp
+       SS2G%airdens_dry => mpas_gocart2G%airdens_dry
        SS2G%delz     => mpas_gocart2G%delz     ; SS2G%t        => mpas_gocart2G%t
        SS2G%rh2      => mpas_gocart2G%rh2      ; SS2G%zle      => mpas_gocart2G%zle
        SS2G%ple      => mpas_gocart2G%ple      ; SS2G%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -472,6 +478,7 @@
        SU2G%tropp   => mpas_gocart2G%backg_ptrop
 
        SU2G%airdens  => mpas_gocart2G%airdens  ; SU2G%delp     => mpas_gocart2G%delp
+       SU2G%airdens_dry => mpas_gocart2G%airdens_dry
        SU2G%delz     => mpas_gocart2G%delz     ; SU2G%t        => mpas_gocart2G%t
        SU2G%rh2      => mpas_gocart2G%rh2      ; SU2G%zle      => mpas_gocart2G%zle
        SU2G%ple      => mpas_gocart2G%ple      ; SU2G%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -653,6 +660,7 @@
        CA2G_bc%ncn_prcp => mpas_gocart2G%ncn_prcp  ; CA2G_bc%tropp    => mpas_gocart2G%backg_ptrop
 
        CA2G_bc%airdens  => mpas_gocart2G%airdens   ; CA2G_bc%delp     => mpas_gocart2G%delp
+       CA2G_bc%airdens_dry => mpas_gocart2G%airdens_dry
        CA2G_bc%delz     => mpas_gocart2G%delz      ; CA2G_bc%t        => mpas_gocart2G%t
        CA2G_bc%rh2      => mpas_gocart2G%rh2       ; CA2G_bc%zle      => mpas_gocart2G%zle
        CA2G_bc%ple      => mpas_gocart2G%ple       ; CA2G_bc%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -700,6 +708,7 @@
        CA2G_br%ncn_prcp => mpas_gocart2G%ncn_prcp ; CA2G_br%tropp    => mpas_gocart2G%backg_ptrop
 
        CA2G_br%airdens  => mpas_gocart2G%airdens  ; CA2G_br%delp     => mpas_gocart2G%delp
+       CA2G_br%airdens_dry => mpas_gocart2G%airdens_dry
        CA2G_br%delz     => mpas_gocart2G%delz     ; CA2G_br%t        => mpas_gocart2G%t
        CA2G_br%rh2      => mpas_gocart2G%rh2      ; CA2G_br%zle      => mpas_gocart2G%zle
        CA2G_br%ple      => mpas_gocart2G%ple      ; CA2G_br%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -752,6 +761,7 @@
        CA2G_oc%ncn_prcp => mpas_gocart2G%ncn_prcp ; CA2G_oc%tropp    => mpas_gocart2G%backg_ptrop
 
        CA2G_oc%airdens  => mpas_gocart2G%airdens  ; CA2G_oc%delp     => mpas_gocart2G%delp
+       CA2G_oc%airdens_dry => mpas_gocart2G%airdens_dry
        CA2G_oc%delz     => mpas_gocart2G%delz     ; CA2G_oc%t        => mpas_gocart2G%t
        CA2G_oc%rh2      => mpas_gocart2G%rh2      ; CA2G_oc%zle      => mpas_gocart2G%zle
        CA2G_oc%ple      => mpas_gocart2G%ple      ; CA2G_oc%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -805,6 +815,7 @@
        DU2G%ncn_prcp   => mpas_gocart2G%ncn_prcp ; DU2G%tropp     => mpas_gocart2G%backg_ptrop
 
        DU2G%airdens    => mpas_gocart2G%airdens  ; DU2G%delp     => mpas_gocart2G%delp
+       DU2G%airdens_dry => mpas_gocart2G%airdens_dry
        DU2G%delz       => mpas_gocart2G%delz     ; DU2G%t        => mpas_gocart2G%t
        DU2G%rh2        => mpas_gocart2G%rh2      ; DU2G%zle      => mpas_gocart2G%zle
        DU2G%ple        => mpas_gocart2G%ple      ; DU2G%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -844,6 +855,7 @@
        NI2G%cn_prcp  => mpas_gocart2G%cn_prcp  ; NI2G%ncn_prcp => mpas_gocart2G%ncn_prcp
 
        NI2G%airdens  => mpas_gocart2G%airdens  ; NI2G%delp     => mpas_gocart2G%delp
+       NI2G%airdens_dry => mpas_gocart2G%airdens_dry
        NI2G%delz     => mpas_gocart2G%delz     ; NI2G%t        => mpas_gocart2G%t
        NI2G%rh2      => mpas_gocart2G%rh2      ; NI2G%u        => mpas_gocart2g%u
        NI2G%v        => mpas_gocart2G%v        ; NI2G%ple      => mpas_gocart2G%ple
@@ -903,6 +915,7 @@
        SS2G%deep_lakes_mask => mpas_gocart2G%dlakes_mask ; SS2G%tropp    => mpas_gocart2G%backg_ptrop
 
        SS2G%airdens  => mpas_gocart2G%airdens  ; SS2G%delp     => mpas_gocart2G%delp
+       SS2G%airdens_dry => mpas_gocart2G%airdens_dry
        SS2G%delz     => mpas_gocart2G%delz     ; SS2G%t        => mpas_gocart2G%t
        SS2G%rh2      => mpas_gocart2G%rh2      ; SS2G%zle      => mpas_gocart2G%zle
        SS2G%ple      => mpas_gocart2G%ple      ; SS2G%pfl_lsan => mpas_gocart2G%pfl_lsan
@@ -946,6 +959,7 @@
        SU2G%tropp   => mpas_gocart2G%backg_ptrop
 
        SU2G%airdens  => mpas_gocart2G%airdens  ; SU2G%delp     => mpas_gocart2G%delp
+       SU2G%airdens_dry => mpas_gocart2G%airdens_dry
        SU2G%delz     => mpas_gocart2G%delz     ; SU2G%t        => mpas_gocart2G%t
        SU2G%rh2      => mpas_gocart2G%rh2      ; SU2G%zle      => mpas_gocart2G%zle
        SU2G%ple      => mpas_gocart2G%ple      ; SU2G%pfl_lsan => mpas_gocart2G%pfl_lsan

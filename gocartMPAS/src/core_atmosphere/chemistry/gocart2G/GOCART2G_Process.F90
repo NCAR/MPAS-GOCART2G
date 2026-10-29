@@ -3303,13 +3303,15 @@ CONTAINS
                                   sfcmass, colmass, mass, exttau, stexttau, scatau, stscatau,&
                                   sfcmass25, colmass25, mass25, exttau25, scatau25, &
                                   fluxu, fluxv, conc, extcoef, scacoef, bckcoef,&
-                                  exttaufm, scataufm, angstrom, aerindx, NO3nFlag, rc )
+                                  exttaufm, scataufm, angstrom, aerindx, NO3nFlag, rhod, delz, rc )
 
 ! !USES:
 
   implicit NONE
 
 ! !INPUT PARAMETERS:
+   ! Optical mass uses MPAS dry density and physical thickness, not hydrostatic pressure mass.
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: rhod, delz
    type(GOCART2G_Mie),  intent(in) :: mie        ! mie table
    integer, intent(in) :: km, nbegin, nbins
    integer,    intent(in)    :: klid   ! index for pressure lid
@@ -3539,21 +3541,21 @@ CONTAINS
       do n = nbegin, nbins
         do w = 1, size(wavelengths_profile)
           call mie%Query(wavelengths_profile(w),n,   &
-                         aerosol(:,:,:,n)*delp/grav, &
+                         aerosol(:,:,:,n)*rhod*delz, &
                          rh, tau=tau, ssa=ssa, bbck=bck,__RC__)
 !         Calculate the total ext. and scat. coefficients
           if ( present(extcoef) ) then
              extcoef(:,:,:,w) = extcoef(:,:,:,w) + &
-                               tau * (grav * rhoa / delp)
+                               tau / delz
           endif
           if ( present(scacoef) ) then
              scacoef(:,:,:,w) = scacoef(:,:,:,w) + &
-                               ssa * tau * (grav * rhoa / delp)
+                               ssa * tau / delz
           endif
           !calculate the backscatter coefficient
           if ( present(bckcoef) ) then
              bckcoef(:,:,:,w) = bckcoef(:,:,:,w) + &
-                               bck * aerosol(:,:,:,n)*rhoa
+                               bck * aerosol(:,:,:,n)*rhod
           endif
        enddo !wavelengths_profile
       enddo !nbins
@@ -3582,7 +3584,7 @@ CONTAINS
       do w = 1, size(wavelengths_vertint)
         do n = nbegin, nbins
            call mie%Query(wavelengths_vertint(w), n,  &
-                          aerosol(:,:,:,n)*delp/grav, &
+                          aerosol(:,:,:,n)*rhod*delz, &
                           rh, tau=tau, ssa=ssa, __RC__)
            do k = klid, km
 !             Integrate in the vertical
@@ -3651,14 +3653,14 @@ CONTAINS
 
 !       Select the name for species
         call mie%Query(4.70E-7, n,                 &
-                       aerosol(:,:,:,n)*delp/grav, &
+                       aerosol(:,:,:,n)*rhod*delz, &
                        rh, tau=tau, __RC__)
         do k = klid, km
           tau470 = tau470 + tau(:,:,k)
         enddo
 
         call mie%Query(8.70E-7, n,                 &
-                       aerosol(:,:,:,n)*delp/grav, &
+                       aerosol(:,:,:,n)*rhod*delz, &
                        rh, tau=tau, __RC__)
         do k = klid, km
           tau870 = tau870 + tau(:,:,k)
@@ -6770,12 +6772,14 @@ K_LOOP: do k = km, 1, -1
                                  so2sfcmass, so2colmass, &
                                  so4sfcmass, so4colmass, &
                                  exttau, stexttau,scatau, stscatau,so4mass, so4conc, extcoef, &
-                                 scacoef, bckcoef, angstrom, fluxu, fluxv, sarea, snum, rc )
+                                 scacoef, bckcoef, angstrom, fluxu, fluxv, sarea, snum, rhod, delz, rc )
 
 ! !USES:
    implicit NONE
 
 ! !INPUT PARAMETERS:
+   ! Optical mass uses MPAS dry density and physical thickness, not hydrostatic pressure mass.
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: rhod, delz
    integer, intent(in) :: km    ! number of model levels
    integer,    intent(in)    :: klid   ! index for pressure lid
    real(kind=RKIND), intent(in)    :: rmed  ! mean radius [um]
@@ -6979,21 +6983,21 @@ K_LOOP: do k = km, 1, -1
 
       do w = 1, size(wavelengths_profile)
          call mie%Query(wavelengths_profile(w), 1, & ! Only SO4 exists in the MieTable, so its index is 1
-                        SO4*delp/grav, rh,         &
+                        SO4*rhod*delz, rh,         &
                         tau=tau, ssa=ssa, bbck=bck,__RC__)
 
 !         Calculate the total ext. and scat. coefficients
          if( present(extcoef) ) then
               extcoef(:,:,:,w) = extcoef(:,:,:,w) + &
-                              tau * (grav * rhoa / delp)
+                              tau / delz
          endif
          if( present(scacoef) ) then
               scacoef(:,:,:,w) = scacoef(:,:,:,w) + &
-                              ssa * tau * (grav * rhoa / delp)
+                              ssa * tau / delz
          endif
          if( present(bckcoef) ) then
               bckcoef(:,:,:,w) = bckcoef(:,:,:,w) + &
-                              bck * SO4 * rhoa 
+                              bck * SO4 * rhod
          endif
       enddo
    endif
@@ -7008,7 +7012,7 @@ K_LOOP: do k = km, 1, -1
 
       do w = 1, size(wavelengths_vertint)
          call mie%Query(wavelengths_vertint(w), 1,  & ! Only SO4 exists in the MieTable, so its index is 1
-                        SO4*delp/grav, rh,          &
+                        SO4*rhod*delz, rh,          &
                         tau=tau, ssa=ssa, __RC__)
 
          do k = klid, km
@@ -7049,14 +7053,14 @@ K_LOOP: do k = km, 1, -1
       tau870(i1:i2,j1:j2) = tiny(1.0)
 
       call mie%Query(4.70E-7,  1,       & ! Only SO4 exists in the MieTable, so its index is 1
-                     SO4*delp/grav, rh, &
+                     SO4*rhod*delz, rh, &
                      tau=tau, __RC__)
       do k = klid, km
          tau470 = tau470 + tau(:,:,k)
       enddo
 
       call mie%Query(8.70E-7, 1,       &
-                     SO4*delp/grav,rh, &
+                     SO4*rhod*delz,rh, &
                      tau=tau, __RC__)
       do k = klid, km
          tau870 = tau870 + tau(:,:,k)

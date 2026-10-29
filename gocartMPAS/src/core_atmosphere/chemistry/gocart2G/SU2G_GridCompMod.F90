@@ -687,6 +687,7 @@
  if(associated(self%sufluxv)   ) self%sufluxv    = 0._RKIND
  istat = 0
  call SU_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
               km         = self_params%km                                  , &
               klid       = self_params%klid                                , &
               rmed       = self_params%radius(nSO4)                        , &
@@ -752,6 +753,7 @@
  if(.not.allocated(rh20)) allocate(rh20(i1:i2,j1:j2,km))
  rh20(:,:,:) = 0.20
  call SU_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
               km                  = self_params%km,                         &
               klid                = self_params%klid,                       &
               rmed                = self_params%radius(nSO4),               &
@@ -793,6 +795,7 @@
  if(.not.allocated(rh80)) allocate(rh80(i1:i2,j1:j2,km))
  rh80(:,:,:) = 0.80
  call SU_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
               km                  = self_params%km,                         &
               klid                = self_params%klid,                       &
               rmed                = self_params%radius(nSO4),               &
@@ -894,7 +897,7 @@
  ext_s(:,:,:) = 0._RKIND
  ssa_s(:,:,:) = 0._RKIND
 
- qsu2G(:,:,:,1) = self%so4(:,:,:)*self%delp(:,:,:)/grav
+ qsu2G(:,:,:,1) = self%so4(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
 
 
  nl = 0
