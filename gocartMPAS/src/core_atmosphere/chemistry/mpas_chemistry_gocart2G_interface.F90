@@ -6,6 +6,14 @@
 ! distributed with this code, or at http://mpas-dev.github.com/license.html
 !
 !==================================================================================================================
+! revision history:
+! * added airdens_dry, the native MPAS dry-air density, so that GOCART2G optics integrate tracer mass
+!   as q*rho_d*dz.
+!   Soyoung Ha (NCAR/MMM) / 2026-10-26.
+! * pass the dry-air layer mass rho_d*g*dz to GOCART2G as delp. The full-pressure interface difference
+!   carried moist mass and could reach zero in the lowest layer, which broke gravitational settling.
+!   Soyoung Ha (NCAR/MMM) / 2026-10-29.
+!==================================================================================================================
  module mpas_chemistry_gocart2G_interface
  use mpas_log
  use mpas_kind_types

@@ -105,6 +105,12 @@
 !
 !  01Apr2021  R.Montuoro/NOAA - Added FENGSHA dust scheme and related methods.
 !
+!  26Oct2026  S.Ha/NCAR - Aero_Compute_Diags and SU_Compute_Diags integrate optics over the
+!                   dry-air layer mass q*rho_d*dz instead of q*delp/g, since MPAS tracers are
+!                   mixing ratios per kg of dry air.
+!  29Oct2026  S.Ha/NCAR - WetRemovalGOCART2G and SU_Wet_Removal use the dry delp for tracer mass
+!                   and the physical layer thickness for precipitation.
+!
 !
 !EOP
 !-------------------------------------------------------------------------
