@@ -543,6 +543,7 @@
            fwet      = fwet              , aerosol = self%nh3         , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = fluxWT_ptr        , rc      = istat                                            &
                         )
     if (associated(self%nh3wt)) self%nh3wt = fluxWT_ptr(:,:,1)
@@ -570,6 +571,7 @@
            fwet      = fwet              , aerosol = self%nh4a        , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = fluxWT_ptr        , rc      = istat                                            &
                         )
     if (associated(self%nh4wt)) self%nh4wt = fluxWT_ptr(:,:,1)
@@ -596,6 +598,7 @@
            fwet      = fwet              , aerosol = self%no3an1      , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = self%niwt         , rc      = istat                                            &
                         )
     if(istat /=0) then
@@ -619,6 +622,7 @@
            fwet      = fwet              , aerosol = self%no3an2      , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = self%niwt         , rc      = istat                                            &
                         )
     if(istat /=0) then
@@ -642,6 +646,7 @@
            fwet      = fwet              , aerosol = self%no3an3      , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = self%niwt         , rc      = istat                                            &
                         )
     if(istat /=0) then

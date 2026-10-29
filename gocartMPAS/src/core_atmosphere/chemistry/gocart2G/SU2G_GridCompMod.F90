@@ -625,6 +625,7 @@
               grav            = grav              , &
               airMolWght      = airmw             , &
               delp            = self%delp         , &
+              delz            = self%delz         , &
               fMassSO4        = fMassSO4          , &
               fMassSO2        = fMassSO2          , &
               h2o2_int        = h2o2_init         , &

@@ -2765,7 +2765,7 @@ CONTAINS
 
 ! !IROUTINE: WetRemovalGOCART2G
    subroutine WetRemovalGOCART2G ( km, klid, n1, n2, bin_ind, cdt, aero_type, kin, grav, fwet, &
-                                   aerosol, ple, tmpu, rhoa, pfllsan, pfilsan, &
+                                   aerosol, ple, tmpu, rhoa, pfllsan, pfilsan, delp, delz, &
                                    precc, precl, fluxout, rc )
 
 ! !USES:
@@ -2788,6 +2788,8 @@ CONTAINS
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: rhoa    ! moist air density [kg/m^3]
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: pfllsan ! 3D flux of liquid nonconvective precipitation [kg/(m^2 sec)]
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: pfilsan ! 3D flux of ice nonconvective precipitation [kg/(m^2 sec)]
+   real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: delp    ! dry-air layer mass times gravity, rho_d*g*dz [Pa]
+   real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: delz    ! layer thickness [m]
    real(kind=RKIND), pointer, dimension(:,:), intent(in)    :: precc   ! surface convective rain flux [kg/(m^2 sec)]
    real(kind=RKIND), pointer, dimension(:,:), intent(in)    :: precl   ! Non-convective precipitation [kg/(m^2 sec)]
    real(kind=RKIND), pointer, dimension(:,:,:)  :: fluxout ! tracer loss flux [kg m-2 s-1]
@@ -2810,7 +2812,6 @@ CONTAINS
    integer  ::  i, j, k, n, LH, kk, ios, nbins
    integer  :: i1=1, i2, j1=1, j2, dims(3)
    real(kind=RKIND), allocatable, dimension(:,:,:) :: pdog   ! air mass factor dp/g [kg m-2]
-   real(kind=RKIND), allocatable, dimension(:,:,:) :: delz   ! box height  dp/g/rhoa [m]
    real(kind=RKIND) :: pls, pcv, pac             ! ls, cv, tot precip [mm day-1]
    real(kind=RKIND) :: qls(km), qcv(km)          ! ls, cv portion of moisture tendency[kg m-3 s-1]
    real(kind=RKIND) :: qmx, qd, A                ! temporary variables on moisture
@@ -2855,7 +2856,7 @@ CONTAINS
 
 !  Allocate arrays
    allocate(c_h2o(i2,j2,km), cldliq(i2,j2,km), cldice(i2,j2,km), pdog(i2,j2,km), &
-            delz(i2,j2,km), dpfli(i2,j2,km), source=0.0)
+            dpfli(i2,j2,km), source=0.0)
 
 !  Initialize local variables
 !  --------------------------
@@ -2889,8 +2890,9 @@ CONTAINS
 !  delz = pdog / rhoa
 !  dpfli = pfllsan(:,:,1:km)-pfllsan(:,:,0:km-1)+pfilsan(:,:,1:km)-pfilsan(:,:,0:km-1)
 
-   pdog = (ple(:,:,2:km+1)-ple(:,:,1:km)) / grav
-   delz = pdog / rhoa
+   ! Tracers are per kg of dry air: transfer them with the dry layer mass, and convert
+   ! precipitation with the physical layer thickness.
+   pdog = delp / grav
    dpfli = pfllsan(:,:,:) + pfilsan(:,:,:)
 !--- end LDF.
    if (.not. KIN) then              ! Gases
@@ -2952,7 +2954,7 @@ CONTAINS
      if(LH .lt. 1) cycle
 
      do k = LH, km
-      qls(k) = dpfli(i,j,k)/pdog(i,j,k)*rhoa(i,j,k)
+      qls(k) = dpfli(i,j,k)/delz(i,j,k)
      end do
 
 !    Loop over vertical to do the scavenging!
@@ -3046,7 +3048,7 @@ CONTAINS
 !-----------------------------------------------------------------------------
 
 !       Aerosols
-        Qd = Qmx /rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else
@@ -3164,7 +3166,7 @@ CONTAINS
 !  units of mm/s (omit the multiply and divide by 1000).
 !-----------------------------------------------------------------------------
 
-        Qd = Qmx / rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else
@@ -6195,7 +6197,7 @@ K_LOOP: do k = km, 1, -1
 !BOP
 ! !IROUTINE: SU_Wet_Removal
 
-   subroutine SU_Wet_Removal ( km, nbins, klid, cdt, kin, grav, airMolWght, delp, fMassSO4, fMassSO2, &
+   subroutine SU_Wet_Removal ( km, nbins, klid, cdt, kin, grav, airMolWght, delp, delz, fMassSO4, fMassSO2, &
                                h2o2_int, ple, rhoa, precc, precl, pfllsan, pfilsan, tmpu, &
                                nDMS, nSO2, nSO4, nMSA, DMS, SO2, SO4, MSA, &
                                fluxout, pSO4_colflux, pSO4wet_colflux, &
@@ -6213,7 +6215,8 @@ K_LOOP: do k = km, 1, -1
    logical, intent(in) :: KIN            ! true for aerosol
    real(kind=RKIND), intent(in) :: grav  ! gravity [m/sec]
    real(kind=RKIND), intent(in) :: airMolWght ! air molecular weight [kg]
-   real(kind=RKIND), dimension(:,:,:), intent(in) :: delp   ! pressure thickness [Pa]
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: delp   ! dry-air layer mass times gravity, rho_d*g*dz [Pa]
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: delz   ! layer thickness [m]
    real(kind=RKIND), intent(in) :: fMassSO4, fMassSO2
    real(kind=RKIND), dimension(:,:,:) :: h2o2_int
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in) :: ple     ! level edge air pressure
@@ -6385,7 +6388,7 @@ K_LOOP: do k = km, 1, -1
      if(LH .lt. 1) cycle
 
      do k = LH, km
-      qls(k) = dpfli(i,j,k)/pdog(i,j,k)*rhoa(i,j,k)
+      qls(k) = dpfli(i,j,k)/delz(i,j,k)   ! precipitation per volume uses the physical thickness
      end do
 
 !    Loop over vertical to do the scavenging!
@@ -6474,7 +6477,7 @@ K_LOOP: do k = km, 1, -1
 !  units of mm/s (omit the multiply and divide by 1000).
 !-----------------------------------------------------------------------------
 
-        Qd = Qmx /rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else
@@ -6608,7 +6611,7 @@ K_LOOP: do k = km, 1, -1
 !  units of mm/s (omit the multiply and divide by 1000).
 !-----------------------------------------------------------------------------
 
-        Qd = Qmx / rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else

@@ -478,6 +478,8 @@
            rhoa      = self%airdens      , &
            pfllsan   = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , &
+           delp      = self%delp         , &
+           delz      = self%delz         , &
            precc     = self%cn_prcp      , &
            precl     = self%ncn_prcp     , &
            fluxout   = self%ocwt         , &
