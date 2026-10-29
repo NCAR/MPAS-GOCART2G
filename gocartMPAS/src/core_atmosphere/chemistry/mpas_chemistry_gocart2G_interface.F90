@@ -12,6 +12,7 @@
  use mpas_derived_types,only: mpas_pool_type
  use mpas_pool_routines,only: mpas_pool_get_array,mpas_pool_get_config,mpas_pool_get_dimension
  use mpas_atmphys_constants,only: degrad,R_d,R_v
+ use mpas_constants,only: gravity
  use mpas_atmphys_vars,only: xice_threshold
 
  use mpas_chemistry_gocart2G_update,only: vinterp_backgrounds
@@ -832,7 +833,10 @@
     !pressure thickness:
     do i = its,ite
        do k = kts,kte
-          self%delp(i,j,k) = self%ple(i,j,k+1)-self%ple(i,j,k)
+          ! MPAS tracers are per kg dry air: delp/g must be the dry-air layer mass,
+          ! rho_d*dz, so every q <-> kg m-2 conversion in GOCART2G is mass-consistent.
+          ! ple stays the full-pressure interface field.
+          self%delp(i,j,k) = self%airdens_dry(i,j,k)*gravity*self%delz(i,j,k)
        enddo
     enddo
  enddo
