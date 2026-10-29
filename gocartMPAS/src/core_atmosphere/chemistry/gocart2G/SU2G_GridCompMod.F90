@@ -260,7 +260,8 @@
     hghte             = self%zle,                    &
     pblh              = self%zpbl,                   &
     tmpu              = self%t,                      &
-    rhoa              = self%airdens,                &
+    ! delp is the dry-air layer mass, so the thickness delp/(rhoa*grav) needs the dry density
+    rhoa              = self%airdens_dry,            &
     delp              = self%delp,                   &
     nVolc             = nVolc,                       &
     su_emis           = self%suem,                   &

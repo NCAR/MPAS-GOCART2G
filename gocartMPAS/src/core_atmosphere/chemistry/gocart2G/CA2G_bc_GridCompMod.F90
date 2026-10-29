@@ -217,7 +217,8 @@
     aviation_crs_src  = self%bc_aviation_crs,        &
     pblh              = self%zpbl,                   &
     tmpu              = self%t,                      &
-    rhoa              = self%airdens,                &
+    ! delp is the dry-air layer mass, so the thickness delp/(rhoa*grav) needs the dry density
+    rhoa              = self%airdens_dry,            &
     rh                = self%rh2,                    &
     delp              = self%delp,                   &
     aerosolPhilic     = self%bcphilic,               &
