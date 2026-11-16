@@ -40,6 +40,17 @@ date_val=${year}${month}${day}
 path_mpas_out=${path_fcst}/${date_val}
 mkdir -p ${path_mpas_out}
 
+# Define and clean submission scripts from existing versions of the model
+job_scripts=(
+    "run_init_static.pbs"
+    "run_init_chem.pbs"
+    "run_init_nudging.pbs"
+    "run_atm_chem.pbs"
+    "run_atm_nudging.pbs"
+)
+
+rm -f "${job_scripts[@]}"
+
 # Build MPAS namelists on the fly: Calculate start and end dates and then execute the .sh files in fcst directory
 start_year=$year
 start_month=$month
@@ -237,15 +248,6 @@ else
     write_atm_pbs "atm_chem" "01:00:00" "${path_mpas_out}/run_atm_chem.pbs" "namelist.chem.atmosphere" "streams.chem.atmosphere"
     echo "Prepared chemistry atmosphere run in: ${path_mpas_out}"
 fi
-
-# Define jobs in strict execution order
-job_scripts=(
-    "run_init_static.pbs"
-    "run_init_chem.pbs"
-    "run_init_nudging.pbs"
-    "run_atm_chem.pbs"
-    "run_atm_nudging.pbs"
-)
 
 PREV_JOBID=""
 FIRST_JOBID=""
