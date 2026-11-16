@@ -255,12 +255,12 @@ for script in "${job_scripts[@]}"; do
         if [[ -z "$PREV_JOBID" ]]; then
             # First existing job in chain: submit on hold (-h)
             echo "Submitting root job (held): $script"
-            CURRENT_JOBID=$(qsub -h "$script")
+            CURRENT_JOBID=$(qsub -h "$script") || exit 1
             FIRST_JOBID="$CURRENT_JOBID"
         else
             # Subsequent jobs: depend on the immediately preceding existing job
             echo "Submitting dependent job: $script (afterok:$PREV_JOBID)"
-            CURRENT_JOBID=$(qsub -W depend=afterok:"$PREV_JOBID" "$script")
+            CURRENT_JOBID=$(qsub -W depend=afterok:"$PREV_JOBID" "$script") || exit 1
         fi
         
         # Advance dependency pointer
