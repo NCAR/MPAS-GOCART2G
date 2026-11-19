@@ -543,6 +543,7 @@
            fwet      = fwet              , aerosol = self%nh3         , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = fluxWT_ptr        , rc      = istat                                            &
                         )
     if (associated(self%nh3wt)) self%nh3wt = fluxWT_ptr(:,:,1)
@@ -570,6 +571,7 @@
            fwet      = fwet              , aerosol = self%nh4a        , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = fluxWT_ptr        , rc      = istat                                            &
                         )
     if (associated(self%nh4wt)) self%nh4wt = fluxWT_ptr(:,:,1)
@@ -596,6 +598,7 @@
            fwet      = fwet              , aerosol = self%no3an1      , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = self%niwt         , rc      = istat                                            &
                         )
     if(istat /=0) then
@@ -619,6 +622,7 @@
            fwet      = fwet              , aerosol = self%no3an2      , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = self%niwt         , rc      = istat                                            &
                         )
     if(istat /=0) then
@@ -642,6 +646,7 @@
            fwet      = fwet              , aerosol = self%no3an3      , ple     = self%ple          , &
            tmpu      = self%t            , rhoa    = self%airdens     , pfllsan = self%pfl_lsan     , &
            pfilsan   = self%pfi_lsan     , precc   = self%cn_prcp     , precl   = self%ncn_prcp     , &
+           delp      = self%delp         , delz    = self%delz         , &
            fluxout   = self%niwt         , rc      = istat                                            &
                         )
     if(istat /=0) then
@@ -669,6 +674,7 @@
  if(associated(self%nh4conc) ) self%nh4conc(:,:,:) = 0._RKIND
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -709,6 +715,7 @@
  if(associated(self%nh3conc) ) self%nh3conc(:,:,:) = 0._RKIND
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -753,6 +760,7 @@
  if(associated(self%niscatfm) ) self%niscatfm(:,:,:) = 0._RKIND
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -809,6 +817,7 @@
  if(associated(self%nibckcoef) ) self%nibckcoef(:,:,:,:) = 0._RKIND
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -862,6 +871,7 @@
  rh20(:,:,:) = 0.20
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -898,6 +908,7 @@
  rh80(:,:,:) = 0.80
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -983,9 +994,9 @@
  ext_s(:,:,:) = 0._RKIND
  ssa_s(:,:,:) = 0._RKIND
 
- qni3G(:,:,:,1) = self%no3an1(:,:,:)*self%delp(:,:,:)/grav
- qni3G(:,:,:,2) = self%no3an2(:,:,:)*self%delp(:,:,:)/grav
- qni3G(:,:,:,3) = self%no3an3(:,:,:)*self%delp(:,:,:)/grav
+ qni3G(:,:,:,1) = self%no3an1(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
+ qni3G(:,:,:,2) = self%no3an2(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
+ qni3G(:,:,:,3) = self%no3an3(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
 
 
  nl = 0

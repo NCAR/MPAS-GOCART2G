@@ -447,6 +447,8 @@
               rhoa      = self%airdens        , &
               pfllsan   = self%pfl_lsan       , &
               pfilsan   = self%pfi_lsan       , &
+              delp      = self%delp           , &
+              delz      = self%delz           , &
               precc     = self%cn_prcp        , &
               precl     = self%ncn_prcp       , &
               fluxout   = self%sswt           , &
@@ -492,6 +494,7 @@
 
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
               mie                 = self_params%diag_Mie                   , &
               km                  = self_params%km                         , &
               klid                = self_params%klid                       , &
@@ -554,6 +557,7 @@
  rh20(:,:,:) = 0.20
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -591,6 +595,7 @@
  rh80(:,:,:) = 0.80
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -673,7 +678,7 @@
  ssa_s(:,:,:) = 0._RKIND
 
  do n = 1,nbins
-    qss5G(:,:,:,n) = self%ss(:,:,:,n)*self%delp(:,:,:)/grav
+    qss5G(:,:,:,n) = self%ss(:,:,:,n)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
  enddo
 
 

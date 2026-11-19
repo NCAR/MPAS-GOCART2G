@@ -6,12 +6,21 @@
 ! distributed with this code, or at http://mpas-dev.github.com/license.html
 !
 !==================================================================================================================
+! revision history:
+! * added airdens_dry, the native MPAS dry-air density, so that GOCART2G optics integrate tracer mass
+!   as q*rho_d*dz.
+!   Soyoung Ha (NCAR/MMM) / 2026-10-26.
+! * pass the dry-air layer mass rho_d*g*dz to GOCART2G as delp. The full-pressure interface difference
+!   carried moist mass and could reach zero in the lowest layer, which broke gravitational settling.
+!   Soyoung Ha (NCAR/MMM) / 2026-10-29.
+!==================================================================================================================
  module mpas_chemistry_gocart2G_interface
  use mpas_log
  use mpas_kind_types
  use mpas_derived_types,only: mpas_pool_type
  use mpas_pool_routines,only: mpas_pool_get_array,mpas_pool_get_config,mpas_pool_get_dimension
  use mpas_atmphys_constants,only: degrad,R_d,R_v
+ use mpas_constants,only: gravity
  use mpas_atmphys_vars,only: xice_threshold
 
  use mpas_chemistry_gocart2G_update,only: vinterp_backgrounds
@@ -113,6 +122,7 @@
     !--- atmospheric fields:
     real(kind=RKIND),dimension(:,:),pointer:: coszr        => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: airdens    => null()
+    real(kind=RKIND),dimension(:,:,:),pointer:: airdens_dry    => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: delp       => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: delz       => null()
     real(kind=RKIND),dimension(:,:,:),pointer:: t          => null()
@@ -290,6 +300,7 @@
 !--- allocate atmospheric fields:
  if(.not.associated(self%coszr)      ) allocate(self%coszr(its:ite,jts:jte)             )
  if(.not.associated(self%airdens)    ) allocate(self%airdens(its:ite,jts:jte,kts:kte)   )
+ if(.not.associated(self%airdens_dry)    ) allocate(self%airdens_dry(its:ite,jts:jte,kts:kte)   )
  if(.not.associated(self%delp)       ) allocate(self%delp(its:ite,jts:jte,kts:kte)      )
  if(.not.associated(self%delz)       ) allocate(self%delz(its:ite,jts:jte,kts:kte)      )
  if(.not.associated(self%t)          ) allocate(self%t(its:ite,jts:jte,kts:kte)         )
@@ -399,6 +410,7 @@
 !--- deallocate atmospheric fields:
  if(associated(self%coszr)      ) deallocate(self%coszr      )
  if(associated(self%airdens)    ) deallocate(self%airdens    )
+ if(associated(self%airdens_dry)    ) deallocate(self%airdens_dry    )
  if(associated(self%delp)       ) deallocate(self%delp       )
  if(associated(self%delz)       ) deallocate(self%delz       )
  if(associated(self%t)          ) deallocate(self%t          )
@@ -736,6 +748,8 @@
     do j = jts,jte
        do i = its,ite
           self%delz(i,j,kk)     = zgrid(k+1,i) - zgrid(k,i)
+          ! MPAS tracer mixing ratios are per dry air; retain native density for optics.
+          self%airdens_dry(i,j,kk) = airdens(k,i)
           self%airdens(i,j,kk)  = airdens(k,i)*(1._RKIND+qv(k,i))
           self%t(i,j,kk)        = theta(k,i)/(1._RKIND+R_v/R_d*max(0._RKIND,qv(k,i)))
           self%t(i,j,kk)        = self%t(i,j,kk)*exner(k,i)
@@ -827,7 +841,10 @@
     !pressure thickness:
     do i = its,ite
        do k = kts,kte
-          self%delp(i,j,k) = self%ple(i,j,k+1)-self%ple(i,j,k)
+          ! MPAS tracers are per kg dry air: delp/g must be the dry-air layer mass,
+          ! rho_d*dz, so every q <-> kg m-2 conversion in GOCART2G is mass-consistent.
+          ! ple stays the full-pressure interface field.
+          self%delp(i,j,k) = self%airdens_dry(i,j,k)*gravity*self%delz(i,j,k)
        enddo
     enddo
  enddo

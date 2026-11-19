@@ -105,6 +105,12 @@
 !
 !  01Apr2021  R.Montuoro/NOAA - Added FENGSHA dust scheme and related methods.
 !
+!  26Oct2026  S.Ha/NCAR - Aero_Compute_Diags and SU_Compute_Diags integrate optics over the
+!                   dry-air layer mass q*rho_d*dz instead of q*delp/g, since MPAS tracers are
+!                   mixing ratios per kg of dry air.
+!  29Oct2026  S.Ha/NCAR - WetRemovalGOCART2G and SU_Wet_Removal use the dry delp for tracer mass
+!                   and the physical layer thickness for precipitation.
+!
 !
 !EOP
 !-------------------------------------------------------------------------
@@ -2765,7 +2771,7 @@ CONTAINS
 
 ! !IROUTINE: WetRemovalGOCART2G
    subroutine WetRemovalGOCART2G ( km, klid, n1, n2, bin_ind, cdt, aero_type, kin, grav, fwet, &
-                                   aerosol, ple, tmpu, rhoa, pfllsan, pfilsan, &
+                                   aerosol, ple, tmpu, rhoa, pfllsan, pfilsan, delp, delz, &
                                    precc, precl, fluxout, rc )
 
 ! !USES:
@@ -2788,6 +2794,8 @@ CONTAINS
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: rhoa    ! moist air density [kg/m^3]
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: pfllsan ! 3D flux of liquid nonconvective precipitation [kg/(m^2 sec)]
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: pfilsan ! 3D flux of ice nonconvective precipitation [kg/(m^2 sec)]
+   real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: delp    ! dry-air layer mass times gravity, rho_d*g*dz [Pa]
+   real(kind=RKIND), pointer, dimension(:,:,:), intent(in)  :: delz    ! layer thickness [m]
    real(kind=RKIND), pointer, dimension(:,:), intent(in)    :: precc   ! surface convective rain flux [kg/(m^2 sec)]
    real(kind=RKIND), pointer, dimension(:,:), intent(in)    :: precl   ! Non-convective precipitation [kg/(m^2 sec)]
    real(kind=RKIND), pointer, dimension(:,:,:)  :: fluxout ! tracer loss flux [kg m-2 s-1]
@@ -2810,7 +2818,6 @@ CONTAINS
    integer  ::  i, j, k, n, LH, kk, ios, nbins
    integer  :: i1=1, i2, j1=1, j2, dims(3)
    real(kind=RKIND), allocatable, dimension(:,:,:) :: pdog   ! air mass factor dp/g [kg m-2]
-   real(kind=RKIND), allocatable, dimension(:,:,:) :: delz   ! box height  dp/g/rhoa [m]
    real(kind=RKIND) :: pls, pcv, pac             ! ls, cv, tot precip [mm day-1]
    real(kind=RKIND) :: qls(km), qcv(km)          ! ls, cv portion of moisture tendency[kg m-3 s-1]
    real(kind=RKIND) :: qmx, qd, A                ! temporary variables on moisture
@@ -2855,7 +2862,7 @@ CONTAINS
 
 !  Allocate arrays
    allocate(c_h2o(i2,j2,km), cldliq(i2,j2,km), cldice(i2,j2,km), pdog(i2,j2,km), &
-            delz(i2,j2,km), dpfli(i2,j2,km), source=0.0)
+            dpfli(i2,j2,km), source=0.0)
 
 !  Initialize local variables
 !  --------------------------
@@ -2889,8 +2896,9 @@ CONTAINS
 !  delz = pdog / rhoa
 !  dpfli = pfllsan(:,:,1:km)-pfllsan(:,:,0:km-1)+pfilsan(:,:,1:km)-pfilsan(:,:,0:km-1)
 
-   pdog = (ple(:,:,2:km+1)-ple(:,:,1:km)) / grav
-   delz = pdog / rhoa
+   ! Tracers are per kg of dry air: transfer them with the dry layer mass, and convert
+   ! precipitation with the physical layer thickness.
+   pdog = delp / grav
    dpfli = pfllsan(:,:,:) + pfilsan(:,:,:)
 !--- end LDF.
    if (.not. KIN) then              ! Gases
@@ -2952,7 +2960,7 @@ CONTAINS
      if(LH .lt. 1) cycle
 
      do k = LH, km
-      qls(k) = dpfli(i,j,k)/pdog(i,j,k)*rhoa(i,j,k)
+      qls(k) = dpfli(i,j,k)/delz(i,j,k)
      end do
 
 !    Loop over vertical to do the scavenging!
@@ -3046,7 +3054,7 @@ CONTAINS
 !-----------------------------------------------------------------------------
 
 !       Aerosols
-        Qd = Qmx /rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else
@@ -3164,7 +3172,7 @@ CONTAINS
 !  units of mm/s (omit the multiply and divide by 1000).
 !-----------------------------------------------------------------------------
 
-        Qd = Qmx / rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else
@@ -3303,13 +3311,15 @@ CONTAINS
                                   sfcmass, colmass, mass, exttau, stexttau, scatau, stscatau,&
                                   sfcmass25, colmass25, mass25, exttau25, scatau25, &
                                   fluxu, fluxv, conc, extcoef, scacoef, bckcoef,&
-                                  exttaufm, scataufm, angstrom, aerindx, NO3nFlag, rc )
+                                  exttaufm, scataufm, angstrom, aerindx, NO3nFlag, rhod, delz, rc )
 
 ! !USES:
 
   implicit NONE
 
 ! !INPUT PARAMETERS:
+   ! Optical mass uses MPAS dry density and physical thickness, not hydrostatic pressure mass.
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: rhod, delz
    type(GOCART2G_Mie),  intent(in) :: mie        ! mie table
    integer, intent(in) :: km, nbegin, nbins
    integer,    intent(in)    :: klid   ! index for pressure lid
@@ -3539,21 +3549,21 @@ CONTAINS
       do n = nbegin, nbins
         do w = 1, size(wavelengths_profile)
           call mie%Query(wavelengths_profile(w),n,   &
-                         aerosol(:,:,:,n)*delp/grav, &
+                         aerosol(:,:,:,n)*rhod*delz, &
                          rh, tau=tau, ssa=ssa, bbck=bck,__RC__)
 !         Calculate the total ext. and scat. coefficients
           if ( present(extcoef) ) then
              extcoef(:,:,:,w) = extcoef(:,:,:,w) + &
-                               tau * (grav * rhoa / delp)
+                               tau / delz
           endif
           if ( present(scacoef) ) then
              scacoef(:,:,:,w) = scacoef(:,:,:,w) + &
-                               ssa * tau * (grav * rhoa / delp)
+                               ssa * tau / delz
           endif
           !calculate the backscatter coefficient
           if ( present(bckcoef) ) then
              bckcoef(:,:,:,w) = bckcoef(:,:,:,w) + &
-                               bck * aerosol(:,:,:,n)*rhoa
+                               bck * aerosol(:,:,:,n)*rhod
           endif
        enddo !wavelengths_profile
       enddo !nbins
@@ -3582,7 +3592,7 @@ CONTAINS
       do w = 1, size(wavelengths_vertint)
         do n = nbegin, nbins
            call mie%Query(wavelengths_vertint(w), n,  &
-                          aerosol(:,:,:,n)*delp/grav, &
+                          aerosol(:,:,:,n)*rhod*delz, &
                           rh, tau=tau, ssa=ssa, __RC__)
            do k = klid, km
 !             Integrate in the vertical
@@ -3651,14 +3661,14 @@ CONTAINS
 
 !       Select the name for species
         call mie%Query(4.70E-7, n,                 &
-                       aerosol(:,:,:,n)*delp/grav, &
+                       aerosol(:,:,:,n)*rhod*delz, &
                        rh, tau=tau, __RC__)
         do k = klid, km
           tau470 = tau470 + tau(:,:,k)
         enddo
 
         call mie%Query(8.70E-7, n,                 &
-                       aerosol(:,:,:,n)*delp/grav, &
+                       aerosol(:,:,:,n)*rhod*delz, &
                        rh, tau=tau, __RC__)
         do k = klid, km
           tau870 = tau870 + tau(:,:,k)
@@ -6193,7 +6203,7 @@ K_LOOP: do k = km, 1, -1
 !BOP
 ! !IROUTINE: SU_Wet_Removal
 
-   subroutine SU_Wet_Removal ( km, nbins, klid, cdt, kin, grav, airMolWght, delp, fMassSO4, fMassSO2, &
+   subroutine SU_Wet_Removal ( km, nbins, klid, cdt, kin, grav, airMolWght, delp, delz, fMassSO4, fMassSO2, &
                                h2o2_int, ple, rhoa, precc, precl, pfllsan, pfilsan, tmpu, &
                                nDMS, nSO2, nSO4, nMSA, DMS, SO2, SO4, MSA, &
                                fluxout, pSO4_colflux, pSO4wet_colflux, &
@@ -6211,7 +6221,8 @@ K_LOOP: do k = km, 1, -1
    logical, intent(in) :: KIN            ! true for aerosol
    real(kind=RKIND), intent(in) :: grav  ! gravity [m/sec]
    real(kind=RKIND), intent(in) :: airMolWght ! air molecular weight [kg]
-   real(kind=RKIND), dimension(:,:,:), intent(in) :: delp   ! pressure thickness [Pa]
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: delp   ! dry-air layer mass times gravity, rho_d*g*dz [Pa]
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: delz   ! layer thickness [m]
    real(kind=RKIND), intent(in) :: fMassSO4, fMassSO2
    real(kind=RKIND), dimension(:,:,:) :: h2o2_int
    real(kind=RKIND), pointer, dimension(:,:,:), intent(in) :: ple     ! level edge air pressure
@@ -6383,7 +6394,7 @@ K_LOOP: do k = km, 1, -1
      if(LH .lt. 1) cycle
 
      do k = LH, km
-      qls(k) = dpfli(i,j,k)/pdog(i,j,k)*rhoa(i,j,k)
+      qls(k) = dpfli(i,j,k)/delz(i,j,k)   ! precipitation per volume uses the physical thickness
      end do
 
 !    Loop over vertical to do the scavenging!
@@ -6472,7 +6483,7 @@ K_LOOP: do k = km, 1, -1
 !  units of mm/s (omit the multiply and divide by 1000).
 !-----------------------------------------------------------------------------
 
-        Qd = Qmx /rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else
@@ -6606,7 +6617,7 @@ K_LOOP: do k = km, 1, -1
 !  units of mm/s (omit the multiply and divide by 1000).
 !-----------------------------------------------------------------------------
 
-        Qd = Qmx / rhoa(i,j,k)*pdog(i,j,k)
+        Qd = Qmx*delz(i,j,k)
         if (Qd.ge.50.) then
          B = 0.
         else
@@ -6770,12 +6781,14 @@ K_LOOP: do k = km, 1, -1
                                  so2sfcmass, so2colmass, &
                                  so4sfcmass, so4colmass, &
                                  exttau, stexttau,scatau, stscatau,so4mass, so4conc, extcoef, &
-                                 scacoef, bckcoef, angstrom, fluxu, fluxv, sarea, snum, rc )
+                                 scacoef, bckcoef, angstrom, fluxu, fluxv, sarea, snum, rhod, delz, rc )
 
 ! !USES:
    implicit NONE
 
 ! !INPUT PARAMETERS:
+   ! Optical mass uses MPAS dry density and physical thickness, not hydrostatic pressure mass.
+   real(kind=RKIND), dimension(:,:,:), intent(in) :: rhod, delz
    integer, intent(in) :: km    ! number of model levels
    integer,    intent(in)    :: klid   ! index for pressure lid
    real(kind=RKIND), intent(in)    :: rmed  ! mean radius [um]
@@ -6979,21 +6992,21 @@ K_LOOP: do k = km, 1, -1
 
       do w = 1, size(wavelengths_profile)
          call mie%Query(wavelengths_profile(w), 1, & ! Only SO4 exists in the MieTable, so its index is 1
-                        SO4*delp/grav, rh,         &
+                        SO4*rhod*delz, rh,         &
                         tau=tau, ssa=ssa, bbck=bck,__RC__)
 
 !         Calculate the total ext. and scat. coefficients
          if( present(extcoef) ) then
               extcoef(:,:,:,w) = extcoef(:,:,:,w) + &
-                              tau * (grav * rhoa / delp)
+                              tau / delz
          endif
          if( present(scacoef) ) then
               scacoef(:,:,:,w) = scacoef(:,:,:,w) + &
-                              ssa * tau * (grav * rhoa / delp)
+                              ssa * tau / delz
          endif
          if( present(bckcoef) ) then
               bckcoef(:,:,:,w) = bckcoef(:,:,:,w) + &
-                              bck * SO4 * rhoa 
+                              bck * SO4 * rhod
          endif
       enddo
    endif
@@ -7008,7 +7021,7 @@ K_LOOP: do k = km, 1, -1
 
       do w = 1, size(wavelengths_vertint)
          call mie%Query(wavelengths_vertint(w), 1,  & ! Only SO4 exists in the MieTable, so its index is 1
-                        SO4*delp/grav, rh,          &
+                        SO4*rhod*delz, rh,          &
                         tau=tau, ssa=ssa, __RC__)
 
          do k = klid, km
@@ -7049,14 +7062,14 @@ K_LOOP: do k = km, 1, -1
       tau870(i1:i2,j1:j2) = tiny(1.0)
 
       call mie%Query(4.70E-7,  1,       & ! Only SO4 exists in the MieTable, so its index is 1
-                     SO4*delp/grav, rh, &
+                     SO4*rhod*delz, rh, &
                      tau=tau, __RC__)
       do k = klid, km
          tau470 = tau470 + tau(:,:,k)
       enddo
 
       call mie%Query(8.70E-7, 1,       &
-                     SO4*delp/grav,rh, &
+                     SO4*rhod*delz,rh, &
                      tau=tau, __RC__)
       do k = klid, km
          tau870 = tau870 + tau(:,:,k)

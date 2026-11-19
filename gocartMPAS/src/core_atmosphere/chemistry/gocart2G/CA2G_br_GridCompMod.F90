@@ -218,7 +218,8 @@
     aviation_crs_src  = self%br_aviation_crs,        &
     pblh              = self%zpbl,                   &
     tmpu              = self%t,                      &
-    rhoa              = self%airdens,                &
+    ! delp is the dry-air layer mass, so the thickness delp/(rhoa*grav) needs the dry density
+    rhoa              = self%airdens_dry,            &
     rh                = self%rh2,                    &
     delp              = self%delp,                   &
     aerosolPhilic     = self%brphilic,               &
@@ -453,6 +454,8 @@
               rhoa      = self%airdens      , &
               pfllsan   = self%pfl_lsan     , &
               pfilsan   = self%pfi_lsan     , &
+              delp      = self%delp         , &
+              delz      = self%delz         , &
               precc     = self%cn_prcp      , &
               precl     = self%ncn_prcp     , &
               fluxout   = self%brwt         , &
@@ -499,6 +502,7 @@
  if(associated(self%braeridx)  ) self%braeridx(:,:)      = 0._RKIND
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
               mie                 = self_params%diag_Mie                   , &
               km                  = self_params%km                         , &
               klid                = self_params%klid                       , &
@@ -553,6 +557,7 @@
  rh20(:,:,:) = 0.20
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -590,6 +595,7 @@
  rh80(:,:,:) = 0.80
  istat = 0
  call Aero_Compute_Diags( &
+              rhod = self%airdens_dry, delz = self%delz, &
            mie                 = self_params%diag_Mie                   , &
            km                  = self_params%km                         , &
            klid                = self_params%klid                       , &
@@ -674,8 +680,8 @@
  ext_s(:,:,:) = 0._RKIND
  ssa_s(:,:,:) = 0._RKIND
 
- qca2G(:,:,:,1) = self%brphobic(:,:,:)*self%delp(:,:,:)/grav
- qca2G(:,:,:,2) = self%brphilic(:,:,:)*self%delp(:,:,:)/grav
+ qca2G(:,:,:,1) = self%brphobic(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
+ qca2G(:,:,:,2) = self%brphilic(:,:,:)*self%airdens_dry(:,:,:)*self%delz(:,:,:)
 
  nl = 0
  ns = 0

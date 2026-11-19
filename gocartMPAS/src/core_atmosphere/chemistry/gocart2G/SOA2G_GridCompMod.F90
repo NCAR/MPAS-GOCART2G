@@ -257,11 +257,14 @@
           endif
        enddo
 
+       ! Allocation weights use full-pressure differences, like the partial-layer terms and the
+       ! normalisation, so they sum to one; delp (dry-air layer mass) is used only in the
+       ! flux-to-mixing-ratio conversion below.
        do k = kte,kts,-1
           f100 = 0._RKIND
           zfactor = 1./(ple(i,j,kte+1)-p100(i,j))
           if(ple(i,j,k) .ge. p100(i,j)) then
-             f100 = zfactor*delp(i,j,k)
+             f100 = zfactor*(ple(i,j,k+1)-ple(i,j,k))
           elseif(ple(i,j,k+1).ge.p100(i,j) .and. ple(i,j,k).lt.p100(i,j)) then
              f100 = zfactor*(ple(i,j,k+1)-p100(i,j))
           endif
@@ -271,7 +274,7 @@
           if(ple(i,j,k+1).ge.p100(i,j) .and. ple(i,j,k).lt.p100(i,j) .and. ple(i,j,k).ge.p500(i,j)) then
              f500 = zfactor*(p100(i,j)-ple(i,j,k))
           elseif(ple(i,j,k+1).lt.p100(i,j) .and. ple(i,j,k).ge.p500(i,j)) then
-             f500 = zfactor*delp(i,j,k)
+             f500 = zfactor*(ple(i,j,k+1)-ple(i,j,k))
           elseif(ple(i,j,k+1).ge.p500(i,j) .and. ple(i,j,k).lt.p500(i,j)) then
              f500 = zfactor*(ple(i,j,k+1)-p500(i,j))
           endif
@@ -279,7 +282,7 @@
           fpbl = 0._RKIND
           zfactor = 1./(ple(i,j,kte+1)-ppbl(i,j))
           if(ple(i,j,k) .ge. ppbl(i,j)) then
-             fpbl = zfactor*delp(i,j,k)
+             fpbl = zfactor*(ple(i,j,k+1)-ple(i,j,k))
           elseif(ple(i,j,k+1).ge.ppbl(i,j) .and. ple(i,j,k).lt.ppbl(i,j)) then
              fpbl = zfactor*(ple(i,j,k+1)-ppbl(i,j))
           endif
