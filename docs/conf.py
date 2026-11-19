@@ -1,6 +1,6 @@
 # docs/conf.py
 
-project = 'MPAS_GOCART2G_TOOLS'
+project = 'MPAS_GOCART2G'
 copyright = '2026, flacey19'
 author = 'flacey19'
 
